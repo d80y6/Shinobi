@@ -804,6 +804,7 @@ module.exports = function(s,config,lang){
                        "field": lang["Connection Type"],
                        "description": lang["fieldTextStreamFlvType"],
                        "default": "0",
+                       "selector": "h_st_stream_flv_type",
                        "example": "",
                        "fieldType": "select",
                        "form-group-class": "h_st_input h_st_flv h_st_mp4",
@@ -824,10 +825,9 @@ module.exports = function(s,config,lang){
                       "name": "detail=stream_flv_maxLatency",
                       "field": lang["Max Latency"],
                       "description": "",
-                      "default": "10",
+                      "default": "20000",
                       "example": "20000",
-                      "form-group-class": "h_st_lat_input h_st_lat_ws",
-                      "form-group-class-pre-layer": "h_st_input h_st_mjpeg",
+                      "uiVisibilityConditions": "monitorDetails.stream_type == 'flv' && monitorDetails.stream_flv_type == 'ws'",
                       "possible": ""
                    },
                    {
@@ -1377,25 +1377,6 @@ module.exports = function(s,config,lang){
                               ]
                            },
                            {
-                               name:'detail-substream-input=stream_flv_type',
-                               field:lang['Loop Stream'],
-                               class:'h_i_SUBSTREAM_FIELDS_input h_i_SUBSTREAM_FIELDS_mp4',
-                               hidden:true,
-                               default:'0',
-                               "fieldType": "select",
-                               type:'selector',
-                               possible:[
-                                   {
-                                      "name": lang.HTTP,
-                                      "value": "http",
-                                   },
-                                   {
-                                      "name": lang.Websocket,
-                                      "value": "ws",
-                                   }
-                               ]
-                           },
-                           {
                                name:'detail-substream-input=fulladdress',
                                field:lang['Full URL Path'],
                                placeholder:'Example : rtsp://admin:password@123.123.123.123/stream/1',
@@ -1598,24 +1579,66 @@ module.exports = function(s,config,lang){
                               "fieldType": "select",
                               "attribute": `triggerChange="#monSectionChannelSUBSTREAM_FIELDS [detail-substream-output=stream_vcodec]" triggerChangeIgnore="b64,mjpeg"`,
                               "possible": [
-                                   {
-                                      "name": lang.Poseidon,
-                                      "value": "mp4",
-                                   },
-                                   {
-                                      "name": lang['MJPEG'],
-                                      "value": "mjpeg",
-                                   },
-                                   {
-                                      "name": lang['FLV'],
-                                      "value": "flv",
-                                   },
-                                   {
-                                      "name": lang['HLS (includes Audio)'],
-                                      "value": "hls",
-                                      selected: true,
-                                   }
-                                ]
+                                    {
+                                       "name": lang.Poseidon,
+                                       "value": "mp4",
+                                       "info": lang["fieldTextStreamTypePoseidon"]
+                                    },
+                                    {
+                                       "name": lang['Base64 over Websocket'],
+                                       "value": "b64",
+                                       "info": lang["fieldTextStreamTypeBase64OverWebsocket"]
+                                    },
+                                    {
+                                       "name": lang['MJPEG'],
+                                       "value": "mjpeg",
+                                       "info": lang["fieldTextStreamTypeMJPEG"]
+                                    },
+                                    {
+                                       "name": lang['FLV'],
+                                       "value": "flv",
+                                       "info": lang["fieldTextStreamTypeFLV"]
+                                    },
+                                    {
+                                       "name": lang['HLS (includes Audio)'],
+                                       "value": "hls",
+                                       "info": lang["fieldTextStreamTypeHLS(includesAudio)"],
+                                       selected: true
+                                    }
+                                 ]
+                           },
+                           {
+                              isAdvanced: true,
+                              hidden:true,
+                              "name": "detail-substream-output=stream_flv_type",
+                              "field": lang["Connection Type"],
+                              "description": lang["fieldTextStreamFlvType"],
+                              "default": "0",
+                              "example": "",
+                              "fieldType": "select",
+                              "selector": "h_st_channel_SUBSTREAM_FIELDS_stream_flv_type",
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4",
+                              "possible": [
+                                 {
+                                    "name": lang.HTTP,
+                                    "value": "http",
+                                 },
+                                 {
+                                    "name": lang.Websocket,
+                                    "value": "ws",
+                                 }
+                              ]
+                          },
+                          {
+                              isAdvanced: true,
+                              hidden:true,
+                              "name": "detail-substream-output=stream_flv_maxLatency",
+                              "field": lang["Max Latency"],
+                              "description": "",
+                              "default": "20000",
+                              "example": "20000",
+                              "uiVisibilityConditions": "monitorDetails.substream.output.stream_type == 'flv' && monitorDetails.substream.output.stream_flv_type == 'ws'",
+                              "possible": ""
                            },
                            {
                               "field": lang['# of Allow MJPEG Clients'],
@@ -1788,7 +1811,7 @@ module.exports = function(s,config,lang){
                               "default": "15",
                               "example": "1",
                               // "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
-                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264 h_st_channel_SUBSTREAM_FIELDS_b64",
                               "possible": "1-23"
                            },
                            {
@@ -1796,21 +1819,21 @@ module.exports = function(s,config,lang){
                               "field": lang["Video Bit Rate"],
                               "placeholder": "",
                               "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
-                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264 h_st_channel_SUBSTREAM_FIELDS_b64",
                            },
                            {
                               "name": "detail-substream-output=stream_a_br",
                               "field": lang["Audio Bit Rate"],
                               "placeholder": "128k",
                               "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
-                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264 h_st_channel_SUBSTREAM_FIELDS_b64",
                            },
                            {
                               "name": "detail-substream-output=stream_fps",
                               "field": lang['Frame Rate'],
                               "description": lang["fieldTextDetailSubstreamOutputStreamFps"],
                               // "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
-                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264 h_st_channel_SUBSTREAM_FIELDS_b64",
                            },
                            {
                               "name": "detail-substream-output=stream_scale_x",
@@ -1820,7 +1843,7 @@ module.exports = function(s,config,lang){
                               "numberMin": "1",
                               "example": "640",
                               // "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
-                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264 h_st_channel_SUBSTREAM_FIELDS_b64",
                            },
                            {
                               "name": "detail-substream-output=stream_scale_y",
@@ -1830,7 +1853,7 @@ module.exports = function(s,config,lang){
                               "numberMin": "1",
                               "example": "480",
                               // "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
-                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264 h_st_channel_SUBSTREAM_FIELDS_b64",
                            },
                            {
                               "name": "detail-substream-output=stream_rotate",
@@ -1838,7 +1861,7 @@ module.exports = function(s,config,lang){
                               "description": lang["fieldTextDetailSubstreamOutputStreamRotate"],
                               "fieldType": "select",
                               // "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
-                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264 h_st_channel_SUBSTREAM_FIELDS_b64",
                               "possible": [
                                    {
                                       "name": lang["No Rotation"],
@@ -1872,7 +1895,7 @@ module.exports = function(s,config,lang){
                               "field": lang["Video Filter"],
                               "description": lang["fieldTextDetailSubstreamOutputSvf"],
                               // "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
-                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264 h_st_channel_SUBSTREAM_FIELDS_b64",
                           },
                           {
                               "name": "detail-substream-output=cust_stream",

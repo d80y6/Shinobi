@@ -469,12 +469,10 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
                         revokeVideoPlayerUrl(monitorId)
                     }
                     var options = {};
-                    if(monitor.details.stream_flv_type==='ws'){
-                        if(monitor.details.stream_flv_maxLatency&&monitor.details.stream_flv_maxLatency!==''){
-                            monitor.details.stream_flv_maxLatency = parseInt(monitor.details.stream_flv_maxLatency)
-                        }else{
-                            monitor.details.stream_flv_maxLatency = 20000;
-                        }
+                    if(subStreamChannel ? details.substream.output.stream_flv_type === 'ws' : monitor.details.stream_flv_type === 'ws'){
+                        var maxLatency = subStreamChannel ?
+                            details.substream.output.stream_flv_maxLatency ? parseInt(details.substream.output.stream_flv_maxLatency) : 20000
+                            : details.stream_flv_maxLatency ? parseInt(details.stream_flv_maxLatency) : 20000;
                         options = {
                             type: 'flv',
                             isLive: true,
@@ -482,7 +480,7 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
                             ke: monitor.ke,
                             uid: $user.uid,
                             id: monitor.mid,
-                            maxLatency: monitor.details.stream_flv_maxLatency,
+                            maxLatency: maxLatency,
                             hasAudio:false,
                             url: location.origin,
                             path: websocketPath,
@@ -932,9 +930,9 @@ function pauseMonitorItem(monitorId){
     closeLiveGridPlayer(monitorId,false)
 }
 function resumeMonitorItem(monitorId){
-    // needs to know about substream
     liveGridPlayingNow[monitorId] = true
-    resetMonitorCanvas(monitorId,true,null)
+    var monitor = loadedMonitors[monitorId]
+    resetMonitorCanvas(monitorId,true,monitor.subStreamChannel)
 }
 function isScrolledIntoView(elem){
     var el = $(elem)
