@@ -20,6 +20,8 @@
    "Geolocation": "Geolocation",
    "Configure": "Configure",
    "Scan": "Scan",
+   "Mount Manager": "Mount Manager",
+   "mountManagerDescription": "Setup drive mounts here.",
    "Rally": "Rally",
    "rallyApiKeyFieldText": "Permissions required : Get Monitors, Edit Monitors, View Streams, View Videos.",
    "rallyDescription": "Here you can connect to a separate Shinobi server and add their cameras to this Shinobi server. The connection would be directly from the separate server instead of directly from the cameras.",
