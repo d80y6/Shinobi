@@ -1,16 +1,7 @@
 const fs = require('fs').promises;
 const { createReadStream } = require('fs');
-const path = require('path')
+const path = require('path');
 const {
-    createMountPoint,
-    mount,
-    update,
-    remove,
-    list,
-    remountAll,
-    remount,
-    unmount,
-    diskUsage,
     writeReadStream,
     checkDiskPathExists,
 } = require('node-fstab');

@@ -13,9 +13,6 @@ $(document).ready(function(){
             html += `
             <tr row-mounted="${getMountId(theMount)}">
                 <td class="align-middle">
-                    <a class="btn btn-info btn-sm cursor-pointer delete" title="${lang.Delete}"><i class="fa fa-trash-o"></i></a>
-                </td>
-                <td class="align-middle">
                     <div>${theMount.device}</div>
                     <div><small>${theMount.mountPoint}</small></div>
                 </td>
@@ -24,6 +21,10 @@ $(document).ready(function(){
                 </td>
                 <td class="align-middle">
                     ${theMount.options}
+                </td>
+                <td class="align-middle">
+                    <a class="btn btn-success btn-sm cursor-pointer setVideosDir" title="${lang.videosDir}"><i class="fa fa-download"></i></a>
+                    <a class="btn btn-danger btn-sm cursor-pointer delete" title="${lang.Delete}"><i class="fa fa-trash-o"></i></a>
                 </td>
             </tr>`
         })
@@ -76,6 +77,16 @@ $(document).ready(function(){
             })
         })
     }
+    function setVideosDir(localPath, pathInside) {
+        return new Promise((resolve,reject) => {
+            $.post(superApiPrefix + $user.sessionKey + '/mountManager/removeMount',{
+                localPath,
+                pathInside
+            },function(data){
+                resolve(data)
+            })
+        })
+    }
     newMountForm.submit(async function(e){
         e.preventDefault();
         const form = newMountForm.serializeObject();
@@ -107,6 +118,37 @@ $(document).ready(function(){
                 type: 'danger'
             })
         }
+    })
+    theTable.on('click','.setVideosDir', function(e){
+        const el = $(this).parents('[row-mounted]')
+        const mountId = el.attr('row-mounted');
+        const theMount = loadedMounts[mountId]
+        const localPath = theMount.mountPoint
+        $.confirm.create({
+            title: lang['Set New Videos Directory'],
+            body: `${lang.restartRequired}<br><br><input class="form-control" id="newVideosDirInnerPath">? `,
+            clickOptions: {
+                class: 'btn-success',
+                title: lang.Save,
+            },
+            clickCallback: async function(){
+                const pathInside = $('#newVideosDirInnerPath').val().trim();
+                const response = await setVideosDir(localPath, pathInside);
+                if(response.ok){
+                    new PNotify({
+                        title: lang['New Videos Directory Set'],
+                        text: lang.restartRequired,
+                        type: 'success'
+                    })
+                }else{
+                    new PNotify({
+                        title: lang['Action Failed'],
+                        text: lang['See System Logs'],
+                        type: 'danger'
+                    })
+                }
+            }
+        })
     })
     loadMounts()
 })
