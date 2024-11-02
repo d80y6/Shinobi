@@ -94,7 +94,7 @@ $(document).ready(function(){
     function launchSetVideoDirConfirm(localPath){
         $.confirm.create({
             title: lang['Set New Videos Directory'],
-            body: `<b>${lang.Path} : ${localPath}</b><br>${lang.restartRequired}<br><br><input placeholder="${lang['Path Inside']}" class="form-control" id="newVideosDirInnerPath">`,
+            body: `<b>${lang['Mount Path']} : ${localPath}</b><br>${lang.restartRequired}<br><br><input placeholder="${lang['Path Inside Mount']}" class="form-control" id="newVideosDirInnerPath">`,
             clickOptions: {
                 class: 'btn-success',
                 title: lang.Save,
@@ -148,7 +148,7 @@ $(document).ready(function(){
         const localPath = theMount.mountPoint
         $.confirm.create({
             title: lang['Delete Mount'],
-            body: `<b>${localPath} (${theMount.type})</b>`,
+            body: `<div>${theMount.device}</div><small>${localPath} (${theMount.type})</small>`,
             clickOptions: {
                 class: 'btn-danger',
                 title: lang.Delete,

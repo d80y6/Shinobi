@@ -1,7 +1,21 @@
 const path = require('path')
 module.exports = (s,config,lang,app,io) => {
-    // for unix-based systems only
-    if(s.isWin)return;
+    // for unix-based systems only (has /etc/fstab)
+    if(s.isWin){
+        app.all([
+            'list',
+            'mount',
+            'removeMount',
+            'setVideosDir',
+        ].map(item => `${config.webPaths.superApiPrefix}:auth/mountManager/${item}`), function (req,res){
+            s.closeJsonResponse(res, {
+                ok: false,
+                msg: lang.windowsCantUseFeature,
+                error: lang.windowsCantUseFeature
+            });
+        });
+        return;
+    }
     const {
         modifyConfiguration,
      } = require('./system/utils.js')(config)
@@ -77,6 +91,11 @@ module.exports = (s,config,lang,app,io) => {
             const { localPath } = req.body;
             try{
                 await unmount(localPath)
+                if(config.videosDir.startsWith(localPath)){
+                    const configError = await modifyConfiguration({
+                        videosDir: '__DIR__/videos',
+                    }, true);
+                }
             }catch(err){
                 console.error(err)
             }
