@@ -94,7 +94,7 @@ $(document).ready(function(){
     function launchSetVideoDirConfirm(localPath){
         $.confirm.create({
             title: lang['Set New Videos Directory'],
-            body: `<b>${lang['Mount Path']} : ${localPath}</b><br>${lang.restartRequired}<br><br><input placeholder="${lang['Path Inside Mount']}" class="form-control" id="newVideosDirInnerPath">`,
+            body: `<b>${lang['Mount Path']} : ${localPath}</b><br>${lang.setVideosDirWarning} ${lang.restartRequired}<br><br><input placeholder="${lang['Path Inside Mount']}" class="form-control" id="newVideosDirInnerPath">`,
             clickOptions: {
                 class: 'btn-success',
                 title: lang.Save,
@@ -125,6 +125,7 @@ $(document).ready(function(){
         const response = await addMount(form);
         const notify = {
             title: lang['Mount Added'],
+            text: lang.mountAddedText,
             type: 'success'
         }
         if(!response.ok){
@@ -148,7 +149,7 @@ $(document).ready(function(){
         const localPath = theMount.mountPoint
         $.confirm.create({
             title: lang['Delete Mount'],
-            body: `<div>${theMount.device}</div><small>${localPath} (${theMount.type})</small>`,
+            body: `<b>${lang['Mount Path']} : ${localPath} (${theMount.type})</b><br><small>${theMount.device}</small><br>${lang.setVideosDirWarning}`,
             clickOptions: {
                 class: 'btn-danger',
                 title: lang.Delete,

@@ -65,11 +65,12 @@ module.exports = (s,config,lang,app,io) => {
                 const updateResponse = await update(sourceTarget, localPath, mountType, options);
                 response.updateResponse = updateResponse
                 response.ok = updateResponse.ok
-                try{
-                    const remountResponse = await remount(localPath)
-                    response.remountResponse = remountResponse
-                }catch(err){
-                    console.error(err)
+                const remountResponse = await remount(localPath)
+                response.remountResponse = remountResponse
+                if(!remountResponse.ok){
+                    await remove(localPath);
+                    response.ok = false;
+                    response.error = remountResponse.error;
                 }
                 response.mount = {
                     device: sourceTarget,
