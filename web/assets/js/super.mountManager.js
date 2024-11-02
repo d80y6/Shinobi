@@ -2,33 +2,37 @@ $(document).ready(function(){
     const loadedMounts = {}
     const theEnclosure = $('#superMountManager')
     const theSearch = $('#mountManagerListSearch')
-    const theTable = $('#mountManagerListTable')
+    const theTable = $('#mountManagerListTable tbody')
     const newMountForm = $('#mountManagerNewMount')
     function getMountId(theMount){
         return `${theMount.mountPoint.split('/').join('_')}`
     }
+    function drawMountToTable(theMount){
+        var html = `
+        <tr row-mounted="${getMountId(theMount)}">
+            <td class="align-middle">
+                <div>${theMount.device}</div>
+                <div><small>${theMount.mountPoint}</small></div>
+            </td>
+            <td class="align-middle">
+                ${theMount.type}
+            </td>
+            <td class="align-middle">
+                ${theMount.options}
+            </td>
+            <td class="align-middle">
+                <a class="btn btn-primary btn-sm cursor-pointer edit" title="${lang.Edit}"><i class="fa fa-pencil-square-o"></i></a>
+                <a class="btn btn-success btn-sm cursor-pointer setVideosDir" title="${lang.videosDir}"><i class="fa fa-download"></i></a>
+                <a class="btn btn-danger btn-sm cursor-pointer delete" title="${lang.Delete}"><i class="fa fa-trash-o"></i></a>
+            </td>
+        </tr>`
+        theTable.append(html)
+    }
     function drawMountsTable(data){
-        var html = ''
+        theTable.empty()
         $.each(data,function(n,theMount){
-            html += `
-            <tr row-mounted="${getMountId(theMount)}">
-                <td class="align-middle">
-                    <div>${theMount.device}</div>
-                    <div><small>${theMount.mountPoint}</small></div>
-                </td>
-                <td class="align-middle">
-                    ${theMount.type}
-                </td>
-                <td class="align-middle">
-                    ${theMount.options}
-                </td>
-                <td class="align-middle">
-                    <a class="btn btn-success btn-sm cursor-pointer setVideosDir" title="${lang.videosDir}"><i class="fa fa-download"></i></a>
-                    <a class="btn btn-danger btn-sm cursor-pointer delete" title="${lang.Delete}"><i class="fa fa-trash-o"></i></a>
-                </td>
-            </tr>`
-        })
-        downloadListElement.html(html)
+            drawMountToTable(theMount)
+        });
     }
     function filterMountsTable(theSearch = '') {
         var searchQuery = theSearch.trim().toLowerCase();
@@ -52,10 +56,10 @@ $(document).ready(function(){
     function loadMounts(callback) {
         return new Promise((resolve,reject) => {
             $.getJSON(superApiPrefix + $user.sessionKey + '/mountManager/list',function(data){
-                $.each(data,function(n,theMount){
+                $.each(data.mounts,function(n,theMount){
                     loadedMounts[getMountId(theMount)] = theMount;
                 })
-                drawMountsTable(data)
+                drawMountsTable(data.mounts)
                 resolve(data)
             })
         })
@@ -79,7 +83,7 @@ $(document).ready(function(){
     }
     function setVideosDir(localPath, pathInside) {
         return new Promise((resolve,reject) => {
-            $.post(superApiPrefix + $user.sessionKey + '/mountManager/removeMount',{
+            $.post(superApiPrefix + $user.sessionKey + '/mountManager/setVideosDir',{
                 localPath,
                 pathInside
             },function(data){
@@ -87,46 +91,10 @@ $(document).ready(function(){
             })
         })
     }
-    newMountForm.submit(async function(e){
-        e.preventDefault();
-        const form = newMountForm.serializeObject();
-        const response = await addMount(form);
-        const notify = {
-            title: lang['Mount Added'],
-            type: 'success'
-        }
-        if(!response.ok){
-            notify.title = lang['Failed to Add Mount']
-            notify.text = response.error
-            notify.type = 'danger'
-        }
-        new PNotify(notify)
-        return false;
-    });
-    theTable.on('click','.delete', async function(e){
-        const el = $(this).parents('[row-mounted]')
-        const mountId = el.attr('row-mounted');
-        const theMount = loadedMounts[mountId]
-        const localPath = theMount.mountPoint
-        const response = await removeMount(localPath);
-        if(response.ok){
-            el.remove()
-        }else{
-            new PNotify({
-                title: lang['Failed to Remove Mount'],
-                text: lang['See System Logs'],
-                type: 'danger'
-            })
-        }
-    })
-    theTable.on('click','.setVideosDir', function(e){
-        const el = $(this).parents('[row-mounted]')
-        const mountId = el.attr('row-mounted');
-        const theMount = loadedMounts[mountId]
-        const localPath = theMount.mountPoint
+    function launchSetVideoDirConfirm(localPath){
         $.confirm.create({
             title: lang['Set New Videos Directory'],
-            body: `${lang.restartRequired}<br><br><input class="form-control" id="newVideosDirInnerPath">? `,
+            body: `<b>${lang.Path} : ${localPath}</b><br>${lang.restartRequired}<br><br><input placeholder="${lang['Path Inside']}" class="form-control" id="newVideosDirInnerPath">`,
             clickOptions: {
                 class: 'btn-success',
                 title: lang.Save,
@@ -149,6 +117,78 @@ $(document).ready(function(){
                 }
             }
         })
+    }
+    newMountForm.submit(async function(e){
+        e.preventDefault();
+        const form = newMountForm.serializeObject();
+        $.each(form, function(key,val){form[key] = val.trim()});
+        const response = await addMount(form);
+        const notify = {
+            title: lang['Mount Added'],
+            type: 'success'
+        }
+        if(!response.ok){
+            notify.title = lang['Failed to Add Mount']
+            notify.text = response.error
+            notify.type = 'danger'
+        }else{
+            const theMount = response.mount
+            const mountId = getMountId(theMount);
+            theTable.find(`[row-mounted="${mountId}"]`).remove()
+            loadedMounts[mountId] = theMount;
+            drawMountToTable(theMount);
+        }
+        new PNotify(notify)
+        return false;
+    });
+    theTable.on('click','.delete', async function(e){
+        const el = $(this).parents('[row-mounted]')
+        const mountId = el.attr('row-mounted');
+        const theMount = loadedMounts[mountId]
+        const localPath = theMount.mountPoint
+        $.confirm.create({
+            title: lang['Delete Mount'],
+            body: `<b>${localPath} (${theMount.type})</b>`,
+            clickOptions: {
+                class: 'btn-danger',
+                title: lang.Delete,
+            },
+            clickCallback: async function(){
+                const response = await removeMount(localPath);
+                if(response.ok){
+                    el.remove()
+                }else{
+                    new PNotify({
+                        title: lang['Failed to Remove Mount'],
+                        text: lang['See System Logs'],
+                        type: 'danger'
+                    })
+                }
+            }
+        })
     })
-    loadMounts()
+    theTable.on('click','.edit', async function(e){
+        const el = $(this).parents('[row-mounted]')
+        const mountId = el.attr('row-mounted');
+        const theMount = loadedMounts[mountId]
+        newMountForm.find('[name="sourceTarget"]').val(theMount.device)
+        newMountForm.find('[name="localPath"]').val(theMount.mountPoint)
+        newMountForm.find('[name="mountType"]').val(theMount.type)
+        newMountForm.find('[name="options"]').val(theMount.options)
+    })
+    theTable.on('click','.setVideosDir', function(e){
+        const el = $(this).parents('[row-mounted]')
+        const mountId = el.attr('row-mounted');
+        const theMount = loadedMounts[mountId]
+        const localPath = theMount.mountPoint
+        launchSetVideoDirConfirm(localPath)
+    })
+    theEnclosure.on('click','.setDefaultVideosDir', function(e){
+        launchSetVideoDirConfirm('__DIR__/videos')
+    })
+    theSearch.keydown(function(){
+        const value = $(this).val().trim()
+        filterMountsTable(value)
+    })
+    onInitSuccess(loadMounts)
 })

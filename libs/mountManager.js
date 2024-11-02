@@ -6,14 +6,15 @@ module.exports = (s,config,lang,app,io) => {
         modifyConfiguration,
      } = require('./system/utils.js')(config)
     const {
-        createMountPoint,
         mount,
         update,
         remove,
         list,
         remountAll,
         remount,
-        unmount
+        unmount,
+        createMountPoint,
+        checkDiskPathExists,
     } = require('node-fstab');
     /**
     * API : Remount All in fstab
@@ -30,16 +31,40 @@ module.exports = (s,config,lang,app,io) => {
     app.post(config.webPaths.superApiPrefix+':auth/mountManager/mount', function (req,res){
         s.superAuth(req.params, async (resp) => {
             const { sourceTarget, localPath, mountType, options } = req.body;
-            try{
-                await createMountPoint(localPath)
-            }catch(err){
-                console.error(err)
-            }
-            const response = await update(sourceTarget, localPath, mountType, options);
-            try{
-                await remount(localPath)
-            }catch(err){
-                console.error(err)
+            const response = { ok: false }
+            if(sourceTarget && localPath){
+                try{
+                    const createDirResponse = await createMountPoint(localPath)
+                    response.createDirResponse = createDirResponse
+                }catch(err){
+                    console.error(err)
+                }
+                try{
+                    const { exists } = await checkDiskPathExists(localPath)
+                    if(exists){
+                        const unmountResponse = await unmount(localPath)
+                        response.unmountResponse = unmountResponse
+                    }
+                }catch(err){
+                    console.error(err)
+                }
+                const updateResponse = await update(sourceTarget, localPath, mountType, options);
+                response.updateResponse = updateResponse
+                response.ok = updateResponse.ok
+                try{
+                    const remountResponse = await remount(localPath)
+                    response.remountResponse = remountResponse
+                }catch(err){
+                    console.error(err)
+                }
+                response.mount = {
+                    device: sourceTarget,
+                    mountPoint: localPath,
+                    type: mountType,
+                    options,
+                }
+            }else{
+                response.error = lang['Invalid Data']
             }
             s.closeJsonResponse(res, response);
         },res,req);
@@ -65,15 +90,19 @@ module.exports = (s,config,lang,app,io) => {
     app.post(config.webPaths.superApiPrefix+':auth/mountManager/setVideosDir', function (req,res){
         s.superAuth(req.params, async (resp) => {
             const { localPath, pathInside } = req.body;
+            const isDefaultDir = localPath === '__DIR__/videos';
             const response = { ok: false }
             try{
-                const { exists } = await checkDiskPathExists(localPath)
+                const { exists } = isDefaultDir ? { exists: true } : await checkDiskPathExists(localPath)
                 if(exists){
                     const newVideosDirPath = pathInside ? path.join(localPath, pathInside) : localPath;
+                    const createDirResponse = isDefaultDir ? true : await createMountPoint(newVideosDirPath)
                     const configError = await modifyConfiguration({
                         videosDir: newVideosDirPath,
                     }, true);
                     response.ok = true;
+                    response.configError = configError;
+                    response.createDirResponse = createDirResponse;
                 }
             }catch(err){
                 console.error(err)
