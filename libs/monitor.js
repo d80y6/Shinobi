@@ -497,7 +497,8 @@ module.exports = function(s,config,lang){
                         s.tx({f:'monitor_snapshot',snapshot:e.mon.name,snapshot_format:'plc',mid:e.mid,ke:e.ke},'GRP_'+e.ke)
                     }
                 }
-                if(s.group[e.ke].activeMonitors[e.mid].onvifConnection){
+                const onvifDevice = s.group[e.ke].activeMonitors[e.mid].onvifConnection || (await s.createOnvifDevice({ id: e.mid, ke: e.ke })).device;
+                if(onvifDevice){
                     try{
                         const screenShot = await s.getSnapshotFromOnvif({
                             ke: e.ke,

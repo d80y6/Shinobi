@@ -67,7 +67,7 @@ function getSnapshot(options,cb){
         var monitor = options.mon || options.monitor || options
         var targetElement = $(options.targetElement || `[data-mid="${monitor.mid}"].monitor_item .stream-element`)
         var details = safeJsonParse(monitor.details)
-        var streamType = details.stream_type;
+        var streamType = details.stream_type === 'useSubstream' ? details.substream.output.stream_type : details.stream_type;
         if(window.jpegModeOn !== true){
             function completeAction(image_data,width,height){
                 var len = image_data.length

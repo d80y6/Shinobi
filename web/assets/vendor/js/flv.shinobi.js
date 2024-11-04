@@ -3192,7 +3192,7 @@
                 L = e("../utils/exception.js"),
                 w = function() {
                     function e(t, n, i) {
-                        r(this, e), this.TAG = "IOController", this._config = n, this._extraData = i, this._stashInitialSize = 393216, void 0 != n.stashInitialSize && n.stashInitialSize > 0 && (this._stashInitialSize = n.stashInitialSize), this._stashUsed = 0, this._stashSize = this._stashInitialSize, this._bufferSize = 3145728, this._stashBuffer = new ArrayBuffer(this._bufferSize), this._stashByteStart = 0, this._enableStash = !0, !1 === n.enableStashBuffer && (this._enableStash = !1), this._loader = null, this._loaderClass = null, this._seekHandler = null, this._dataSource = t, this._isWebSocketURL = /wss?:\/\/(.+?)/.test(t.url), this._refTotalLength = t.filesize ? t.filesize : null, this._totalLength = this._refTotalLength, this._fullRequestFlag = !1, this._currentRange = null, this._redirectedURL = null, this._speedNormalized = 0, this._speedSampler = new l.default, this._speedNormalizeList = [64, 128, 256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096], this._isEarlyEofReconnecting = !1, this._paused = !1, this._resumeFrom = 0, this._onDataArrival = null, this._onSeeked = null, this._onError = null, this._onComplete = null, this._onRedirect = null, this._onRecoveredEarlyEof = null, this._selectSeekHandler(), this._selectLoader(), this._createLoader()
+                        r(this, e), this.TAG = "IOController", this._config = n, this._extraData = i, this._stashInitialSize = 393216, void 0 != n.stashInitialSize && n.stashInitialSize > 0 && (this._stashInitialSize = n.stashInitialSize), this._stashUsed = 0, this._stashSize = this._stashInitialSize, this._bufferSize = 3145728, this._stashBuffer = new ArrayBuffer(this._bufferSize), this._stashByteStart = 0, this._enableStash = !0, !1 === n.enableStashBuffer && (this._enableStash = !1), this._loader = null, this._loaderClass = null, this._seekHandler = null, this._dataSource = t, this._isWebSocketURL = /\/socket.io/.test(t.config.path), this._refTotalLength = t.filesize ? t.filesize : null, this._totalLength = this._refTotalLength, this._fullRequestFlag = !1, this._currentRange = null, this._redirectedURL = null, this._speedNormalized = 0, this._speedSampler = new l.default, this._speedNormalizeList = [64, 128, 256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096], this._isEarlyEofReconnecting = !1, this._paused = !1, this._resumeFrom = 0, this._onDataArrival = null, this._onSeeked = null, this._onError = null, this._onComplete = null, this._onRedirect = null, this._onRecoveredEarlyEof = null, this._selectSeekHandler(), this._selectLoader(), this._createLoader()
                     }
                     return s(e, [{
                         key: "destroy",
@@ -3907,7 +3907,7 @@
                                     transports:['websocket']
                                 });
                                 l._ws = t;
-                                var monitor = $.ccio.mon[e.config.ke+e.config.id+e.config.auth_token];
+                                var monitor = loadedMonitors[e.config.id];
                                 if(monitor){
                                     monitor.flvWebSocket = t;
                                     monitor.stopFlvReconnect = false;

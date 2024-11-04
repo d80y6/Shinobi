@@ -129,7 +129,7 @@ function initiateLivePlayer(monitor){
                 }
                 if(!loadedPlayer.PoseidonErrorCount)loadedPlayer.PoseidonErrorCount = 0
                 if(loadedPlayer.PoseidonErrorCount >= 5)return
-                if(monitor.details.stream_flv_type==='ws'){
+                if(subStreamChannel ? details.substream.output.stream_flv_type === 'ws' : monitor.details.stream_flv_type === 'ws'){
                     if(loadedPlayer.Poseidon){
                         loadedPlayer.Poseidon.stop()
                     }
@@ -165,11 +165,9 @@ function initiateLivePlayer(monitor){
                 }
                 var options = {};
                 if(monitor.details.stream_flv_type==='ws'){
-                    if(monitor.details.stream_flv_maxLatency&&monitor.details.stream_flv_maxLatency!==''){
-                        monitor.details.stream_flv_maxLatency = parseInt(monitor.details.stream_flv_maxLatency)
-                    }else{
-                        monitor.details.stream_flv_maxLatency = 20000;
-                    }
+                    var maxLatency = subStreamChannel ?
+                        details.substream.output.stream_flv_maxLatency ? parseInt(details.substream.output.stream_flv_maxLatency) : 20000
+                        : details.stream_flv_maxLatency ? parseInt(details.stream_flv_maxLatency) : 20000;
                     options = {
                         type: 'flv',
                         isLive: true,
@@ -177,7 +175,7 @@ function initiateLivePlayer(monitor){
                         ke: monitor.ke,
                         uid: $user.uid,
                         id: monitor.mid,
-                        maxLatency: monitor.details.stream_flv_maxLatency,
+                        maxLatency: maxLatency,
                         hasAudio:false,
                         url: location.origin,
                         path: websocketPath,

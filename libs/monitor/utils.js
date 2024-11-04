@@ -220,7 +220,7 @@ module.exports = (s,config,lang) => {
             }
             const temporaryImageFile = streamDir + s.gid(5) + '.jpg'
             const ffmpegCmd = splitForFFMPEG(`-y -loglevel warning -re ${inputOptions.join(' ')} -i "${url}" ${outputOptions.join(' ')} -f mjpeg -an -frames:v 1 "${temporaryImageFile}"`)
-            const snapProcess = spawn('ffmpeg',ffmpegCmd,{detached: true})
+            const snapProcess = spawn(config.ffmpegDir,ffmpegCmd,{detached: true})
             snapProcess.stderr.on('data',function(data){
                 // s.debugLog(data.toString())
             })
@@ -447,8 +447,22 @@ module.exports = (s,config,lang) => {
                ffmpegProcess.stdio[pipeNumber].pipe(activeMonitor.mp4frag[pipeNumber],{ end: false })
            break;
            case'mjpeg':
+               frameToStreamAdded = function (d) {
+                    activeMonitor.emitterChannel[pipeNumber].emit('data', d)
+               }
+           break;
+           case'b64':
+               var buffer
                frameToStreamAdded = function(d){
-                   activeMonitor.emitterChannel[pipeNumber].emit('data',d)
+                    if(!buffer){
+                        buffer=[d]
+                    }else{
+                        buffer.push(d)
+                    }
+                    if((d[d.length-2] === 0xFF && d[d.length-1] === 0xD9)){
+                        activeMonitor.emitterChannel[pipeNumber].emit('data',Buffer.concat(buffer))
+                        buffer = null
+                    }
                }
            break;
            case'flv':

@@ -116,24 +116,26 @@ module.exports = function(s,config,lang,io){
         })
     }
 
-    const validatedAndBindAuthenticationToSocketConnection = (cn,d,removeListenerOnDisconnect) => {
-        if(!d.channel)d.channel = 'MAIN';
+    const validatedAndBindAuthenticationToSocketConnection = (cn, d, removeListenerOnDisconnect) => {
+        if (d.channel) {
+            cn.channel = parseInt(d.channel)+config.pipeAddition;
+        } else {
+            d.channel = 'MAIN';
+            cn.channel = 'MAIN';
+        }
         cn.ke = d.ke,
         cn.uid = d.uid,
         cn.auth = d.auth;
-        cn.channel = d.channel;
         cn.removeListenerOnDisconnect = removeListenerOnDisconnect;
         cn.socketVideoStream = d.id;
     }
 
     const createStreamEmitter = (d,cn) => {
-        var Emitter,chunkChannel
+        var Emitter;
         if(!d.channel){
             Emitter = s.group[d.ke].activeMonitors[d.id].emitter
-            chunkChannel = 'MAIN'
         }else{
             Emitter = s.group[d.ke].activeMonitors[d.id].emitterChannel[parseInt(d.channel)+config.pipeAddition]
-            chunkChannel = parseInt(d.channel)+config.pipeAddition
         }
         if(!Emitter){
             cn.disconnect();return;
@@ -160,15 +162,17 @@ module.exports = function(s,config,lang,io){
             }
             const onSuccess = (r) => {
                 r = r[0];
-                const Emitter = createStreamEmitter(d,cn)
-                validatedAndBindAuthenticationToSocketConnection(cn,d,true)
-                var contentWriter
-                cn.closeSocketVideoStream = function(){
-                    Emitter.removeListener('data', contentWriter);
+                const Emitter = createStreamEmitter(d, cn)
+                if (Emitter) {
+                    validatedAndBindAuthenticationToSocketConnection(cn,d,true)
+                    var contentWriter
+                    cn.closeSocketVideoStream = function(){
+                        Emitter.removeListener('data', contentWriter);
+                    }
+                    Emitter.on('data',contentWriter = function(base64){
+                        tx(base64)
+                    })
                 }
-                Emitter.on('data',contentWriter = function(base64){
-                    tx(base64)
-                })
              }
             //check if auth key is user's temporary session key
             if(s.group[d.ke]&&s.group[d.ke].users&&s.group[d.ke].users[d.auth]){
@@ -193,16 +197,18 @@ module.exports = function(s,config,lang,io){
             }
             const onSuccess = (r) => {
                 r=r[0];
-                const Emitter = createStreamEmitter(d,cn)
-                validatedAndBindAuthenticationToSocketConnection(cn,d,true)
-                var contentWriter
-                cn.closeSocketVideoStream = function(){
-                    Emitter.removeListener('data', contentWriter);
+                const Emitter = createStreamEmitter(d, cn)
+                if (Emitter) {
+                    validatedAndBindAuthenticationToSocketConnection(cn,d,true)
+                    var contentWriter
+                    cn.closeSocketVideoStream = function(){
+                        Emitter.removeListener('data', contentWriter);
+                    }
+                    tx({time:toUTC(),buffer:s.group[d.ke].activeMonitors[d.id].firstStreamChunk[cn.channel]})
+                    Emitter.on('data',contentWriter = function(buffer){
+                        tx({time:toUTC(),buffer:buffer})
+                    })
                 }
-                tx({time:toUTC(),buffer:s.group[d.ke].activeMonitors[d.id].firstStreamChunk[chunkChannel]})
-                Emitter.on('data',contentWriter = function(buffer){
-                    tx({time:toUTC(),buffer:buffer})
-                })
              }
             if(s.group[d.ke] && s.group[d.ke].users && s.group[d.ke].users[d.auth]){
                 onSuccess(s.group[d.ke].users[d.auth]);
@@ -227,7 +233,7 @@ module.exports = function(s,config,lang,io){
             const onSuccess = (r) => {
                 r = r[0];
                 validatedAndBindAuthenticationToSocketConnection(cn,d)
-                var mp4frag = s.group[d.ke].activeMonitors[d.id].mp4frag[d.channel];
+                var mp4frag = s.group[d.ke].activeMonitors[d.id].mp4frag[cn.channel];
                 var onInitialized = () => {
                     cn.emit('mime', mp4frag.mime);
                     mp4frag.removeListener('initialized', onInitialized);

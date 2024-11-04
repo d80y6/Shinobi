@@ -256,7 +256,8 @@ module.exports = (s, shinobiConfig, lang, app, io) => {
     
         const dbConfig = {
             client: shinobiConfig.databaseType,
-            connection: shinobiConfig.db
+            connection: shinobiConfig.db,
+            pool: { min: 0, max: 10, propagateCreateError: true }
         };
 
         if(dbConfig.client.indexOf('sqlite')>-1){

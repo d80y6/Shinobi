@@ -4,7 +4,7 @@ var liveGridElements = {}
 var runningJpegStreams = {}
 var containerElement = $(`#monitors_live`)
 var liveGrid = $('#monitors_live .stream-element-container')
-var websocketPath = checkCorrectPathEnding(urlPrefix) + 'socket.io'
+var websocketPath = '/socket.io'
 //
 var onLiveStreamInitiateExtensions = []
 function onLiveStreamInitiate(callback){
@@ -63,6 +63,15 @@ function resetMonitorCanvas(monitorId,initiateAfter,subStreamChannel){
     streamBlock.append(buildStreamElementHtml(streamType))
     if(initiateAfter)initiateLiveGridPlayer(monitor,subStreamChannel)
 }
+function replaceMonitorInfoInHtml(htmlString,monitor){
+    var monitorMutes = dashboardOptions().monitorMutes || {}
+    return htmlString
+        .replaceAll('$GROUP_KEY',monitor.ke)
+        .replaceAll('$MONITOR_ID',monitor.mid)
+        .replaceAll('$MONITOR_MODE',monitor.mode)
+        .replaceAll('$MONITOR_NAME',monitor.name)
+        .replaceAll('$MONITOR_MUTE_ICON',(monitorMutes[monitor.mid] !== 1 ? 'volume-up' : 'volume-off'));
+}
 function buildLiveGridBlock(monitor){
     if(monitor.mode === 'stop'){
         new PNotify({
@@ -95,7 +104,7 @@ function buildLiveGridBlock(monitor){
         ${streamElement}
         ${(streamBlockInfo.gridBlockAfterContentHtml || '').replace(`$QUICKLINKS`,quickLinkHtml)}
     </div>`
-    return baseHtml
+    return replaceMonitorInfoInHtml(baseHtml,monitor)
 }
 
 function drawLiveGridBlock(monitorConfig,subStreamChannel){
@@ -129,7 +138,7 @@ function unmuteVideoPlayer(){
     },3000)
     $('.unmute-embed-audio').remove()
 }
-function initiateLiveGridPlayer(monitor){
+function initiateLiveGridPlayer(monitor,subStreamChannel){
     var livePlayerElement = loadedLiveGrids[monitor.mid]
     var details = monitor.details
     var groupKey = monitor.ke
@@ -137,7 +146,7 @@ function initiateLiveGridPlayer(monitor){
     var loadedMonitor = loadedMonitors[monitorId]
     var loadedPlayer = loadedLiveGrids[monitor.mid]
     var subStreamChannel = loadedMonitor.subStreamChannel
-    var streamType = details.stream_type === 'useSubstream' ? details.substream.output.stream_type : details.stream_type
+    var streamType = subStreamChannel ? details.substream ? details.substream.output.stream_type : 'hls' : details.stream_type
     switch(streamType){
         case'jpeg':
             startJpegStream(monitorId)
@@ -235,10 +244,31 @@ function initiateLiveGridPlayer(monitor){
                     loadedPlayer.flv.destroy()
                     revokeVideoPlayerUrl(monitorId)
                 }
-                var options = {
-                    type: 'flv',
-                    isLive: true,
-                    url: getApiPrefix(`flv`)+'/'+monitor.mid + (subStreamChannel ? `/${subStreamChannel}` : '')+'/s.flv'
+                var options = {};
+                if (subStreamChannel ? details.substream.output.stream_flv_type === 'ws' : details.stream_flv_type === 'ws') {
+                    var maxLatency = subStreamChannel ?
+                        details.substream.output.stream_flv_maxLatency ? parseInt(details.substream.output.stream_flv_maxLatency) : 20000
+                        : details.stream_flv_maxLatency ? parseInt(details.stream_flv_maxLatency) : 20000;
+                    options = {
+                        type: 'flv',
+                        isLive: true,
+                        auth_token: $user.auth_token,
+                        ke: monitor.ke,
+                        uid: $user.uid,
+                        id: monitor.mid,
+                        maxLatency: maxLatency,
+                        hasAudio:false,
+                        url: location.origin,
+                        path: websocketPath,
+                        channel : subStreamChannel,
+                        query: websocketQuery
+                    }
+                }else{
+                    options = {
+                        type: 'flv',
+                        isLive: true,
+                        url: getApiPrefix(`flv`)+'/'+monitor.mid + (subStreamChannel ? `/${subStreamChannel}` : '')+'/s.flv'
+                    }
                 }
                 loadedPlayer.flv = flvjs.createPlayer(options);
                 loadedPlayer.flv.attachMediaElement(containerElement.find('.stream-element')[0]);
