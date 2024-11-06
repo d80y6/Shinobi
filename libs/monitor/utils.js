@@ -303,7 +303,7 @@ module.exports = (s,config,lang) => {
             const monitorConfig = copyMonitorConfiguration(groupKey,monitorId)
             const monitorDetails = monitorConfig.details
             const activeMonitor = getActiveMonitor(groupKey,monitorId)
-            const channelNumber = 1 + (monitorDetails.stream_channels || []).length
+            const channelNumber = 1 + (s.parseJSON(monitorDetails.stream_channels) || []).length
             const ffmpegCommand = [`-progress pipe:5`];
             const logLevel = monitorDetails.loglevel ? e.details.loglevel : 'warning'
             const stdioPipes = createPipeArray({}, 2)

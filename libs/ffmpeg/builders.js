@@ -504,7 +504,7 @@ module.exports = (s,config,lang) => {
             }
             if(streamChannels){
                 streamChannels.forEach(function(v,n){
-                    streamFlags.push(createStreamChannel(e,n + config.pipeAddition,v))
+                    streamFlags.push(createStreamChannel(e,n + 1 + config.pipeAddition,v))
                 })
             }
         }
