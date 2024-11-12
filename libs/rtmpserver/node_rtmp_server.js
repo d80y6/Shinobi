@@ -24,15 +24,15 @@ class NodeRtmpServer {
 
   run() {
     this.tcpServer.listen(this.port, () => {
-      // Logger.log(`Node Media Rtmp Server started on port: ${this.port}`);
+        console.log(`Node Media Rtmp Server started on port: ${this.port}`);
     });
 
     this.tcpServer.on('error', (e) => {
-      // Logger.error(`Node Media Rtmp Server ${e}`);
+        console.log(`Node Media Rtmp Server ${e}`);
     });
 
     this.tcpServer.on('close', () => {
-      // Logger.log('Node Media Rtmp Server Close.');
+        console.log('Node Media Rtmp Server Close.');
     });
   }
 
