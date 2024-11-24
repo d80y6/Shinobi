@@ -110,7 +110,16 @@ module.exports = (processCwd,config) => {
     function fetchWithAuthentication(requestUrl,options,callback){
         let hasDigestAuthEnabled = options.digestAuth;
         let theRequester;
-        const hasUsernameAndPassword = options.username && typeof options.password === 'string'
+        let username = options.username
+        let password = options.password
+        let hasUsernameAndPassword = username && typeof password === 'string'
+        if (!hasUsernameAndPassword && requestUrl.indexOf('@') !== -1) {
+            const parts = requestUrl.split("//")[1].split("@")
+            const credentials = parts[0].split(":")
+            username = credentials.length > 0 ? credentials[0] : null
+            password = credentials.length > 1 ? credentials[1] : null
+            hasUsernameAndPassword = username && typeof password === 'string'
+        }
         const requestOptions = {
             method : options.method || 'GET',
             headers: {'Content-Type': 'application/json'}
@@ -127,10 +136,9 @@ module.exports = (processCwd,config) => {
                 }
             }
         }
-        if(hasUsernameAndPassword && hasDigestAuthEnabled){
-            theRequester = (new DigestFetch(options.username, options.password)).fetch
-        }else if(hasUsernameAndPassword){
-            theRequester = (new DigestFetch(options.username, options.password, { basic: true })).fetch
+        if(hasUsernameAndPassword){
+            const digestFetch = hasDigestAuthEnabled ? new DigestFetch(username, password) : new DigestFetch(username, password, { basic: true })
+            theRequester = digestFetch.fetch.bind(digestFetch)
         }else{
             theRequester = fetch
         }
