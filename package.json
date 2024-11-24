@@ -21,7 +21,7 @@
     "connection-tester": "^0.2.0",
     "cors": "^2.8.5",
     "cws": "^2.0.0",
-    "digest-fetch": "^1.2.1",
+    "digest-fetch": "^2.0.3",
     "discord.js": "^12.2.0",
     "ejs": "^3.1.9",
     "engine.io": "^6.6.2",
