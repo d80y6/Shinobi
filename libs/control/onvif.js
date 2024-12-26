@@ -9,6 +9,10 @@ module.exports = function(s,config,lang,app,io){
         createSnapshot,
         addCredentialsToStreamLink,
     } = require('../monitor/utils.js')(s,config,lang)
+    const {
+        startPatrolPresets,
+        stopPatrolPresets,
+    } = require('../onvifDeviceManager/utils.js')(s,config,lang)
     const createOnvifDevice = async (onvifAuth) => {
         var response = {ok: false}
         const monitorConfig = s.group[onvifAuth.ke].rawMonitorConfigurations[onvifAuth.id]
@@ -42,6 +46,14 @@ module.exports = function(s,config,lang,app,io){
             }
         })
         return newOptions
+    }
+    const getOnvifDevice = async (groupKey, monitorId) => {
+        const onvifDevice = s.group[groupKey].activeMonitors[monitorId].onvifConnection;
+        if(!onvifDevice){
+            return (await createOnvifDevice(onvifAuth)).device
+        }else{
+            return onvifDevice
+        }
     }
     const runOnvifMethod = (onvifOptions,callback) => {
         return new Promise((resolve) => {
@@ -179,6 +191,52 @@ module.exports = function(s,config,lang,app,io){
             },(endData) => {
                 s.closeJsonResponse(res,endData)
             })
+        },res,req);
+    })
+    /**
+    * API : ONVIF Start Patrol
+     */
+    app.post(config.webPaths.apiPrefix+':auth/onvifStartPatrol/:ke/:id',function (req,res){
+        s.auth(req.params, async function(user){
+            const endData = { ok: true }
+            try{
+                const groupKey = req.params.ke;
+                const monitorId = req.params.id;
+                const onvifEnabled = s.group[groupKey].rawMonitorConfigurations[monitorId].details.is_onvif === '1';
+                if(onvifEnabled){
+                    const patrolId = `${groupKey}_${monitorId}`;
+                    const onvifDevice = await getOnvifDevice(groupKey, monitorId);
+                    const startingPresetToken = s.getPostData(req,'startingPresetToken');
+                    const patrolIndexTimeout = s.getPostData(req,'patrolIndexTimeout');
+                    const speed = s.getPostData(req,'speed');
+                    await startPatrolPresets(patrolId, onvifDevice, startingPresetToken, patrolIndexTimeout, speed)
+                }else{
+                    endData.ok = false;
+                    endData.err = lang.ONVIFNotEnabled;
+                }
+            }catch(err){
+                endData.ok = false;
+                endData.err = err.toString()
+            }
+            s.closeJsonResponse(res,endData)
+        },res,req);
+    })
+    /**
+    * API : ONVIF Stop Patrol
+     */
+    app.get(config.webPaths.apiPrefix+':auth/onvifStopPatrol/:ke/:id',function (req,res){
+        s.auth(req.params, async function(user){
+            const endData = { ok: true }
+            try{
+                const groupKey = req.params.ke;
+                const monitorId = req.params.id;
+                const patrolId = `${groupKey}_${monitorId}`;
+                await stopPatrolPresets(patrolId)
+            }catch(err){
+                endData.ok = false;
+                endData.err = err.toString()
+            }
+            s.closeJsonResponse(res,endData)
         },res,req);
     })
     s.getSnapshotFromOnvif = getSnapshotFromOnvif
