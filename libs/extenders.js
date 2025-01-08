@@ -1,6 +1,7 @@
 module.exports = function(s,config){
     s.cloudDiskUseStartupExtensions = {}
     s.cloudDiskUseOnGetVideoDataExtensions = {}
+    s.availableExtensions = []
     function createExtension(nameOfExtension,nameOfExtensionContainer,objective){
         nameOfExtensionContainer = nameOfExtensionContainer || `${nameOfExtension}Extensions`
         if(objective){
@@ -14,6 +15,10 @@ module.exports = function(s,config){
                 s[nameOfExtensionContainer].push(callback)
             }
         }
+        s.availableExtensions.push({
+            name: nameOfExtension,
+            container: nameOfExtensionContainer,
+        })
     }
     s.runExtensionsForArray = (nameOfExtension, nameOfExtensionContainer, args) => {
         nameOfExtensionContainer = nameOfExtensionContainer || `${nameOfExtension}Extensions`
