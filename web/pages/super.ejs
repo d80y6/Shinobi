@@ -92,6 +92,9 @@
                             <li class="nav-item">
                                 <a class="nav-link" data-bs-toggle="tab" data-bs-target="#superMountManager" role="tab"><%-lang['Mount Manager']%></a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="tab" data-bs-target="#centralManagement" role="tab"><%-lang['Central Management']%></a>
+                            </li>
                             <% customAutoLoad.superPageTabs.forEach(function(block){ %>
                                 <li class="nav-item">
                                     <a class="nav-link" data-bs-toggle="tab" data-bs-target="#<%- block.target %>" role="tab"><%- block.label %></a>
@@ -136,6 +139,7 @@
                                 <div class="tab-pane text-left" id="superMountManager" role="tabpanel">
                                     <%- include('blocks/superMountManager'); %>
                                 </div>
+                                <%- include('blocks/superCentralManagement'); %>
                                 <% customAutoLoad.superPageBlocks.forEach(function(block){ %>
                                     <%- include(block) %>
                                 <% }) %>

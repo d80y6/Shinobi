@@ -95,6 +95,8 @@ require('./libs/ffmpeg.js')(s,config,lang, async () => {
     require('./libs/mountManager.js')(s,config,lang,app,io)
     //on-start actions, daemon(s) starter
     await require('./libs/startup.js')(s,config,lang)
+    // management server connect
+    require('./libs/connectToManagementServer/index.js')(s,config,lang,app)
     //p2p, commander
     require('./libs/commander.js')(s,config,lang,app)
     //cron

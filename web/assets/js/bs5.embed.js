@@ -189,45 +189,43 @@ function initiateLiveGridPlayer(monitor){
             })
         break;
         case'mp4':
-            setTimeout(function(){
-                var stream = containerElement.find('.stream-element');
-                var onPoseidonError = function(){
-                    // setTimeout(function(){
-                    //     mainSocket.f({f:'monitor',ff:'watch_on',id:monitorId})
-                    // },2000)
+            var stream = containerElement.find('.stream-element');
+            var onPoseidonError = function(){
+                // setTimeout(function(){
+                //     mainSocket.f({f:'monitor',ff:'watch_on',id:monitorId})
+                // },2000)
+            }
+            if(!loadedPlayer.PoseidonErrorCount)loadedPlayer.PoseidonErrorCount = 0
+            if(loadedPlayer.PoseidonErrorCount >= 5)return
+            if(subStreamChannel ? details.substream.output.stream_flv_type === 'ws' : monitor.details.stream_flv_type === 'ws'){
+                if(loadedPlayer.Poseidon){
+                    loadedPlayer.Poseidon.stop()
+                    revokeVideoPlayerUrl(monitorId)
                 }
-                if(!loadedPlayer.PoseidonErrorCount)loadedPlayer.PoseidonErrorCount = 0
-                if(loadedPlayer.PoseidonErrorCount >= 5)return
-                if(subStreamChannel ? details.substream.output.stream_flv_type === 'ws' : monitor.details.stream_flv_type === 'ws'){
-                    if(loadedPlayer.Poseidon){
-                        loadedPlayer.Poseidon.stop()
-                        revokeVideoPlayerUrl(monitorId)
-                    }
-                    try{
-                        loadedPlayer.Poseidon = new Poseidon({
-                            video: stream[0],
-                            auth_token: $user.auth_token,
-                            ke: monitor.ke,
-                            uid: $user.uid,
-                            id: monitor.mid,
-                            url: location.origin,
-                            path: websocketPath,
-                            query: websocketQuery,
-                            onError : onPoseidonError,
-                            channel : subStreamChannel
-                        })
-                        loadedPlayer.Poseidon.start();
-                    }catch(err){
-                        // onPoseidonError()
-                        console.log('onTryPoseidonError',err)
-                    }
-                }else{
-                    stream.attr('src',getApiPrefix(`mp4`)+'/'+monitor.mid + (subStreamChannel ? `/${subStreamChannel}` : '')+'/s.mp4?time=' + (new Date()).getTime())
-                    stream[0].onerror = function(err){
-                        console.error(err)
-                    }
+                try{
+                    loadedPlayer.Poseidon = new Poseidon({
+                        video: stream[0],
+                        auth_token: $user.auth_token,
+                        ke: monitor.ke,
+                        uid: $user.uid,
+                        id: monitor.mid,
+                        url: location.origin,
+                        path: websocketPath,
+                        query: websocketQuery,
+                        onError : onPoseidonError,
+                        channel : subStreamChannel
+                    })
+                    loadedPlayer.Poseidon.start();
+                }catch(err){
+                    // onPoseidonError()
+                    console.log('onTryPoseidonError',err)
                 }
-            },1000)
+            }else{
+                stream.attr('src',getApiPrefix(`mp4`)+'/'+monitor.mid + (subStreamChannel ? `/${subStreamChannel}` : '')+'/s.mp4?time=' + (new Date()).getTime())
+                stream[0].onerror = function(err){
+                    console.error(err)
+                }
+            }
         break;
         case'flv':
             if (flvjs.isSupported()) {

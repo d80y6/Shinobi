@@ -4,6 +4,9 @@ var moment = require('moment')
 var exec = require('child_process').exec;
 var spawn = require('child_process').spawn;
 var execSync = require('child_process').execSync;
+const {
+    mergeDeep
+} = require('./common.js')
 module.exports = function(s,config,lang,app){
     const {
         deleteMonitor,
@@ -334,10 +337,12 @@ module.exports = function(s,config,lang,app){
                        return
                     }
                     form.mid = req.params.id.replace(/[^\w\s]/gi,'').replace(/ /g,'')
+                    const alreadyExisting = s.group[groupKey].rawMonitorConfigurations[monitorId];
                     if(form && form.name){
                         s.checkDetails(form)
-                        form.ke = req.params.ke
-                        endData = await s.addOrEditMonitor(form,null,user)
+                        const postForm = mergeDeep({}, alreadyExisting || {}, form);
+                        form.ke = groupKey;
+                        endData = await s.addOrEditMonitor(postForm,null,user)
                     }else{
                         endData.msg = user.lang.monitorEditText1;
                     }

@@ -29,7 +29,7 @@ module.exports = function(s,config,lang,app,io){
                 if(data.indexOf('not a git repository') === -1){
                     s.currentVersion = data.trim()
                     isGitRespository = true
-                    s.systemLog(`Current Version : ${s.currentVersion}`)
+                    s.systemLog(`Current Version`, s.currentVersion)
                 }
             }else if(err){
                 s.debugLog('Git is not installed.')

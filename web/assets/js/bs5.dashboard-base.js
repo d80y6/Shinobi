@@ -1124,3 +1124,45 @@ function getQueryString(){
     })
     return theObject
 }
+function getChangedObjectValues(obj1, obj2) {
+    if (Object.keys(obj1).length === 0) {
+        return obj2;
+    }
+
+    const changes = {};
+
+    function compare(obj1, obj2, changes) {
+        for (const key in obj1) {
+            if (obj1.hasOwnProperty(key)) {
+                if (Array.isArray(obj1[key]) && Array.isArray(obj2[key])) {
+                    if (!arraysEqual(obj1[key], obj2[key])) {
+                        changes[key] = obj2[key];
+                    }
+                } else if (typeof obj1[key] === 'object' && obj1[key] !== null) {
+                    if (typeof obj2[key] === 'object' && obj2[key] !== null) {
+                        const nestedChanges = {};
+                        compare(obj1[key], obj2[key], nestedChanges);
+                        if (Object.keys(nestedChanges).length > 0) {
+                            changes[key] = nestedChanges;
+                        }
+                    } else {
+                        changes[key] = obj2[key];
+                    }
+                } else if (obj1[key] !== obj2[key]) {
+                    changes[key] = obj2[key];
+                }
+            }
+        }
+    }
+
+    function arraysEqual(arr1, arr2) {
+        if (arr1.length !== arr2.length) return false;
+        for (let i = 0; i < arr1.length; i++) {
+            if (arr1[i] !== arr2[i]) return false;
+        }
+        return true;
+    }
+
+    compare(obj1, obj2, changes);
+    return changes;
+}

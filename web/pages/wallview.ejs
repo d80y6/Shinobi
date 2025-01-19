@@ -19,10 +19,7 @@
     var hasGUI = getAddon('gui')
     var isFullscreen = getAddon('fullscreen')
     var isRelativeUrl = getAddon('relative')
-    var hasHost = getAddon('host')
-    if(hasHost){
-        urlPrefix = decodeURI(hasHost)
-    }else if(forceUrlPrefix){
+    if(forceUrlPrefix){
         urlPrefix = forceUrlPrefix
     }else if(isRelativeUrl){
         urlPrefix = ''
@@ -84,10 +81,8 @@
     </div>
     <div id="wallview-monitorList" class="d-none p-2"></div>
 </div>
-<script src="<%- urlPrefix %>assets/js/bs5.embed.utils.js"></script>
-<script src="<%- urlPrefix %>assets/vendor/js/poseidon.js"></script>
-<script src="<%- urlPrefix %>assets/vendor/js/hls.min.js"></script>
 <!-- <script src="<%- urlPrefix %>assets/js/bs5.embed.utils.js"></script> -->
+<script src="<%- urlPrefix %>assets/js/bs5.embed.utils.js"></script>
 <script src="<%- urlPrefix %>assets/vendor/bootstrap5/js/bootstrap.bundle.min.js"></script>
 <script src="<%- urlPrefix %>assets/vendor/js/pnotify.custom.min.js"></script>
 <script src="<%- urlPrefix %>assets/vendor/js/jquery-ui.min.js"></script>

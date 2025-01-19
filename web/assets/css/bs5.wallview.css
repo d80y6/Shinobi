@@ -54,13 +54,11 @@
     height: 100%;
     width: 100%;
     border: 0;
-    z-index: 1;
 }
-#wallview-canvas .wallview-video .stream-element {
+#wallview-canvas .wallview-video iframe {
     height: 100%;
     width: 100%;
     border: 0;
-    object-fit: fill;
 }
 
 #wallview-canvas .wallview-video.col-md-4 {

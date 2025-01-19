@@ -8,10 +8,40 @@ var wallViewInfoScreen = $('#wallview-info-screen')
 var theWindow = $(window);
 var lastWindowWidth = theWindow.width()
 var lastWindowHeight = theWindow.height()
-var loadedLiveGrids = {}
-var liveGridElements = {}
-var liveGridPlayingNow = {}
 var websocketPath = checkCorrectPathEnding(urlPrefix.replace(location.origin, '')) + 'socket.io'
+function checkCorrectPathEnding(x){
+    var length=x.length
+    if(x.charAt(length-1)!=='/'){
+        x=x+'/'
+    }
+    return x
+}
+function dashboardOptions(r,rr,rrr){
+    if(!rrr){rrr={};};if(typeof rrr === 'string'){rrr={n:rrr}};if(!rrr.n){rrr.n='ShinobiOptions_'+location.host+'_'+$user.ke+$user.uid}
+    ii={o:localStorage.getItem(rrr.n)};try{ii.o=JSON.parse(ii.o)}catch(e){ii.o={}}
+    if(!ii.o){ii.o={}}
+    if(r&&rr&&!rrr.x){
+        ii.o[r]=rr;
+    }
+    switch(rrr.x){
+        case 0:
+            delete(ii.o[r])
+        break;
+        case 1:
+            delete(ii.o[r][rr])
+        break;
+    }
+    localStorage.setItem(rrr.n,JSON.stringify(ii.o))
+    return ii.o
+}
+function getQueryString(){
+    var theObject = {}
+    location.search.substring(1).split('&').forEach(function(string){
+        var parts = string.split('=')
+        theObject[parts[0]] = parts[1]
+    })
+    return theObject
+}
 function featureIsActivated(showNotice){
     if(userHasSubscribed){
         return true
@@ -82,415 +112,24 @@ function drawMonitorList(){
         })
     })
 }
+
 function getMonitorListItem(monitorId){
     return wallViewMonitorList.find(`[select-monitor="${monitorId}"]`)
 }
-function buildStreamElementHtml(streamType){
-    var html = ''
-    switch(streamType){
-        case'hls':case'flv':case'mp4':
-            html = `<video class="stream-element" playsinline autoplay muted></video>`;
-        break;
-        case'mjpeg':
-            html = '<iframe class="stream-element"></iframe>';
-        break;
-        case'jpeg':
-            html = '<img class="stream-element">';
-        break;
-        default://base64//h265
-            html = '<canvas class="stream-element"></canvas>';
-        break;
-    }
-    return html
-}
-function attachVideoElementErrorHandler(monitorId){
-    try{
-        var monitor = loadedMonitors[monitorId]
-        var monitorDetails = monitor.details
-        var subStreamChannel = monitor.subStreamChannel
-        var streamType = subStreamChannel ? monitorDetails.substream ? monitorDetails.substream.output.stream_type : 'hls' : monitorDetails.stream_type
-        if(
-            streamType === 'flv' ||
-            streamType === 'hls'
-        ){
-            var streamBlock = liveGridElements[monitorId].streamElement
-            streamBlock[0].onerror = function(){
-                // setTimeout(function(){
-                //     mainSocket.f({f:'monitor',ff:'watch_on',id:monitorId})
-                // },2000)
-            }
-        }
-    }catch(err){
-        console.error(`Failed to Set Error Handler for Video Element`,err)
-    }
-}
-function initiateLiveGridPlayer(monitor,subStreamChannel){
-    var monitorId = monitor.mid
-    var details = monitor.details
-    var groupKey = monitor.ke
-    var monitorId = monitor.mid
-    var livePlayerBlocks = liveGridElements[monitorId]
-    var monitorItem = livePlayerBlocks.monitorItem
-    var loadedMonitor = loadedMonitors[monitorId]
-    var loadedPlayer = loadedLiveGrids[monitorId]
-    var containerElement = $(`#monitor_live_${monitor.mid}`)
-    console.log(`#monitor_live_${monitor.mid}`, containerElement)
-    var streamType = subStreamChannel ? details.substream ? details.substream.output.stream_type : 'hls' : details.stream_type
-    liveGridPlayingNow[monitorId] = true
-    switch(streamType){
-        case'jpeg':
-            startJpegStream(monitorId)
-        break;
-        case'b64':
-            if(loadedPlayer.Base64 && loadedPlayer.Base64.connected){
-                loadedPlayer.Base64.disconnect()
-            }
-            loadedPlayer.Base64 = io(location.origin,{ path: websocketPath, query: websocketQuery, transports: ['websocket'], forceNew: false})
-            var ws = loadedPlayer.Base64
-            var buffer
-            ws.on('diconnect',function(){
-                console.log('Base64 Stream Disconnected')
-            })
-            ws.on('connect',function(){
-                ws.emit('Base64',{
-                    auth: $user.auth_token,
-                    uid: $user.uid,
-                    ke: monitor.ke,
-                    id: monitor.mid,
-                    channel: subStreamChannel
-                })
-                if(!loadedPlayer.ctx || loadedPlayer.ctx.length === 0){
-                    loadedPlayer.ctx = containerElement.find('canvas');
-                }
-                var ctx = loadedPlayer.ctx[0]
-                var ctx2d = ctx.getContext("2d")
-                loadedPlayer.image = new Image()
-                var image = loadedPlayer.image
-                image.onload = function() {
-                    loadedPlayer.imageLoading = false
-                    var x = 0
-                    var y = 0
-                    ctx.getContext("2d").drawImage(image,x,y,ctx.width,ctx.height)
-                    URL.revokeObjectURL(loadedPlayer.imageUrl)
-                }
-                ws.on('data',function(imageData){
-                    try{
-                        if(loadedPlayer.imageLoading === true)return console.log('drop');
-                        loadedPlayer.imageLoading = true
-                        var arrayBufferView = new Uint8Array(imageData);
-                        var blob = new Blob( [ arrayBufferView ], { type: "image/jpeg" } );
-                        loadedPlayer.imageUrl = URL.createObjectURL( blob );
-                        loadedPlayer.image.src = loadedPlayer.imageUrl
-                        loadedPlayer.last_frame = 'data:image/jpeg;base64,'+base64ArrayBuffer(imageData)
-                    }catch(er){
-                        debugLog('base64 frame')
-                    }
-                    // $.ccio.init('signal',d);
-                })
-            })
-        break;
-        case'mp4':
-            var stream = containerElement.find('.stream-element');
-            var onPoseidonError = function(){
-                // setTimeout(function(){
-                //     mainSocket.f({f:'monitor',ff:'watch_on',id:monitorId})
-                // },2000)
-            }
-            if(!loadedPlayer.PoseidonErrorCount)loadedPlayer.PoseidonErrorCount = 0
-            if(loadedPlayer.PoseidonErrorCount >= 5)return
-            if(subStreamChannel ? details.substream.output.stream_flv_type === 'ws' : monitor.details.stream_flv_type === 'ws'){
-                if(loadedPlayer.Poseidon){
-                    loadedPlayer.Poseidon.stop()
-                    revokeVideoPlayerUrl(monitorId)
-                }
-                try{
-                    loadedPlayer.Poseidon = new Poseidon({
-                        video: stream[0],
-                        auth_token: $user.auth_token,
-                        ke: monitor.ke,
-                        uid: $user.uid,
-                        id: monitor.mid,
-                        url: location.origin,
-                        path: websocketPath,
-                        query: websocketQuery,
-                        onError : onPoseidonError,
-                        channel : subStreamChannel
-                    })
-                    loadedPlayer.Poseidon.start();
-                    console.log('started',stream[0], {
-                        video: stream[0],
-                        auth_token: $user.auth_token,
-                        ke: monitor.ke,
-                        uid: $user.uid,
-                        id: monitor.mid,
-                        url: location.origin,
-                        path: websocketPath,
-                        query: websocketQuery,
-                        onError : onPoseidonError,
-                        channel : subStreamChannel
-                    })
-                }catch(err){
-                    // onPoseidonError()
-                    console.log('onTryPoseidonError',err)
-                }
-            }else{
-                stream.attr('src',getApiPrefix(`mp4`)+'/'+monitor.mid + (subStreamChannel ? `/${subStreamChannel}` : '')+'/s.mp4?time=' + (new Date()).getTime())
-                stream[0].onerror = function(err){
-                    console.error(err)
-                }
-            }
-        break;
-        case'flv':
-            if (flvjs.isSupported()) {
-                if(loadedPlayer.flv){
-                    loadedPlayer.flv.destroy()
-                    revokeVideoPlayerUrl(monitorId)
-                }
-                var options = {};
-                if(monitor.details.stream_flv_type==='ws'){
-                    if(monitor.details.stream_flv_maxLatency&&monitor.details.stream_flv_maxLatency!==''){
-                        monitor.details.stream_flv_maxLatency = parseInt(monitor.details.stream_flv_maxLatency)
-                    }else{
-                        monitor.details.stream_flv_maxLatency = 20000;
-                    }
-                    options = {
-                        type: 'flv',
-                        isLive: true,
-                        auth_token: $user.auth_token,
-                        ke: monitor.ke,
-                        uid: $user.uid,
-                        id: monitor.mid,
-                        maxLatency: monitor.details.stream_flv_maxLatency,
-                        hasAudio:false,
-                        url: location.origin,
-                        path: websocketPath,
-                        channel : subStreamChannel,
-                        query: websocketQuery
-                    }
-                }else{
-                    options = {
-                        type: 'flv',
-                        isLive: true,
-                        url: getApiPrefix(`flv`)+'/'+monitor.mid + (subStreamChannel ? `/${subStreamChannel}` : '')+'/s.flv'
-                    }
-                }
-                loadedPlayer.flv = flvjs.createPlayer(options);
-                loadedPlayer.flv.attachMediaElement(containerElement.find('.stream-element')[0]);
-                loadedPlayer.flv.on('error',function(err){
-                    console.log(err)
-                });
-                loadedPlayer.flv.load();
-                loadedPlayer.flv.play();
-            }else{
-                new PNotify({title:'Stream cannot be started',text:'FLV.js is not supported on this browser. Try another stream type.',type:'error'});
-            }
-        break;
-        case'hls':
-            function createSteamNow(){
-                clearTimeout(loadedPlayer.m3uCheck)
-                var url = getApiPrefix(`hls`) + '/' + monitor.mid + (subStreamChannel ? `/${subStreamChannel}` : '') + '/s.m3u8'
-                $.get(url,function(m3u){
-                    if(m3u == 'File Not Found'){
-                        loadedPlayer.m3uCheck = setTimeout(function(){
-                            createSteamNow()
-                        },2000)
-                    }else{
-                        var video = containerElement.find('.stream-element')[0]
-                        if (isAppleDevice) {
-                            video.src = url;
-                            video.addEventListener('loadedmetadata', function() {
-                              setTimeout(function(){
-                                video.play();
-                              },3000)
-                            }, false);
-                        }else{
-                            var hlsOptions = safeJsonParse(dashboardOptions().hlsOptions) || {}
-                            if(hlsOptions instanceof String){
-                                hlsOptions = {}
-                                new PNotify({
-                                    title: lang['Invalid JSON'],
-                                    text: lang.hlsOptionsInvalid,
-                                    type: `warning`,
-                                })
-                            }
-                            if(loadedPlayer.hls){
-                                loadedPlayer.hls.destroy()
-                                revokeVideoPlayerUrl(monitorId)
-                            }
-                            loadedPlayer.hls = new Hls(hlsOptions)
-                            loadedPlayer.hls.loadSource(url)
-                            loadedPlayer.hls.attachMedia(video)
-                            loadedPlayer.hls.on(Hls.Events.MANIFEST_PARSED,function() {
-                                if (video.paused) {
-                                    video.play();
-                                }
-                            });
-                        }
-                    }
-                })
-            }
-            createSteamNow()
-        break;
-        case'mjpeg':
-            var liveStreamElement = containerElement.find('.stream-element')
-            var setSource = function(){
-                liveStreamElement.attr('src',getApiPrefix(`mjpeg`)+'/'+monitorId + (subStreamChannel ? `/${subStreamChannel}` : ''))
-                liveStreamElement.unbind('ready')
-                liveStreamElement.ready(function(){
-                    setTimeout(function(){
-                        liveStreamElement.contents().find("body").append('<style>img{width:100%;height:100%}</style>')
-                    },1000)
-                })
-            }
-            setSource()
-            liveStreamElement.on('error',function(err){
-                setTimeout(function(){
-                    setSource()
-                },4000)
-            })
-        break;
-    }
-    // var monitorMutes = dashboardOptions().monitorMutes || {}
-    // if(dashboardOptions().switches.monitorMuteAudio === 1){
-    //     containerElement.find('video').each(function(n,el){
-    //         el.muted = "muted"
-    //     })
-    // }else{
-    //     var hasFocus = windowFocus && window.hadFocus
-    //     $.each(loadedMonitors,function(frontId,monitor){
-    //         setTimeout(() => {
-    //             var monitorId = monitor.mid
-    //             var muted = monitorMutes[monitorId]
-    //             try{
-    //                 var vidEl = $('.monitor_item[mid="' + monitorId + '"] video')[0]
-    //                 if(vidEl.length === 0)return;
-    //                 if(muted === 1){
-    //                     vidEl.muted = true
-    //                 }else{
-    //                     if(hasFocus){
-    //                         vidEl.muted = false
-    //                     }else{
-    //                         console.error('User must have window active to unmute.')
-    //                     }
-    //                 }
-    //             }catch(err){
-    //                 // console.log(err)
-    //             }
-    //         },2000)
-    //     })
-    // }
-    //initiate signal check
-    if(streamType !== 'useSubstream'){
-        // var signalCheckInterval = (isNaN(loadedMonitor.details.signal_check) ? 10 : parseFloat(loadedMonitor.details.signal_check)) * 1000 * 60
-        // if(signalCheckInterval > 0){
-        //     clearInterval(loadedPlayer.signal)
-        //     loadedPlayer.signal = setInterval(function(){
-        //         signalCheckLiveStream({
-        //             mid: monitorId,
-        //             checkSpeed: 3000,
-        //         })
-        //     },signalCheckInterval);
-        // }
-    }
-}
-function closeLiveGridPlayer(monitorId,killElement){
-    try{
-        var loadedPlayer = loadedLiveGrids[monitorId]
-        if(loadedPlayer){
-            if(loadedPlayer.hls){loadedPlayer.hls.destroy()}
-            clearTimeout(loadedPlayer.m3uCheck)
-            if(loadedPlayer.Poseidon){loadedPlayer.Poseidon.stop()}
-            if(loadedPlayer.Base64){loadedPlayer.Base64.disconnect()}
-            if(loadedPlayer.dash){loadedPlayer.dash.reset()}
-            if(loadedPlayer.jpegInterval){
-                stopJpegStream(monitorId)
-            }
-            clearInterval(loadedPlayer.signal)
-        }
-        if(liveGridElements[monitorId]){
-            revokeVideoPlayerUrl(monitorId)
-            if(killElement){
-                var livePlayerElement = liveGridElements[monitorId]
-                delete(loadedLiveGrids[monitorId])
-                delete(liveGridElements[monitorId])
-            }
-        }
-    }catch(err){
-        console.log(err)
-    }
-}
-function revokeVideoPlayerUrl(monitorId){
-    try{
-        URL.revokeObjectURL(liveGridElements[monitorId].streamElement[0].src)
-    }catch(err){
-        // console.log(err)
-    }
-}
-function startJpegStream(monitorId){
-    if(loadedLiveGrids[monitorId]){
-        var monitor = loadedMonitors[monitorId]
-        var loadedBlock = loadedLiveGrids[monitorId]
-        var jpegInterval = !isNaN(monitor.details.jpegInterval) ? parseFloat(monitor.details.jpegInterval) : 1
-        resetMonitorCanvas(monitorId,false)
-        var streamElement = $('#monitor_live_' + monitorId + ' .stream-element');
-        // stopJpegStream(monitorId)
-        var jpegUrl = getApiPrefix('jpeg') + '/' + monitorId + '/s.jpg?time='
-        function drawNewFrame(){
-            streamElement.attr('src',jpegUrl + (new Date()).getTime())
-        }
-        streamElement.on('load',function(){
-            loadedBlock.jpegInterval = setTimeout(drawNewFrame,1000/jpegInterval)
-        }).on('error',function(){
-            loadedBlock.jpegInterval = setTimeout(drawNewFrame,1000/jpegInterval)
-        })
-        drawNewFrame()
-    }
-}
-function stopJpegStream(monitorId){
-    var livePlayerElement = loadedLiveGrids[monitorId]
-    if(!livePlayerElement)return;
-    try{
-        liveGridElements[monitorId].streamElement.off('load').off('error')
-        clearTimeout(livePlayerElement.jpegInterval)
-    }catch(err){
-        console.log(err)
-        console.log(monitorId)
-    }
-}
-function cacheMonitorElements(monitorId){
-    var theBlock = $('#monitor_live_' + monitorId);
-    var streamElement = theBlock.find('.stream-element')
-    liveGridElements[monitorId] = {
-        monitorItem: theBlock,
-        streamElement: streamElement,
-        eventObjects: theBlock.find('.stream-objects'),
-        motionMeter: theBlock.find('.indifference .progress-bar'),
-        motionMeterText: theBlock.find('.indifference .progress-bar span'),
-        width: streamElement.width(),
-        height: streamElement.height(),
-        miniVideoList: theBlock.find('.videos-mini'),
-    }
-    return theBlock
-}
+
 function selectMonitor(monitorId, css){
     css = css || {};
-    var loadedMonitor = loadedMonitors[monitorId];
-    var details = loadedMonitor.details;
-    var subStreamChannel = loadedMonitor.subStreamChannel;
+    var embedHost = getQueryString().host || `/`;
     var isSelected = selectedMonitors[monitorId]
-    var streamType = subStreamChannel ? details.substream ? details.substream.output.stream_type : 'hls' : details.stream_type
     if(isSelected)return;
     var numberOfSelected = Object.keys(selectedMonitors)
     if(numberOfSelected > 3 && !featureIsActivated(true)){
         return
     }
-    if(!loadedLiveGrids[monitorId])loadedLiveGrids[monitorId] = {}
-    selectedMonitors[monitorId] = Object.assign({}, loadedMonitor);
-    wallViewCanvas.append(`<div id="monitor_live_${monitorId}" class="wallview-video p-0 m-0" live-stream="${monitorId}" style="left:${css.left || 0}px;top:${css.top || 0}px;width:${css.width ? css.width + 'px' : '50vw'};height:${css.height ? css.height + 'px' : '50vh'};"><div class="overlay"><div class="wallview-item-controls text-end"><a class="btn btn-sm btn-outline-danger wallview-item-close"><i class="fa fa-times"></i></a></div></div>
-        ${buildStreamElementHtml(streamType)}
-    </div>`);
-    const newElement = cacheMonitorElements(monitorId);
-    newElement.draggable({
+    selectedMonitors[monitorId] = Object.assign({}, loadedMonitors[monitorId]);
+    wallViewCanvas.append(`<div class="wallview-video p-0 m-0" live-stream="${monitorId}" style="left:${css.left || 0}px;top:${css.top || 0}px;width:${css.width ? css.width + 'px' : '50vw'};height:${css.height ? css.height + 'px' : '50vh'};"><div class="overlay"><div class="wallview-item-controls text-end"><a class="btn btn-sm btn-outline-danger wallview-item-close"><i class="fa fa-times"></i></a></div></div><iframe src="${getApiPrefix('embed')}/${monitorId}/fullscreen%7Cjquery%7Crelative?host=${embedHost}"></iframe></div>`)
+    wallViewCanvas.find(`[live-stream="${monitorId}"]`)
+    .draggable({
         grid: [40, 40],
         snap: '#wallview-canvas',
         containment: "window",
@@ -505,14 +144,12 @@ function selectMonitor(monitorId, css){
             saveLayout()
         }
     });
-    initiateLiveGridPlayer(loadedMonitor, subStreamChannel)
-    attachVideoElementErrorHandler(monitorId)
     getMonitorListItem(monitorId).removeClass('btn-primary').addClass('btn-warning')
 }
 function deselectMonitor(monitorId){
     delete(selectedMonitors[monitorId])
-    closeLiveGridPlayer(monitorId, true)
     var monitorItem = wallViewCanvas.find(`[live-stream="${monitorId}"]`);
+    monitorItem.find('iframe').attr('src','about:blank')
     monitorItem.remove()
     getMonitorListItem(monitorId).removeClass('btn-warning').addClass('btn-primary')
 }

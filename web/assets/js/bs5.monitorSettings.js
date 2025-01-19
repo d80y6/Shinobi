@@ -817,34 +817,39 @@ editorForm.submit(function(e){
     var validation = getMonitorEditFormFields()
     if(!validation.ok){
         var errorsFound = validation.errors
-        $.sM.e.find('.msg').html(errorsFound.join('<br>'));
         new PNotify({title:'Configuration Invalid',text:errorsFound.join('<br>'),type:'error'});
+        return;
     }
     var monitorConfig = validation.monitorConfig
-    setSubmitButton(editorForm, lang[`Please Wait...`], `spinner fa-pulse`, true)
-    $.post(getApiPrefix()+'/configureMonitor/'+$user.ke+'/'+monitorConfig.mid,{data:JSON.stringify(monitorConfig)},function(d){
-        if(d.ok === false){
+    monitorConfig.ke = $user.ke;
+    var alreadyExisting = getDbColumnsForMonitor(loadedMonitors[monitorConfig.mid] || {});
+    var postFormVals = getChangedObjectValues(alreadyExisting, monitorConfig);
+    postFormVals.name = monitorConfig.name || alreadyExisting.name;
+    if(Object.keys(postFormVals).length > 0){
+        setSubmitButton(editorForm, lang[`Please Wait...`], `spinner fa-pulse`, true)
+        $.post(getApiPrefix()+'/configureMonitor/'+$user.ke+'/'+monitorConfig.mid,{data:JSON.stringify(postFormVals)},function(d){
+            if(d.ok === false){
+                new PNotify({
+                    title: lang['Action Failed'],
+                    text: d.msg,
+                    type: 'danger'
+                })
+            }
+            debugLog(d)
+            setSubmitButton(editorForm, lang.Save, `check`, false)
+        }).fail((err) => {
             new PNotify({
                 title: lang['Action Failed'],
-                text: d.msg,
+                text: JSON.stringify(err, null, 3),
                 type: 'danger'
             })
-        }
-        debugLog(d)
-        setSubmitButton(editorForm, lang.Save, `check`, false)
-    }).fail((err) => {
-        new PNotify({
-            title: lang['Action Failed'],
-            text: JSON.stringify(err, null, 3),
-            type: 'danger'
+            setSubmitButton(editorForm, lang.Save, `check`, false)
         })
-        setSubmitButton(editorForm, lang.Save, `check`, false)
-    })
-    //
-    if(copySettingsSelector.val() === '1'){
-        copyMonitorSettingsToSelected(monitorConfig)
+        //
+        if(copySettingsSelector.val() === '1'){
+            copyMonitorSettingsToSelected(monitorConfig)
+        }
     }
-    monitorEditorWindow.modal('hide')
     return false;
 });
 //////////////////
