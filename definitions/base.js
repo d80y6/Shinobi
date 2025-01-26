@@ -4847,6 +4847,15 @@ module.exports = function(s,config,lang){
                       "possible": ""
                    },
                    {
+                      "attribute": `size-adjust='[detail="size"]'`,
+                      "field": lang["Max Storage Amount"],
+                      "description": lang["fieldTextSize"],
+                      "default": "10 GB",
+                      "notForSubAccount": true,
+                      "evaluation": "details.edit_size !== '0'"
+                   },
+                   {
+                       hidden: true,
                       "name": "detail=size",
                       "field": lang["Max Storage Amount"],
                       "description": lang["fieldTextSize"],

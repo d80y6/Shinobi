@@ -494,14 +494,17 @@ module.exports = function(s,config,lang){
          },
          {
              "hidden": true,
-            "name": "detail=whcs_size_limit",
-            "field": lang['Max Storage Amount'],
+            "attribute": `size-adjust='[detail="whcs_size_limit"]'`,
+            "field": lang["Max Storage Amount"],
             "form-group-class":"autosave_whcs_input autosave_whcs_1",
             "form-group-class-pre-layer":"h_whcssld_input h_whcssld_1",
-            "description": "",
+            "default": "10 GB",
+         },
+         {
+             "hidden": true,
+            "name": "detail=whcs_size_limit",
+            "field": lang['Max Storage Amount'],
             "default": "10000",
-            "example": "",
-            "possible": ""
          },
          {
              "hidden": true,

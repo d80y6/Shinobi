@@ -15,6 +15,10 @@ $(document).ready(function(){
                 <div addStorageFields="${storage.path}">
                     <div class="form-group">
                         <div class="mb-2"><span>${lang['Max Storage Amount']} : ${storage.name}</span></div>
+                        <div><input class="form-control" placeholder="10 GB" size-adjust='[addStorageFields="${storage.path}"] [addStorageItem="limit"]'></div>
+                    </div>
+                    <div class="form-group d-none">
+                        <div class="mb-2"><span>${lang['Max Storage Amount']} : ${storage.name}</span></div>
                         <div><input class="form-control" placeholder="10000" addStorageItem="limit" value="${theStorage.limit || ''}"></div>
                     </div>
                     <div class="form-group">
@@ -32,6 +36,16 @@ $(document).ready(function(){
             console.log(err)
         }
     }
+    function fillSizeAdjustFields(){
+        theForm.find('[size-adjust]').each(function(n,v){
+            var el = $(this);
+            var targetElTag = el.attr('size-adjust');
+            var targetEl = theForm.find(targetElTag);
+            var value = targetEl.val() || '10000';
+            var translatedVal = mbToHumanReadable(value);
+            el.val(translatedVal);
+        })
+    }
     function fillFormFields(){
         $.each($user,function(n,v){
             theForm.find(`[name="${n}"]`).val(v).change()
@@ -39,6 +53,7 @@ $(document).ready(function(){
         $.each($user.details,function(n,v){
             theForm.find(`[detail="${n}"]`).val(v).change()
         })
+        fillSizeAdjustFields()
         accountSettings.onLoadFieldsExtensions.forEach(function(extender){
             extender(theForm)
         })
@@ -62,6 +77,14 @@ $(document).ready(function(){
         })
         return json
     }
+    theForm.on('change', '[size-adjust]', function(){
+        var el = $(this);
+        var targetElTag = el.attr('size-adjust');
+        var targetEl = theForm.find(targetElTag);
+        var value = el.val();
+        var translatedVal = humanReadableToMb(value);
+        targetEl.val(translatedVal);
+    })
     theForm.find('[detail]').change(onDetailFieldChange)
     theForm.find('[detail]').change(function(){
         onDetailFieldChange(this)

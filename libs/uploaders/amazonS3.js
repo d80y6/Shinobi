@@ -491,14 +491,17 @@ module.exports = function(s,config,lang){
          },
          {
              "hidden": true,
-            "name": "detail=aws_s3_size_limit",
-            "field": lang['Max Storage Amount'],
+            "attribute": `size-adjust='[detail="aws_s3_size_limit"]'`,
+            "field": lang["Max Storage Amount"],
             "form-group-class":"autosave_aws_s3_input autosave_aws_s3_1",
             "form-group-class-pre-layer":"h_s3sld_input h_s3sld_1",
-            "description": "",
+            "default": "10 GB",
+         },
+         {
+             "hidden": true,
+            "name": "detail=aws_s3_size_limit",
+            "field": lang['Max Storage Amount'],
             "default": "10000",
-            "example": "",
-            "possible": ""
          },
          {
              "hidden": true,

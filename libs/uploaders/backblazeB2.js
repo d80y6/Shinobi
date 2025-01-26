@@ -305,14 +305,17 @@ module.exports = function(s,config,lang){
           },
           {
               "hidden": true,
-             "name": "detail=bb_b2_size_limit",
-             "field": lang['Max Storage Amount'],
+             "attribute": `size-adjust='[detail="bb_b2_size_limit"]'`,
+             "field": lang["Max Storage Amount"],
              "form-group-class":"autosave_bb_b2_input autosave_bb_b2_1",
              "form-group-class-pre-layer":"h_b2sld_input h_b2sld_1",
-             "description": "",
+             "default": "10 GB",
+          },
+          {
+              "hidden": true,
+             "name": "detail=bb_b2_size_limit",
+             "field": lang['Max Storage Amount'],
              "default": "10000",
-             "example": "",
-             "possible": ""
           },
           {
               "hidden": true,

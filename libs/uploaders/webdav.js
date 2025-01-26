@@ -336,14 +336,17 @@ module.exports = async function(s,config,lang){
                  },
                  {
                      "hidden": true,
-                    "name": "detail=webdav_size_limit",
-                    "field": lang['Max Storage Amount'],
+                    "attribute": `size-adjust='[detail="webdav_size_limit"]'`,
+                    "field": lang["Max Storage Amount"],
                     "form-group-class":"autosave_webdav_input autosave_webdav_1",
                     "form-group-class-pre-layer":"h_webdavsld_input h_webdavsld_1",
-                    "description": "",
+                    "default": "10 GB",
+                 },
+                 {
+                     "hidden": true,
+                    "name": "detail=webdav_size_limit",
+                    "field": lang['Max Storage Amount'],
                     "default": "10000",
-                    "example": "",
-                    "possible": ""
                  },
                  {
                      "hidden": true,

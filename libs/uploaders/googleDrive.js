@@ -397,14 +397,17 @@ module.exports = (s,config,lang,app,io) => {
          },
          {
              "hidden": true,
-            "name": "detail=googd_size_limit",
-            "field": lang['Max Storage Amount'],
+            "attribute": `size-adjust='[detail="googd_size_limit"]'`,
+            "field": lang["Max Storage Amount"],
             "form-group-class":"autosave_googd_input autosave_googd_1",
             "form-group-class-pre-layer":"h_googdsld_input h_googdsld_1",
-            "description": "",
+            "default": "10 GB",
+         },
+         {
+             "hidden": true,
+            "name": "detail=googd_size_limit",
+            "field": lang['Max Storage Amount'],
             "default": "10000",
-            "example": "",
-            "possible": ""
          },
          {
              "hidden": true,
