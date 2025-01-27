@@ -79,7 +79,17 @@
         </div>
         <a class="btn btn-secondary wallview-toggle-monitor-list" href="#"><%- lang.Monitors %></a>
     </div>
-    <div id="wallview-monitorList" class="d-none p-2"></div>
+    <div id="wallview-monitorList-container" class="d-none search-parent">
+        <div class="p-2">
+            <a class="btn btn-success d-block wallview-autoplace" href="#"><%- lang['Auto Placement'] %></a>
+        </div>
+        <div class="px-2 pb-2">
+            <input class="form-control search-controller" placeholder="<%- lang.Search %>">
+        </div>
+        <div id="wallview-monitorList" class="px-2 pb-2 search-body">
+
+        </div>
+    </div>
 </div>
 <!-- <script src="<%- urlPrefix %>assets/js/bs5.embed.utils.js"></script> -->
 <script src="<%- urlPrefix %>assets/js/bs5.embed.utils.js"></script>

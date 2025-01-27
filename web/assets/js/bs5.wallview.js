@@ -2,6 +2,7 @@ var loadedMonitors = {}
 var selectedMonitors = {}
 PNotify.prototype.options.styling = "fontawesome";
 var wallViewMonitorList = $('#wallview-monitorList')
+var wallViewMonitorListContainer = $('#wallview-monitorList-container')
 var wallViewControls = $('#wallview-controls')
 var wallViewCanvas = $('#wallview-canvas')
 var wallViewInfoScreen = $('#wallview-info-screen')
@@ -106,7 +107,7 @@ function drawMonitorList(){
                     label,
                 })
             })
-            var html = allFound.map(item => `<div class="mb-1"><a class="btn d-block btn-primary btn-sm ${item.class}" ${item.attributes} href="#">${item.label}</a></div>`).join('')
+            var html = allFound.map(item => `<div class="mb-1 search-row"><a class="btn d-block btn-primary btn-sm ${item.class}" ${item.attributes} href="#">${item.label}</a></div>`).join('')
             wallViewMonitorList.html(html)
             resolve(monitors)
         })
@@ -398,7 +399,7 @@ $(document).ready(function(){
     })
     .on('click', '.wallview-toggle-monitor-list', function(e){
         e.preventDefault();
-        wallViewMonitorList.toggleClass('d-none')
+        wallViewMonitorListContainer.toggleClass('d-none')
         return false;
     })
     .on('click', '.wallview-open-monitor-group', function(e){
@@ -420,6 +421,16 @@ $(document).ready(function(){
         displayInfoScreen()
         saveLayout()
         return false;
+    })
+    .on('keyup','.search-parent .search-controller',function(){
+        var _this = this;
+        var parent = $(this).parents('.search-parent')
+        $.each(parent.find(".search-body .search-row"), function() {
+            if($(this).text().toLowerCase().indexOf($(_this).val().toLowerCase()) === -1)
+               $(this).hide();
+            else
+               $(this).show();
+        });
     });
     createWebsocket(location.origin,{
         path: websocketPath

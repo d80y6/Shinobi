@@ -9,7 +9,8 @@ module.exports = function(s,config,lang,io){
         scanForOrphanedVideos
     } = require('./video/utils.js')(s,config,lang)
     const {
-        checkSubscription
+        checkSubscription,
+        checkAgainSubscription,
     } = require('./basic/utils.js')(process.cwd(),config)
     const {
         checkForStaticUsers
@@ -60,7 +61,7 @@ module.exports = function(s,config,lang,io){
                 table: "Monitors",
             },function(err,monitors) {
                 foundMonitors = monitors
-                if(err){s.systemLog(err)}
+                if(err){s.systemLog('Startup Error', err.toString())}
                 if(monitors && monitors[0]){
                     var didNotLoad = 0
                     var loadCompleted = 0
@@ -120,11 +121,12 @@ module.exports = function(s,config,lang,io){
                     if(orphanedFilesCount){
                         orphanedVideosForMonitors[monitor.ke][monitor.mid] += orphanedFilesCount
                     }
+                    if(orphanedVideosForMonitors[monitor.ke][monitor.mid] == 0)delete(orphanedVideosForMonitors[monitor.ke][monitor.mid]);
                     ++loadCompleted
                     if(monitors[loadCompleted]){
                         await checkForOrphanedVideosForMonitor(monitors[loadCompleted])
                     }else{
-                        s.systemLog(lang.startUpText6+' : '+s.s(orphanedVideosForMonitors))
+                        s.systemLog(lang.startUpText6, s.s(orphanedVideosForMonitors))
                         delete(foundMonitors)
                         callback()
                     }
@@ -135,7 +137,7 @@ module.exports = function(s,config,lang,io){
             }
         }
         var loadDiskUseForUser = function(user,callback){
-            s.systemLog(user.mail+' : '+lang.startUpText0)
+            s.systemLog(lang.startUpText0, user.mail)
             var userDetails = JSON.parse(user.details)
             s.group[user.ke].sizeLimit = parseFloat(userDetails.size) || 10000
             s.group[user.ke].sizeLimitVideoPercent = parseFloat(userDetails.size_video_percent) || 90
@@ -248,7 +250,7 @@ module.exports = function(s,config,lang,io){
                         })
                         s.cloudDisksLoaded.forEach(function(storageType){
                             var firstCount = user.cloudDiskUse[storageType].firstCount
-                            s.systemLog(user.mail+' : '+lang.startUpText1+' : '+firstCount,storageType,user.cloudDiskUse[storageType].usedSpace)
+                            // s.systemLog(lang.startUpText1, user.mail+' : '+firstCount,storageType,user.cloudDiskUse[storageType].usedSpace)
                             delete(user.cloudDiskUse[storageType].firstCount)
                         })
                     }
@@ -343,7 +345,7 @@ module.exports = function(s,config,lang,io){
                 storageIndex.usedSpaceVideos = usedSpaceVideos / 1048576
                 storageIndex.usedSpaceFilebin = usedSpaceFilebin / 1048576
                 storageIndex.usedSpaceTimelapseFrames = usedSpaceTimelapseFrames / 1048576
-                s.systemLog(user.mail+' : '+path+' : '+videos.length,storageIndex.usedSpace)
+                // s.systemLog(user.mail+' : '+path+' : '+videos.length,storageIndex.usedSpace)
                 ++currentStorageNumber
                 readStorageArray()
             }
@@ -436,7 +438,8 @@ module.exports = function(s,config,lang,io){
                             })
                         })
                     })
-                },1500)
+                },1500);
+                s.subscriptionIntervalCheck = checkAgainSubscription();
             })
         }
     })
