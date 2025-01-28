@@ -4482,6 +4482,7 @@ module.exports = function(s,config,lang){
                       "default": "0",
                       "example": "",
                       "fieldType": "select",
+                      "attribute": "multiple",
                        id: 'copy_settings_monitors',
                       "form-group-class": "h_copy_settings_input h_copy_settings_1",
                       "possible": [
