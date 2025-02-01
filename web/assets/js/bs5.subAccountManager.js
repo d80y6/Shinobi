@@ -158,6 +158,7 @@ $(document).ready(function(){
         <thead class="text-center">
             <tr>
                 <td></td>
+                <td></td>
                 ${permissionTypeNames.map(permissionType => `<td><a class="btn btn-sm btn-primary" toggle-checkbox="${permissionType.name}">${permissionType.label}</a></td>`).join('')}
             </tr>
         </thead>
@@ -165,6 +166,7 @@ $(document).ready(function(){
         $.each(getLoadedMonitorsAlphabetically(),function(n,monitor){
             html += `<tr class="search-row permission-view" style="vertical-align: baseline;">`
                 html += `<td class="text-start">${monitor.name} (${monitor.mid})</td>`
+                html += `<td>${(monitor.tags || '').split(',').map(item => `<span class="label label-primary">${item}</span>`)}</td>`
                 $.each(permissionTypeNames,function(n,permissionType){
                     const isChecked = account && (account.details[permissionType.name] || []).indexOf(monitor.mid) > -1;
                     html += `<td><input class="form-check-input" type="checkbox" data-monitor="${monitor.mid}" value="${permissionType.name}" ${isChecked ? 'checked' : ''}></td>`
@@ -322,7 +324,7 @@ $(document).ready(function(){
     permissionsMonitorSection.on('click', '[toggle-checkbox]',function(){
         var el = $(this);
         var target = el.attr('toggle-checkbox')
-        var checkBoxes = permissionsMonitorSection.find(`.permission-view [value="${target}"]`);
+        var checkBoxes = permissionsMonitorSection.find(`.permission-view [value="${target}"]:visible`);
         var isChecked = checkBoxes.first().prop('checked')
         checkBoxes.prop('checked', !isChecked)
     })

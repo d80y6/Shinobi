@@ -100,13 +100,13 @@ module.exports = (s,config,lang) => {
               "color": "green",
               "info": [
                  {
-                     "field": lang.Search,
+                     "field": lang.Monitors,
                      "placeholder": lang.Search,
                      "class": "search-controller",
                  },
                  {
                      "fieldType": "table",
-                     "class": "search-body h_perm_allmonitors_input h_perm_allmonitors_1",
+                     "class": "search-body",
                      id: "permissionSets_monitors",
                  },
              ]

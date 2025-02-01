@@ -5792,6 +5792,7 @@ module.exports = function(s,config,lang){
                     },
                     {
                         "fieldType": "table",
+                        "class": "search-body",
                         id: "sub_accounts_permissions",
                     },
                 ]
