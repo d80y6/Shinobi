@@ -20,7 +20,7 @@ module.exports = function(s,config,lang,app){
                 isSubAccount,
                 userPermissions,
             } = s.checkPermission(user)
-            const canEditPermissions = !isSubAccount || userPermissions.edit_permissions_disallowed;
+            const canEditPermissions = !isSubAccount || userPermissions.edit_permissions;
             if(!canEditPermissions){
                 s.closeJsonResponse(res,{ok: false, msg: lang['Not an Administrator Account']});
             }else{
@@ -42,7 +42,7 @@ module.exports = function(s,config,lang,app){
                 isSubAccount,
                 userPermissions,
             } = s.checkPermission(user)
-            const canEditPermissions = !isSubAccount || userPermissions.edit_permissions_disallowed;
+            const canEditPermissions = !isSubAccount || userPermissions.edit_permissions;
             if(!canEditPermissions){
                 response.msg = lang['Not Authorized'];
             }else{
@@ -67,7 +67,7 @@ module.exports = function(s,config,lang,app){
                 isSubAccount,
                 userPermissions,
             } = s.checkPermission(user)
-            const canEditPermissions = !isSubAccount || userPermissions.edit_permissions_disallowed;
+            const canEditPermissions = !isSubAccount || userPermissions.edit_permissions;
             if(!canEditPermissions){
                 response.msg = lang['Not Authorized'];
             }else{

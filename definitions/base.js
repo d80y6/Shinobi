@@ -7911,7 +7911,7 @@ module.exports = function(s,config,lang){
                           label: `${lang['Monitor Settings']}`,
                           pageOpen: 'monitorSettings',
                           addUl: true,
-                          eval: `!$user.details.sub || $user.details.monitor_create !== 0`,
+                          eval: `!$user.details.sub || $user.details.monitor_create != 0`,
                       },
                       {
                           icon: 'grav',
@@ -7941,7 +7941,7 @@ module.exports = function(s,config,lang){
                           icon: 'exclamation-triangle',
                           label: `${lang['Logs']}`,
                           pageOpen: 'logViewer',
-                          eval: `!$user.details.sub || $user.details.view_logs !== 0`,
+                          eval: `!$user.details.sub || $user.details.view_logs != 0`,
                       },
                       {
                           divider: true,
@@ -7950,7 +7950,7 @@ module.exports = function(s,config,lang){
                           icon: 'gears',
                           label: `${lang['Account Settings']}`,
                           pageOpen: 'accountSettings',
-                          eval: `!$user.details.sub || $user.details.user_change !== 0`,
+                          eval: `!$user.details.sub || $user.details.user_change != 0`,
                           addUl: true,
                       },
                       {
@@ -7964,6 +7964,7 @@ module.exports = function(s,config,lang){
                           icon: 'group',
                           label: `${lang['Permission Groups']}`,
                           pageOpen: 'permissionSets',
+                          eval: `!$user.details.sub || $user.details.edit_permissions != 0`,
                       },
                       {
                           icon: 'key',
@@ -7978,13 +7979,13 @@ module.exports = function(s,config,lang){
                           label: `${lang['ONVIF Scanner']}`,
                           pageOpen: 'onvifScanner',
                           addUl:true,
-                          eval: `!$user.details.sub || $user.details.monitor_create !== 0`,
+                          eval: `!$user.details.sub || $user.details.monitor_create != 0`,
                       },
                       {
                           icon: 'opera',
                           label: `${lang['ONVIF Device Manager']}`,
                           pageOpen: 'onvifDeviceManager',
-                          eval: `!$user.details.sub || $user.details.monitor_create !== 0`,
+                          eval: `!$user.details.sub || $user.details.monitor_create != 0`,
                       },
                       {
                           icon: 'ravelry',
@@ -8001,7 +8002,7 @@ module.exports = function(s,config,lang){
                           label: `${lang['ShinobiHub']}`,
                           pageOpen: 'configFinder',
                           addUl: true,
-                          eval: `!$user.details.sub || $user.details.monitor_create !== 0`,
+                          eval: `!$user.details.sub || $user.details.monitor_create != 0`,
                       },
                       {
                           divider: true,

@@ -355,6 +355,8 @@ module.exports = function(s,config,lang){
                         if(details.video_delete){formDetails.video_delete = details.video_delete;}
                         if(details.video_view){formDetails.video_view = details.video_view;}
                         if(details.monitor_edit){formDetails.monitor_edit = details.monitor_edit;}
+                        if(details.edit_permissions){formDetails.edit_permissions = details.edit_permissions;}
+                        if(details.permissionSet){formDetails.permissionSet = details.permissionSet;}
                         if(details.size){formDetails.size = details.size;}
                         if(details.days){formDetails.days = details.days;}
                     }
