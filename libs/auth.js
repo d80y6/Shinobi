@@ -1,5 +1,8 @@
 var fs = require('fs');
 module.exports = function(s,config,lang){
+    const {
+        applyPermissionsToUser,
+    } = require('./user/permissionSets.js')(s,config,lang)
     //Authenticator functions
     s.api = {}
     s.superUsersApi = {}
@@ -78,9 +81,9 @@ module.exports = function(s,config,lang){
             var isSessionKey = false
             if(apiKey){
                 var sessionKey = params.auth
-                getUserByUid(apiKey,'mail,details',function(err,user){
+                getUserByUid(apiKey,'mail,details',async function(err,user){
                     if(user){
-                        createSession(apiKey,{
+                        await createSession(apiKey,{
                             auth: sessionKey,
                             permissions: s.parseJSON(apiKey.details),
                             mail: user.mail,
@@ -88,7 +91,7 @@ module.exports = function(s,config,lang){
                             lang: s.getLanguageFile(user.details.lang)
                         })
                     }else{
-                        createSession(apiKey,{
+                        await createSession(apiKey,{
                             auth: sessionKey,
                             permissions: s.parseJSON(apiKey.details),
                             details: {}
@@ -97,9 +100,9 @@ module.exports = function(s,config,lang){
                     callback(err,s.api[params.auth])
                 })
             }else{
-                getUserBySessionKey(params,function(err,user){
+                getUserBySessionKey(params,async function(err,user){
                     if(user){
-                        createSession(user,{
+                        await createSession(user,{
                             auth: params.auth,
                             details: JSON.parse(user.details),
                             isSessionKey: true,
@@ -113,7 +116,7 @@ module.exports = function(s,config,lang){
             }
         })
     }
-    var createSession = function(user,additionalData){
+    var createSession = async function(user,additionalData){
         if(user){
             var generatedId
             if(!additionalData)additionalData = {}
@@ -124,6 +127,7 @@ module.exports = function(s,config,lang){
                 generatedId = user.auth || user.code
             }
             user.details = s.parseJSON(user.details)
+            await applyPermissionsToUser(user)
             user.permissions = {}
             s.api[generatedId] = Object.assign({},user,additionalData)
             return generatedId
@@ -195,10 +199,10 @@ module.exports = function(s,config,lang){
                resetActiveSessionTimer(activeSession)
             }
         }else if(params.username && params.username !== '' && params.password && params.password !== ''){
-            loginWithUsernameAndPassword(params,'*',function(err,user){
+            loginWithUsernameAndPassword(params,'*',async function(err,user){
                 if(user){
                     params.auth = user.auth
-                    createSession(user)
+                    await createSession(user)
                     resetActiveSessionTimer(s.api[params.auth])
                     onSuccess(user)
                 }else{

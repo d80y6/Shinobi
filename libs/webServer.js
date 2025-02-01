@@ -66,6 +66,7 @@ module.exports = function(s,config,lang,io){
             'home/videoPlayer',
             'home/monitorsList',
             'home/subAccountManager',
+            'home/permissionSets',
             'home/accountSettings',
             'home/apiKeys',
             'home/monitorSettings',

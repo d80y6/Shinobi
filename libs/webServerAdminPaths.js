@@ -7,7 +7,8 @@ var execSync = require('child_process').execSync;
 module.exports = function(s,config,lang,app){
     const {
         deleteMonitor,
-    } = require('./monitor/utils.js')(s,config,lang)
+    } = require('./monitor/utils.js')(s,config,lang);
+    require('./webPaths/permissionSets.js')(s,config,lang,app)
     /**
     * API : Administrator : Edit Sub-Account (Account to share cameras with)
     */

@@ -5563,43 +5563,43 @@ module.exports = function(s,config,lang){
              },
          }
        },
+       "Permission Sets": require('./permissionSets.js')(s,config,lang),
        "Sub-Account Manager": {
            "section": "Sub-Account Manager",
            "blocks": {
                "Sub-Accounts": {
                   "name": lang['Sub-Accounts'],
-                  "section-pre-class": "col-md-6",
                   "color": "orange",
                   "isSection": true,
                   "id":"monSectionAccountList",
                   "info": [
                       {
-                          "fieldType": "table",
+                          "fieldType": "div",
+                          "style": "max-height: 400px;overflow: auto;",
                           id: "subAccountsList",
                       }
                   ]
                },
-               "Currently Active": {
-                  "name": lang['Currently Active'],
-                  "section-pre-class": "col-md-6 search-parent",
-                  "color": "green",
-                  "isSection": true,
-                  "info": [
-                      {
-                         "field": lang['Search'],
-                         "class": 'search-controller',
-                      },
-                      {
-                          "fieldType": "div",
-                          "class": "search-body",
-                          "id": "currently-active-users",
-                          "attribute": `style="max-height: 400px;overflow: auto;"`,
-                      }
-                  ]
-               },
+               // "Currently Active": {
+               //    "name": lang['Currently Active'],
+               //    "section-pre-class": "col-md-6 search-parent",
+               //    "color": "green",
+               //    "isSection": true,
+               //    "info": [
+               //        {
+               //           "field": lang['Search'],
+               //           "class": 'search-controller',
+               //        },
+               //        {
+               //            "fieldType": "div",
+               //            "class": "search-body",
+               //            "id": "currently-active-users",
+               //            "attribute": `style="max-height: 400px;overflow: auto;"`,
+               //        }
+               //    ]
+               // },
                "Account Information": {
                   "name": lang['Account Information'],
-                  "section-pre-class": "col-md-6",
                   "color": "blue",
                   "isSection": true,
                   "isForm": true,
@@ -5653,11 +5653,29 @@ module.exports = function(s,config,lang){
               },
               "Account Privileges": {
                  "name": lang['Account Privileges'],
-                 "section-pre-class": "col-md-6",
                  "color": "red",
                  "isSection": true,
                  "id":"monSectionAccountPrivileges",
                  "info": [
+                     {
+                        "name": "detail=permissionSet",
+                        "field": lang['Permission Group'],
+                        "default": "",
+                        "description": lang.fieldTextPermissionGroup,
+                        "fieldType": "select",
+                        "selector": "h_perm_permissionSet",
+                        "possible": [
+                            {
+                               "name": lang.Default,
+                               "value": "",
+                               "info": lang.Default
+                            },
+                            {
+                                "name": lang['Saved Permissions'],
+                                "optgroup": []
+                            }
+                        ]
+                     },
                      {
                         "name": "detail=allmonitors",
                         "field": lang['All Monitors and Privileges'],
@@ -5724,6 +5742,22 @@ module.exports = function(s,config,lang){
                         ]
                      },
                      {
+                        "name": "detail=edit_permissions",
+                        "field": lang['Can Edit Permissions'],
+                        "default": "0",
+                        "fieldType": "select",
+                        "possible": [
+                            {
+                               "name": lang.No,
+                               "value": "0"
+                            },
+                            {
+                               "name": lang.Yes,
+                               "value": "1"
+                            }
+                        ]
+                     },
+                     {
                         "name": "detail=landing_page",
                         "field": lang['Landing Page'],
                         "default": "",
@@ -5739,18 +5773,29 @@ module.exports = function(s,config,lang){
                             }
                         ]
                      },
-                     {
-                         "fieldType": "div",
-                         "class": "h_perm_allmonitors_input h_perm_allmonitors_1",
-                         id: "sub_accounts_permissions",
-                     },
-                     {
+                 ]
+              },
+              "Monitors": {
+                 noHeader: true,
+                 "section-class": "search-parent h_perm_allmonitors_input h_perm_allmonitors_1",
+                 "color": "green",
+                 "info": [
+                    {
+                        "field": lang.Monitors,
+                        "placeholder": lang.Search,
+                        "class": "search-controller",
+                    },
+                    {
                         "fieldType": "btn",
                         "class": `btn-success submit-form`,
                         "btnContent": `<i class="fa fa-plus"></i> &nbsp; ${lang['Add New']}`,
-                     },
-                 ]
-              },
+                    },
+                    {
+                        "fieldType": "table",
+                        id: "sub_accounts_permissions",
+                    },
+                ]
+             },
           }
       },
       "API Keys": {
@@ -7914,6 +7959,11 @@ module.exports = function(s,config,lang){
                           pageOpen: 'subAccountManager',
                           addUl: true,
                           eval: `!$user.details.sub`,
+                      },
+                      {
+                          icon: 'group',
+                          label: `${lang['Permission Groups']}`,
+                          pageOpen: 'permissionSets',
                       },
                       {
                           icon: 'key',

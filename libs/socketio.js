@@ -8,6 +8,9 @@ const {
 } = require('./common.js')
 module.exports = function(s,config,lang,io){
     const {
+        applyPermissionsToUser,
+    } = require('./user/permissionSets.js')(s,config,lang)
+    const {
         ptzControl
     } = require('./control/ptz.js')(s,config,lang)
     const {
@@ -304,7 +307,7 @@ module.exports = function(s,config,lang,io){
                 const onFail = (msg) => {
                     tx({ok:false,msg:'Not Authorized',token_used:d.auth,ke:d.ke});cn.disconnect();
                 }
-                const onSuccess = (r) => {
+                const onSuccess = async (r) => {
                     r = r[0];
                     cn.join('GRP_'+d.ke);cn.join('CPU');
                     cn.ke=d.ke,
@@ -314,11 +317,13 @@ module.exports = function(s,config,lang,io){
     //                    if(!s.group[d.ke].vid)s.group[d.ke].vid={};
                     if(!s.group[d.ke].users)s.group[d.ke].users={};
     //                    s.group[d.ke].vid[cn.id]={uid:d.uid};
+                    r.details = JSON.parse(r.details);
+                    await applyPermissionsToUser(r)
                     s.group[d.ke].users[d.auth] = {
                         cnid: cn.id,
                         uid: r.uid,
                         mail: r.mail,
-                        details: JSON.parse(r.details),
+                        details: r.details,
                         logged_in_at: s.timeObject(new Date).format(),
                         login_type: 'Dashboard'
                     }
@@ -847,19 +852,21 @@ module.exports = function(s,config,lang,io){
                         ['uid','=',d.uid],
                     ],
                     limit: 1
-                },(err,r) => {
+                },async (err,r) => {
                     if(r && r[0]){
                         r = r[0]
                         cn.ke=d.ke,cn.uid=d.uid,cn.auth=d.auth;
                         if(!s.group[d.ke])s.group[d.ke]={};
                         if(!s.group[d.ke].users)s.group[d.ke].users={};
                         if(!s.group[d.ke].dashcamUsers)s.group[d.ke].dashcamUsers={};
+                        r.details = JSON.parse(r.details);
+                        await applyPermissionsToUser(r)
                         s.group[d.ke].users[d.auth]={
                             cnid: cn.id,
                             ke : d.ke,
                             uid:r.uid,
                             mail:r.mail,
-                            details:JSON.parse(r.details),
+                            details: r.details,
                             logged_in_at:s.timeObject(new Date).format(),
                             login_type:'Streamer'
                         }

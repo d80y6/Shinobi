@@ -875,6 +875,7 @@ module.exports = function(s,config,lang){
             'monitor_create',
             'user_change',
             'view_logs',
+            'edit_permissions',
         ].forEach((key) => {
             response.userPermissions[key] = details[key] === '1' || !details[key];
             response.userPermissions[`${key}_disallowed`] = details[key] === '0';

@@ -178,6 +178,14 @@ module.exports = function(s,config){
             {name: 'end', length: 10, type: 'string'},
             {name: 'enabled', type: 'integer', length: 1, defaultTo: 1},
         ]);
+        await createTable('Permission Sets',[
+            isMySQL ? {name: 'utf8', type: 'charset'} : null,
+            isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
+            {name: 'ke', length: 50, type: 'string'},
+            {name: 'name', length: 100, type: 'string'},
+            {name: 'details', type: 'text'},
+            {name: 'time', type: 'timestamp', defaultTo: currentTimestamp()},
+        ]);
         // additional requirements for older installs
         await require('./migrate/2022-08-22.js')(s,config)
         await require('./migrate/2022-12-18.js')(s,config)
