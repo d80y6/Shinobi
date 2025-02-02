@@ -1964,7 +1964,6 @@ module.exports = function(s,config,lang,app,io){
             }
             const response = { ok: false }
             const selectedVideos = s.getPostData(req,'videos');
-            console.log('selected',selectedVideos)
             if(selectedVideos && selectedVideos.length > 1){
                 const mergedFilePath = await mergeVideosAndBin(selectedVideos);
                 response.ok = !!mergedFilePath;

@@ -127,9 +127,9 @@ module.exports = function(s,config,lang){
                 generatedId = user.auth || user.code
             }
             user.details = s.parseJSON(user.details)
-            await applyPermissionsToUser(user)
             user.permissions = {}
             s.api[generatedId] = Object.assign({},user,additionalData)
+            await applyPermissionsToUser(s.api[generatedId])
             return generatedId
         }
     }
