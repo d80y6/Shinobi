@@ -15,6 +15,9 @@ var fileupload = require("express-fileupload");
 var fieldBuild = require('./fieldBuild');
 module.exports = function(s,config,lang,app,io){
     const {
+        applyPermissionsToUser,
+    } = require('./user/permissionSets.js')(s,config,lang)
+    const {
         ptzControl,
         setPresetForCurrentPosition
     } = require('./control/ptz.js')(s,config,lang,app,io)
@@ -176,6 +179,7 @@ module.exports = function(s,config,lang,app,io){
             });
             const userInfo =  rows[0];
             userInfo.details = JSON.parse(userInfo.details)
+            await applyPermissionsToUser(userInfo)
             response.user = userInfo;
             res.end(s.prettyPrint(response));
         },res,req);

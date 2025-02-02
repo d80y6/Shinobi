@@ -9,6 +9,7 @@ module.exports = function(s,config,lang,app){
         deleteMonitor,
     } = require('./monitor/utils.js')(s,config,lang);
     require('./webPaths/permissionSets.js')(s,config,lang,app)
+    const { createApiKey } = require('./user/apiKeys.js')(s,config,lang)
     /**
     * API : Administrator : Edit Sub-Account (Account to share cameras with)
     */
@@ -174,7 +175,10 @@ module.exports = function(s,config,lang,app){
     /**
     * API : Administrator : Get Sub-Account List
     */
-    app.get(config.webPaths.adminApiPrefix+':auth/accounts/:ke', function (req,res){
+    app.get([
+        config.webPaths.adminApiPrefix+':auth/accounts/:ke',
+        config.webPaths.adminApiPrefix+':auth/accounts/:ke/:uid',
+    ], function (req,res){
         s.auth(req.params,function(user){
             var endData = {
                 ok : false
@@ -187,14 +191,19 @@ module.exports = function(s,config,lang,app){
                 return
             }else{
                 endData.ok = true
+                const userUID = req.params.uid;
+                const whereQuery = [
+                    ['ke','=',req.params.ke],
+                    ['details','LIKE','%"sub"%'],
+                ];
+                if(userUID){
+                    whereQuery.push(['uid','=',userUID])
+                }
                 s.knexQuery({
                     action: "select",
                     columns: "ke,uid,mail,details",
                     table: "Users",
-                    where: [
-                        ['ke','=',req.params.ke],
-                        ['details','LIKE','%"sub"%']
-                    ]
+                    where: whereQuery
                 },function(err,rows){
                     endData.accounts = rows
                     s.closeJsonResponse(res,endData)
@@ -223,7 +232,9 @@ module.exports = function(s,config,lang,app){
                 s.closeJsonResponse(res,{ok: false, msg: lang['Not an Administrator Account']});
                 return
             }
+            const groupKey = req.params.ke;
             var form = s.getPostData(req)
+            var alsoCreateApiKey = s.getPostData(req,'createApiKey') === '1'
             if(form.mail !== '' && form.pass !== ''){
                 if(form.pass === form.password_again || form.pass === form.pass_again){
                     s.knexQuery({
@@ -233,7 +244,7 @@ module.exports = function(s,config,lang,app){
                         where: [
                             ['mail','=',form.mail],
                         ]
-                    },function(err,r){
+                    },async function(err,r){
                         if(r && r[0]){
                             //found one exist
                             endData.msg = lang['Email address is in use.']
@@ -247,17 +258,20 @@ module.exports = function(s,config,lang,app){
                             },s.parseJSON(form.details) || {}, {
                                 sub: "1",
                             }))
-                            s.knexQuery({
+                            await s.knexQueryPromise({
                                 action: "insert",
                                 table: "Users",
                                 insert: {
-                                    ke: req.params.ke,
+                                    ke: groupKey,
                                     uid: newId,
                                     mail: form.mail,
                                     pass: s.createHash(form.pass),
                                     details: details,
                                 }
-                            })
+                            });
+                            if(alsoCreateApiKey){
+                                endData.apiKey = await createApiKey({ ke: groupKey, uid: newId });
+                            }
                             s.tx({
                                 f: 'add_sub_account',
                                 details: details,
@@ -350,47 +364,42 @@ module.exports = function(s,config,lang,app){
     /**
     * API : Add API Key, binded to the user who created it
     */
-    app.all([
+    app.post([
         config.webPaths.adminApiPrefix+':auth/api/:ke/add',
         config.webPaths.apiPrefix+':auth/api/:ke/add',
     ],function (req,res){
         var endData = {ok:false}
         res.setHeader('Content-Type', 'application/json');
-        s.auth(req.params,function(user){
+        s.auth(req.params,async function(user){
+            const {
+                isSubAccount,
+            } = s.checkPermission(user)
             var endData = {
                 ok : false
             }
-            var form = s.getPostData(req)
-            if(form){
-                const insertQuery = {
+            var form = s.getPostData(req) || {}
+            try{
+                const targetUID = form.uid || req.body.uid;
+                const insertQuery = await createApiKey({
                     ke : req.params.ke,
-                    uid : user.uid,
-                    code : s.gid(30),
+                    uid : !isSubAccount && targetUID ? targetUID : user.uid,
+                    // code : s.gid(30),
                     ip : form.ip,
-                    details : s.stringJSON(form.details)
-                }
-                s.knexQuery({
-                    action: "insert",
-                    table: "API",
-                    insert: insertQuery
-                },(err,r) => {
-                    insertQuery.time = s.formattedTime(new Date,'YYYY-DD-MM HH:mm:ss');
-                    insertQuery.details = s.parseJSON(insertQuery.details)
-                    if(!err){
-                        s.tx({
-                            f: 'api_key_added',
-                            uid: user.uid,
-                            form: insertQuery
-                        },'GRP_' + req.params.ke)
-                        endData.ok = true
-                    }
-                    endData.api = insertQuery
-                    s.closeJsonResponse(res,endData)
-                })
-            }else{
-                endData.msg = lang.postDataBroken
-                s.closeJsonResponse(res,endData)
+                    details : form.details ? s.stringJSON(form.details) : undefined
+                });
+                insertQuery.time = s.formattedTime(new Date,'YYYY-DD-MM HH:mm:ss');
+                insertQuery.details = s.parseJSON(insertQuery.details)
+                s.tx({
+                    f: 'api_key_added',
+                    uid: user.uid,
+                    form: insertQuery
+                },'GRP_' + req.params.ke)
+                endData.ok = true
+                endData.api = insertQuery
+            }catch(err){
+                console.error(err)
             }
+            s.closeJsonResponse(res,endData)
         },res,req)
     })
     /**
@@ -455,14 +464,19 @@ module.exports = function(s,config,lang,app){
         config.webPaths.apiPrefix+':auth/api/:ke/list',
     ],function (req,res){
         var endData = {ok:false}
-        res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
+            const {
+                isSubAccount,
+            } = s.checkPermission(user)
             var endData = {
-                ok : false
+                ok : false,
+                keys: []
             }
+            const targetUID = req.query.uid;
+            endData.uid = !isSubAccount && targetUID ? targetUID : user.uid;
             const whereQuery = {
                 ke : req.params.ke,
-                uid : user.uid
+                uid : endData.uid
             }
             s.knexQuery({
                 action: "select",
@@ -475,7 +489,6 @@ module.exports = function(s,config,lang,app){
                         row.details = JSON.parse(row.details)
                     })
                     endData.ok = true
-                    endData.uid = user.uid
                     endData.ke = user.ke
                     endData.keys = rows
                 }

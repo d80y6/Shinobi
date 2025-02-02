@@ -333,22 +333,6 @@ $(document).ready(function(){
     })
     onWebSocketEvent(function(d){
         switch(d.f){
-            case'users_online':
-                console.log(d)
-                // $.ccio.pm('user-row',d.users);
-                $.each(d.user,function(n,user){
-                    drawUserToActiveList(user)
-                })
-            break;
-            case'user_status_change':
-                console.log(d)
-                var user = d.user
-                if(d.status === 1){
-                    drawUserToActiveList(user)
-                }else{
-                    $(`#active-user-${user.uid}-${user.cnid}`).remove()
-                }
-            break;
             case'delete_sub_account':
                 var user = d.user
                 accountTable.find(`[uid="${user.uid}"]`).remove()
