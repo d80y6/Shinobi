@@ -81,7 +81,9 @@ module.exports = (s,config,lang) => {
                     treekill(processPID)
                 });
                 if(proc && proc.stdin) {
-                    proc.stdin.write("q\r\n");
+                    try{
+                        proc.stdin.write("q\r\n");
+                    }catch(err){}
                 }
                 let killTimer = setTimeout(() => {
                     if(proc && proc.kill){
