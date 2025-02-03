@@ -679,10 +679,9 @@ module.exports = (s,config,lang) => {
                 type: lang.monitorDeleted,
                 msg: `${lang.byUser} : ${userId}`
             });
-            s.camera('stop', {
+            await s.camera('stop', {
                 ke: groupKey,
                 mid: monitorId,
-                delete: 1,
             });
             s.tx({
                 f: 'monitor_delete',

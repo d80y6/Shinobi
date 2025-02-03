@@ -73,10 +73,14 @@ module.exports = function(s,config,lang){
         if(!e.status || !e.code)console.error(JSON.stringify(e),new Error());
         const groupKey = e.ke
         const monitorId = e.mid || e.id
-        const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
-        activeMonitor.monitorStatus = `${e.status}`
-        activeMonitor.monitorStatusCode = `${e.code}`
-        s.tx(Object.assign(e,{f:'monitor_status'}),'GRP_'+e.ke)
+        try{
+            const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
+            activeMonitor.monitorStatus = `${e.status}`
+            activeMonitor.monitorStatusCode = `${e.code}`
+            s.tx(Object.assign(e,{f:'monitor_status'}),'GRP_'+e.ke)
+        }catch(err){
+
+        }
     }
     s.getMonitorCpuUsage = function(e,callback){
         if(s.group[e.ke].activeMonitors[e.mid] && s.group[e.ke].activeMonitors[e.mid].spawn){
@@ -155,6 +159,7 @@ module.exports = function(s,config,lang){
         return s.dir.streams + monitor.ke + '/' + (monitor.mid || monitor.id) + '/'
     }
     s.getRawSnapshotFromMonitor = function(monitor,options){
+        if(!monitor || !monitor.details)return {};
         return new Promise((resolve,reject) => {
             options = options instanceof Object ? options : {flags: ''}
             s.checkDetails(monitor)

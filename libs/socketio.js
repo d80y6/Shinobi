@@ -305,7 +305,7 @@ module.exports = function(s,config,lang,io){
                 cn.ip = (ipAddress.indexOf('127.0.0.1') > -1 || ipAddress.indexOf('localhost') > -1) && d.ipAddress ?  d.ipAddress : ipAddress;
                 tx=function(z){if(!z.ke){z.ke=cn.ke;};cn.emit('f',z);}
                 const onFail = (msg) => {
-                    tx({ok:false,msg:'Not Authorized',token_used:d.auth,ke:d.ke});cn.disconnect();
+                    tx({ok:false,msg: msg ? msg.stack || msg : lang['Not Authorized'],token_used:d.auth,ke:d.ke});cn.disconnect();
                 }
                 const onSuccess = async (r) => {
                     r = r[0];
@@ -319,6 +319,7 @@ module.exports = function(s,config,lang,io){
     //                    s.group[d.ke].vid[cn.id]={uid:d.uid};
                     r.details = JSON.parse(r.details);
                     await applyPermissionsToUser(r)
+                    // cn.checkedPermissions = s.checkPermission(r)
                     s.group[d.ke].users[d.auth] = {
                         cnid: cn.id,
                         uid: r.uid,
