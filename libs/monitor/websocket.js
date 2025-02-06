@@ -2,11 +2,11 @@ module.exports = function(s,config,lang,io){
     s.onOtherWebSocketMessages(async (d,cn,tx) => {
         switch(d.f){
             case'addOrEditMonitor':
-                var response = { f: 'callback', ff:'addOrEditMonitor', ok: false }
                 var user = s.group[cn.ke].users[cn.auth];
                 var groupKey = cn.ke
                 var monitorId = d.mid || d.id;
-                var requestId = d.rid;
+                var callbackId = d.callbackId;
+                var response = { f: 'callback', ff:'addOrEditMonitor', callbackId, ok: false }
                 var {
                     monitorPermissions,
                     monitorRestrictions,
