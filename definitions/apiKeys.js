@@ -78,6 +78,10 @@ module.exports = (s,config,lang) => {
                               value: 'auth_socket',
                           },
                           {
+                              name: lang['Can Create API Keys'],
+                              value: 'create_api_keys',
+                          },
+                          {
                               name: lang['Can Get Monitors'],
                               value: 'get_monitors',
                           },

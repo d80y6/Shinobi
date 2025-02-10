@@ -856,6 +856,7 @@ module.exports = function(s,config,lang){
         const details = user.details;
         [
             'auth_socket',
+            'create_api_keys',
             'get_monitors',
             'edit_monitors',
             'control_monitors',

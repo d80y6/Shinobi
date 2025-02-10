@@ -340,6 +340,7 @@
    "Group Key": "Group Key",
    "Allowed IPs": "Allowed IPs",
    "Separate with commas, no spaces": "Separate with commas, no spaces",
+   "Can Create API Keys": "Can Create API Keys",
    "Can Get Monitors": "Can Get Monitors",
    "Can Get Logs": "Can Get Logs",
    "Can Authenticate Websocket": "Can Authenticate Websocket",

@@ -88,6 +88,7 @@ module.exports = (s,config) => {
                 ip : '0.0.0.0',
                 details : s.stringJSON({
                     "auth_socket": "1",
+                    "create_api_keys": "1",
                     "get_monitors": "1",
                     "edit_monitors": "1",
                     "control_monitors": "1",

@@ -99,7 +99,7 @@ $(document).ready(function(e){
                 details[permissionValue] = "0"
             }
         });
-        details.monitorPermissions = getMonitorsSelectedInPermissionForm();
+        details.monitorPermissions = details.monitorsRestricted === '1' ? getMonitorsSelectedInPermissionForm() : {};
         return details
     }
     function getMonitorsSelectedInPermissionForm(){

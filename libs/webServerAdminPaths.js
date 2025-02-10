@@ -10,7 +10,8 @@ module.exports = function(s,config,lang,app){
     } = require('./monitor/utils.js')(s,config,lang);
     require('./webPaths/permissionSets.js')(s,config,lang,app)
     require('./webPaths/customSettings.js')(s,config,lang,app)
-    const { createApiKey, editApiKey } = require('./user/apiKeys.js')(s,config,lang)
+    require('./webPaths/apiKeys.js')(s,config,lang,app)
+    const { createApiKey } = require('./user/apiKeys.js')(s,config,lang)
     /**
     * API : Administrator : Edit Sub-Account (Account to share cameras with)
     */
@@ -360,140 +361,6 @@ module.exports = function(s,config,lang,app){
                 break;
             }
             s.closeJsonResponse(res,endData)
-        },res,req)
-    })
-    /**
-    * API : Add API Key, binded to the user who created it
-    */
-    app.post([
-        config.webPaths.adminApiPrefix+':auth/api/:ke/add',
-        config.webPaths.apiPrefix+':auth/api/:ke/add',
-    ],function (req,res){
-        var endData = {ok:false}
-        res.setHeader('Content-Type', 'application/json');
-        s.auth(req.params,async function(user){
-            const {
-                isSubAccount,
-            } = s.checkPermission(user)
-            var endData = {
-                ok : false
-            }
-            var form = s.getPostData(req) || {}
-            try{
-                const targetUID = form.uid || req.body.uid;
-                const code = form.code;
-                const editResponse = await editApiKey({
-                    code,
-                    ke : req.params.ke,
-                    uid : !isSubAccount && targetUID ? targetUID : user.uid,
-                    ip : typeof form.ip === 'string' ? form.ip.trim() : '',
-                    details : form.details ? s.stringJSON(form.details) : undefined
-                });
-                s.tx({
-                    f: 'api_key_added',
-                    uid: user.uid,
-                    form: editResponse.api
-                },'GRP_' + req.params.ke)
-                endData.ok = editResponse.ok
-                endData.api = editResponse.api
-            }catch(err){
-                console.error(err)
-            }
-            s.closeJsonResponse(res,endData)
-        },res,req)
-    })
-    /**
-    * API : Delete API Key
-    */
-    app.all([
-        config.webPaths.adminApiPrefix+':auth/api/:ke/delete',
-        config.webPaths.apiPrefix+':auth/api/:ke/delete',
-    ],function (req,res){
-        var endData = {ok:false}
-        res.setHeader('Content-Type', 'application/json');
-        s.auth(req.params,function(user){
-            var endData = {
-                ok : false
-            }
-            var form = s.getPostData(req) || {}
-            const code = form.code || s.getPostData(req,'code',false)
-            if(!code){
-                s.tx({
-                    f:'form_incomplete',
-                    uid: user.uid,
-                    form:'APIs'
-                },'GRP_' + req.params.ke)
-                endData.msg = lang.postDataBroken
-                s.closeJsonResponse(res,endData)
-                return
-            }
-            if(code){
-                s.knexQuery({
-                    action: "delete",
-                    table: "API",
-                    where: {
-                        ke: req.params.ke,
-                        uid: user.uid,
-                        code: code,
-                    }
-                },(err,r) => {
-                    if(!err){
-                        s.tx({
-                            f: 'api_key_deleted',
-                            uid: user.uid,
-                            form: {
-                                code: code
-                            }
-                        },'GRP_' + req.params.ke)
-                        endData.ok = true
-                        delete(s.api[code])
-                    }
-                    s.closeJsonResponse(res,endData)
-                })
-            }else{
-                endData.msg = lang.postDataBroken
-                s.closeJsonResponse(res,endData)
-            }
-        },res,req)
-    })
-    /**
-    * API : List API Keys for Authenticated user
-    */
-    app.get([
-        config.webPaths.adminApiPrefix+':auth/api/:ke/list',
-        config.webPaths.apiPrefix+':auth/api/:ke/list',
-    ],function (req,res){
-        var endData = {ok:false}
-        s.auth(req.params,function(user){
-            const {
-                isSubAccount,
-            } = s.checkPermission(user)
-            var endData = {
-                ok : false,
-                keys: []
-            }
-            const targetUID = req.query.uid;
-            endData.uid = !isSubAccount && targetUID ? targetUID : user.uid;
-            const whereQuery = {
-                ke : req.params.ke,
-                uid : endData.uid
-            }
-            s.knexQuery({
-                action: "select",
-                columns: "*",
-                table: "API",
-                where: whereQuery
-            },function(err,rows) {
-                if(rows && rows[0]){
-                    rows.forEach(function(row){
-                        row.details = JSON.parse(row.details)
-                    })
-                    endData.ok = true
-                    endData.ke = user.ke
-                    endData.keys = rows
-                }
-                s.closeJsonResponse(res,endData)
-            })
         },res,req)
     })
     /**

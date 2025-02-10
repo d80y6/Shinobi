@@ -17,10 +17,9 @@ module.exports = function(s,config,lang){
         }
         return details
     }
-    async function getApiKeys({ ke, code, uid }){
+    async function getApiKeys({ ke, uid }){
         const whereQuery = {
             ke,
-            code
         };
         if(uid)whereQuery.uid = uid;
         const { rows } = await s.knexQueryPromise({
@@ -29,7 +28,10 @@ module.exports = function(s,config,lang){
             table: "API",
             where: whereQuery
         });
-        return rows[0]
+        for(row of rows){
+            row.details = JSON.parse(row.details);
+        }
+        return rows
     }
     async function getApiKey({ ke, code, uid }){
         const whereQuery = {
