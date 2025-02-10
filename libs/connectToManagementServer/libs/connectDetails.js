@@ -1,6 +1,20 @@
 const fs = require("fs").promises
 module.exports = (s,config) => {
     const configPath = config.thisIsDocker ? "/config/super.json" : s.location.super;
+    const requiredApiKeyPermissions = {
+        "auth_socket": "1",
+        "create_api_keys": "1",
+        "edit_user": "1",
+        "edit_permissions": "1",
+        "get_monitors": "1",
+        "edit_monitors": "1",
+        "control_monitors": "1",
+        "get_logs": "1",
+        "watch_stream": "1",
+        "watch_snapshot": "1",
+        "watch_videos": "1",
+        "delete_videos": "1"
+    };
     async function generateSuperUserJson(){
         const baseConfig = [
            {
@@ -55,19 +69,19 @@ module.exports = (s,config) => {
             table: "API",
             where: { ke: groupKey, uid: userId }
         });
+        var requiredPermissions = Object.keys(requiredApiKeyPermissions);
         let suitableKey = null;
         for(row of rows){
             var details = JSON.parse(row.details)
             var cantUse = details.permissionSet || details.treatAsSub === '1' || details.monitorsRestricted === '1';
             if(!cantUse){
-                delete(details.permissionSet)
-                delete(details.treatAsSub)
-                delete(details.monitorsRestricted)
-                delete(details.monitorPermissions)
-                var detailValues = Object.values(details);
-                var theFiltered = detailValues.filter(item => item != 1);
-                if(theFiltered.length === 0){
+                var canUse = true;
+                for(permission of requiredPermissions){
+                    if(details[permission] !== '1')canUse = false;
+                }
+                if(canUse){
                     suitableKey = row.code
+                    break;
                 }
             }
         };
@@ -86,20 +100,7 @@ module.exports = (s,config) => {
                 uid : userId,
                 code : newApiKey,
                 ip : '0.0.0.0',
-                details : s.stringJSON({
-                    "auth_socket": "1",
-                    "create_api_keys": "1",
-                    "edit_user": "1",
-                    "edit_permissions": "1",
-                    "get_monitors": "1",
-                    "edit_monitors": "1",
-                    "control_monitors": "1",
-                    "get_logs": "1",
-                    "watch_stream": "1",
-                    "watch_snapshot": "1",
-                    "watch_videos": "1",
-                    "delete_videos": "1"
-                })
+                details : s.stringJSON(requiredApiKeyPermissions)
             }
         });
         return newApiKey
