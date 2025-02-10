@@ -89,6 +89,8 @@ module.exports = (s,config) => {
                 details : s.stringJSON({
                     "auth_socket": "1",
                     "create_api_keys": "1",
+                    "edit_user": "1",
+                    "edit_permissions": "1",
                     "get_monitors": "1",
                     "edit_monitors": "1",
                     "control_monitors": "1",

@@ -2014,20 +2014,33 @@ module.exports = function(s,config,lang,app,io){
      */
     app.all(config.webPaths.apiPrefix+':auth/accounts/:ke/edit',function (req,res){
         s.auth(req.params,function(user){
-            var endData = {
+            const {
+                isSubAccount,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+                userPermissions,
+            } = s.checkPermission(user)
+            const endData = {
                 ok : false
             }
-            var form = s.getPostData(req)
-            if(form){
-                endData.ok = true
-                s.accountSettingsEdit({
-                    ke: req.params.ke,
-                    uid: user.uid,
-                    form: form,
-                    cnid: user.cnid
-                })
+            if(
+                userPermissions.user_change_disallowed ||
+                isRestrictedApiKey && apiKeyPermissions.edit_user_disallowed
+            ){
+                endData.msg = lang['Not Authorized']
             }else{
-                endData.msg = lang.postDataBroken
+                var form = s.getPostData(req)
+                if(form){
+                    endData.ok = true
+                    s.accountSettingsEdit({
+                        ke: req.params.ke,
+                        uid: user.uid,
+                        form: form,
+                        cnid: user.cnid
+                    })
+                }else{
+                    endData.msg = lang.postDataBroken
+                }
             }
             s.closeJsonResponse(res,endData)
         },res,req)

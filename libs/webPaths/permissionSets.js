@@ -19,8 +19,10 @@ module.exports = function(s,config,lang,app){
             const {
                 isSubAccount,
                 userPermissions,
+                apiKeyPermissions,
+                isRestrictedApiKey,
             } = s.checkPermission(user)
-            const canEditPermissions = !isSubAccount || userPermissions.edit_permissions;
+            const canEditPermissions = !isSubAccount || userPermissions.edit_permissions || isRestrictedApiKey && (apiKeyPermissions.edit_permissions || apiKeyPermissions.create_api_keys);
             if(!canEditPermissions){
                 s.closeJsonResponse(res,{ok: false, msg: lang['Not an Administrator Account']});
             }else{
@@ -41,8 +43,10 @@ module.exports = function(s,config,lang,app){
             const {
                 isSubAccount,
                 userPermissions,
+                apiKeyPermissions,
+                isRestrictedApiKey,
             } = s.checkPermission(user)
-            const canEditPermissions = !isSubAccount || userPermissions.edit_permissions;
+            const canEditPermissions = !isSubAccount || userPermissions.edit_permissions || isRestrictedApiKey && apiKeyPermissions.edit_permissions;
             if(!canEditPermissions){
                 response.msg = lang['Not Authorized'];
             }else{
@@ -66,8 +70,10 @@ module.exports = function(s,config,lang,app){
             const {
                 isSubAccount,
                 userPermissions,
+                apiKeyPermissions,
+                isRestrictedApiKey,
             } = s.checkPermission(user)
-            const canEditPermissions = !isSubAccount || userPermissions.edit_permissions;
+            const canEditPermissions = !isSubAccount || userPermissions.edit_permissions || isRestrictedApiKey && apiKeyPermissions.edit_permissions;
             if(!canEditPermissions){
                 response.msg = lang['Not Authorized'];
             }else{

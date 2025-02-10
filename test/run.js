@@ -286,6 +286,8 @@ module.exports = function(s,config,lang,io){
                           "details": {
                              "auth_socket": "1",
                              "create_api_keys": "1",
+                             "edit_user": "1",
+                             "edit_permissions": "1",
                              "get_monitors": "1",
                              "control_monitors": "1",
                              "get_logs": "1",

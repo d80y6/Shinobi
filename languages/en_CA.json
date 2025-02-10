@@ -679,7 +679,7 @@
    "Start Time cannot be empty.": "Start Time cannot be empty.",
    "Must be atleast one row": "Must be atleast one row",
    "InvalidJSONText": "Please ensure this is a valid JSON string for Shinobi monitor configuration.",
-   "Passwords don't match": "Passwords don't match",
+   "Passwords Don't Match": "Passwords Don't Match",
    "Email address is in use.": "Email address is in use.",
    "Account Created": "Account Created",
    "Account Edited": "Account Edited",

@@ -69,8 +69,7 @@ $(document).ready(function(){
                 notifyTitle = lang.accountActionFailed
                 notifyText = data.msg
                 notifyColor = 'warning'
-            }
-            if(data.user){
+            }else if(data.user){
                 notifyTitle = lang.accountAdded
                 notifyText = lang.accountAddedText + '\n' + data.user.mail
                 notifyColor = 'success'
@@ -301,13 +300,13 @@ $(document).ready(function(){
     });
     //sub simple lister
     theWindow.on('click','.delete',function(e){
-        var el = $(this).parents('.card')
+        var el = $(this).parents('[uid]')
         var subAccountEmail = el.find('.mail').text()
         var subAccountUid = el.attr('uid')
         deleteSubAccount(subAccountEmail,subAccountUid)
     })
     theWindow.on('click','.permission',function(e){
-        var el = $(this).parents('.card')
+        var el = $(this).parents('[uid]')
         var uid = el.attr('uid')
         openSubAccountEditor(uid)
         setSubmitButtonState(lang['Save Changes'],'check')
@@ -317,9 +316,6 @@ $(document).ready(function(){
     permissionsSection.on('click','[check]',function(e){
         $(this).parents('.form-group-group').find('select').val($(this).attr('check')).first().change()
     })
-    // permissionsSection.on('change','[monitor]',function(e){
-    //     writePermissionsFromFieldsToString()
-    // });
     permissionsMonitorSection.on('click', '[toggle-checkbox]',function(){
         var el = $(this);
         var target = el.attr('toggle-checkbox')
@@ -329,14 +325,6 @@ $(document).ready(function(){
     })
     addOnTabOpen('subAccountManager', function () {
         resetAccountForm()
-    })
-    onWebSocketEvent(function(d){
-        switch(d.f){
-            case'delete_sub_account':
-                var user = d.user
-                accountTable.find(`[uid="${user.uid}"]`).remove()
-            break;
-        }
     })
     initiateSubAccountPage()
     drawSubMenuItems('subAccountManager',definitions['Sub-Account Manager'])

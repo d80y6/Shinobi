@@ -82,6 +82,14 @@ module.exports = (s,config,lang) => {
                               value: 'create_api_keys',
                           },
                           {
+                              name: lang['Can Change User Settings'],
+                              value: 'edit_user',
+                          },
+                          {
+                              name: lang['Can Edit Permissions'],
+                              value: 'edit_permissions',
+                          },
+                          {
                               name: lang['Can Get Monitors'],
                               value: 'get_monitors',
                           },
