@@ -208,7 +208,6 @@ $(document).ready(function(){
     }
     var openSubAccountEditor = async function(uid){
         var account = loadedSubAccounts[uid]
-        console.log(account)
         drawSelectableForPermissionForm(account)
         await setPermissionSelectionsToFields(uid)
         theWindowForm.find('[name="pass"],[name="password_again"]').val('')

@@ -85,7 +85,7 @@ module.exports = function(s,config,lang){
                     if(user){
                         await createSession(apiKey,{
                             auth: sessionKey,
-                            permissions: s.parseJSON(apiKey.details),
+                            permissions: s.parseJSON(apiKey.details) || {},
                             mail: user.mail,
                             details: s.parseJSON(user.details),
                             lang: s.getLanguageFile(user.details.lang)
@@ -127,6 +127,11 @@ module.exports = function(s,config,lang){
                 generatedId = user.auth || user.code
             }
             user.details = s.parseJSON(user.details)
+            const apiKeyPermissions = additionalData.permissions || {};
+            const permissionSet = apiKeyPermissions.permissionSet;
+            const treatAsSub = apiKeyPermissions.treatAsSub === '1';
+            if(permissionSet)additionalData.details.permissionSet = permissionSet;
+            if(treatAsSub)additionalData.details.sub = '1';
             user.permissions = {}
             s.api[generatedId] = Object.assign({},user,additionalData)
             await applyPermissionsToUser(s.api[generatedId])

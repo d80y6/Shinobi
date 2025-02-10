@@ -88,12 +88,16 @@ module.exports = function(s,config,lang){
     async function applyPermissionsToUser(user){
         const groupKey = user.ke;
         const name = (user.details.permissionSet || '').trim();
+        const apiKeyPermissions = user.permissions || {};
         if(name){
             const rows = await getPermissionSets(groupKey, name)
             const foundRow = rows[0];
             if(foundRow){
                 user.details = Object.assign(user.details, foundRow.details)
             }
+        }
+        if(apiKeyPermissions.monitorsRestricted === '1' && apiKeyPermissions.monitorPermissions){
+            user.details = Object.assign(user.details, apiKeyPermissions.monitorPermissions)
         }
         return user
     }

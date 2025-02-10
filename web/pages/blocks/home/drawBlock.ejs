@@ -92,7 +92,7 @@ drawBlock = function(theBlock){
                 drawBlock(field)
             }else{
         if(field.notForSubAccount === true){
-             var notForSubAccount = '!details.sub'
+             var notForSubAccount = '!$user.details.sub'
              if(!field.evaluation){
                  evaluation = notForSubAccount
              }else{

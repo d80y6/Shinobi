@@ -57,11 +57,18 @@ module.exports = (s,config) => {
         });
         let suitableKey = null;
         for(row of rows){
-            row.details = JSON.parse(row.details)
-            const detailValues = Object.values(row.details);
-            const theFiltered = detailValues.filter(item => item != 1);
-            if(theFiltered.length === 0){
-                suitableKey = row.code
+            var details = JSON.parse(row.details)
+            var cantUse = details.permissionSet || details.treatAsSub === '1' || details.monitorsRestricted === '1';
+            if(!cantUse){
+                delete(details.permissionSet)
+                delete(details.treatAsSub)
+                delete(details.monitorsRestricted)
+                delete(details.monitorPermissions)
+                var detailValues = Object.values(details);
+                var theFiltered = detailValues.filter(item => item != 1);
+                if(theFiltered.length === 0){
+                    suitableKey = row.code
+                }
             }
         };
         if(!suitableKey){

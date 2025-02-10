@@ -10,7 +10,7 @@ module.exports = function(s,config,lang,app){
     } = require('./monitor/utils.js')(s,config,lang);
     require('./webPaths/permissionSets.js')(s,config,lang,app)
     require('./webPaths/customSettings.js')(s,config,lang,app)
-    const { createApiKey } = require('./user/apiKeys.js')(s,config,lang)
+    const { createApiKey, editApiKey } = require('./user/apiKeys.js')(s,config,lang)
     /**
     * API : Administrator : Edit Sub-Account (Account to share cameras with)
     */
@@ -381,22 +381,21 @@ module.exports = function(s,config,lang,app){
             var form = s.getPostData(req) || {}
             try{
                 const targetUID = form.uid || req.body.uid;
-                const insertQuery = await createApiKey({
+                const code = form.code;
+                const editResponse = await editApiKey({
+                    code,
                     ke : req.params.ke,
                     uid : !isSubAccount && targetUID ? targetUID : user.uid,
-                    // code : s.gid(30),
-                    ip : form.ip,
+                    ip : typeof form.ip === 'string' ? form.ip.trim() : '',
                     details : form.details ? s.stringJSON(form.details) : undefined
                 });
-                insertQuery.time = s.formattedTime(new Date,'YYYY-DD-MM HH:mm:ss');
-                insertQuery.details = s.parseJSON(insertQuery.details)
                 s.tx({
                     f: 'api_key_added',
                     uid: user.uid,
-                    form: insertQuery
+                    form: editResponse.api
                 },'GRP_' + req.params.ke)
-                endData.ok = true
-                endData.api = insertQuery
+                endData.ok = editResponse.ok
+                endData.api = editResponse.api
             }catch(err){
                 console.error(err)
             }

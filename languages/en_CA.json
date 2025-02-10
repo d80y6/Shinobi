@@ -700,6 +700,7 @@
    "monitorEditFailedMaxReached": "Your account has reached the maximum number of cameras that can be created. Speak to an administrator if you would like this changed.",
    "monitorEditFailedMaxReachedUnactivated": "Your system has reached the maximum number of cameras that can be created. You must activate your installation to create more.",
    "Sub-Accounts": "Sub-Accounts",
+   "Treated as Sub-Account": "Treated as Sub-Account",
    "Stream in Background": "Stream in Background",
    "Carousel in Background": "Carousel in Background",
    "Last": "Last",
@@ -2010,6 +2011,7 @@
    "Permission Groups": "Permission Groups",
    "User Permissions": "User Permissions",
    "User Accounts": "User Accounts",
+   "Restricted Monitors": "Restricted Monitors",
    "Available Pages": "Available Pages",
    "userPermissionsPageText": "Here you can create Permission Groups for this Management Panel. To set add a User to these Permission Groups access the User Accounts page.",
    "userAccountsPageText": "Here you can create Sub-Accounts. These accounts can have full access or limited access based on your selections when creating or editing them. To create Permission Groups you can access the User Permissions page."
