@@ -6,7 +6,7 @@ module.exports = (s,config,lang) => {
     } = require('../../system/utils.js')(config)
     const {
         getConnectionDetails,
-    } = require('./connectDetails.js')(s,config)
+    } = require('./connectDetails.js')(s,config,lang)
     const configPath = process.cwd() + '/conf.json'
     async function startWorker(){
         if(!config.userHasSubscribed){

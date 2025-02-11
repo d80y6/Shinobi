@@ -1,6 +1,7 @@
 const fs = require("fs").promises
-module.exports = (s,config) => {
-    const configPath = config.thisIsDocker ? "/config/super.json" : s.location.super;
+module.exports = (s,config,lang) => {
+    const { getNewApiKey } = require('../../user/apiKeys.js')(s,config,lang)
+    const configPath = s.location.super;
     const requiredApiKeyPermissions = {
         "auth_socket": "1",
         "create_api_keys": "1",
@@ -91,16 +92,16 @@ module.exports = (s,config) => {
         return suitableKey;
     }
     async function createApiKey(groupKey, userId){
-        const newApiKey = s.gid(30);
+        const newApiKey = await getNewApiKey(groupKey);
         await s.knexQueryPromise({
             action: "insert",
             table: "API",
             insert: {
-                ke : groupKey,
-                uid : userId,
-                code : newApiKey,
-                ip : '0.0.0.0',
-                details : s.stringJSON(requiredApiKeyPermissions)
+                ke: groupKey,
+                uid: userId,
+                code: newApiKey,
+                ip: '0.0.0.0',
+                details: s.stringJSON(requiredApiKeyPermissions)
             }
         });
         return newApiKey
