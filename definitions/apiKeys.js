@@ -148,7 +148,7 @@ module.exports = (s,config,lang) => {
                    // },
                ]
            },
-           "Monitors": {
+            "Monitors": {
               noHeader: true,
               styles: "display:none;",
               "section-class": "search-parent h_apiKey_monitorsRestricted_input h_apiKey_monitorsRestricted_1",
@@ -164,8 +164,8 @@ module.exports = (s,config,lang) => {
                      "class": "search-body",
                      id: "apiKeys_monitors",
                  },
-             ]
-          },
-       }
-   }
+              ]
+           },
+        }
+    }
 }

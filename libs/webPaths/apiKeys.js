@@ -1,5 +1,5 @@
 module.exports = function(s,config,lang,app){
-    const { getApiKeys, createApiKey, editApiKey, deleteApiKey } = require('../user/apiKeys.js')(s,config,lang)
+    const { getApiKey, getApiKeys, createApiKey, editApiKey, deleteApiKey } = require('../user/apiKeys.js')(s,config,lang)
     /**
     * API : Add/Edit API Key, binded to the user who created it
     */
@@ -121,6 +121,38 @@ module.exports = function(s,config,lang,app){
                 endData.ok = true
                 endData.keys = rows
                 endData.ke = user.ke
+            }
+            s.closeJsonResponse(res,endData)
+        },res,req)
+    })
+    /**
+    * API : Get API Key for Authenticated user
+    */
+    app.get([
+        config.webPaths.adminApiPrefix+':auth/api/:ke/get/:code',
+        config.webPaths.apiPrefix+':auth/api/:ke/get/:code',
+    ],function (req,res){
+        var endData = {ok:false}
+        s.auth(req.params, async function(user){
+            const {
+                isSubAccount,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user)
+            const endData = {
+                ok : false,
+                keys: []
+            }
+            if(isRestrictedApiKey && apiKeyPermissions.create_api_keys_disallowed){
+                endData.msg = lang['Not Authorized']
+            }else{
+                const groupKey = req.params.ke;
+                const targetUID = req.query.uid;
+                const code = req.params.code;
+                const uid = !isSubAccount && targetUID ? targetUID : user.uid;
+                const row = await getApiKey({ ke: groupKey, uid, code })
+                endData.ok = true
+                endData.key = row
             }
             s.closeJsonResponse(res,endData)
         },res,req)
