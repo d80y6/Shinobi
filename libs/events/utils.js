@@ -34,6 +34,7 @@ module.exports = (s,config,lang) => {
     const {
         isEven,
         fetchTimeout,
+        copyFile,
     } = require('../basic/utils.js')(process.cwd(),config)
     const glyphs = require('../../definitions/glyphs.js')
     async function saveImageFromEvent(options,frameBuffer){
@@ -482,6 +483,37 @@ module.exports = (s,config,lang) => {
             await extender(d,filter)
         }
     }
+    const saveEventBaseRecordingClip = async function({
+        groupKey,
+        monitorId,
+        filename,
+        filePath,
+        details = {}
+    }){
+        const response = { ok: true }
+        try{
+            const fileBinFilePath = getFileBinDirectory({ ke: groupKey, mid: monitorId }) + filename;
+            const copyResponse = await copyFile(filePath,fileBinFilePath)
+            const fileSize = (await fs.stat(fileBinFilePath)).size
+            // s.file('delete',filePath)
+            const fileBinInsertQuery = {
+                ke: groupKey,
+                mid: monitorId,
+                name: filename,
+                size: fileSize,
+                details: JSON.stringify(details),
+                status: 1,
+                time: new Date(),
+            }
+            await s.insertFileBinEntry(fileBinInsertQuery)
+            response.fileBinInsertQuery = fileBinInsertQuery
+            response.fileBinPath = fileBinFilePath
+        }catch(err){
+            response.ok = false;
+            response.err = err.toString();
+        }
+        return response;
+    }
     const getEventBasedRecordingUponCompletion = function(options){
         const response = {ok: true}
         return new Promise((resolve,reject) => {
@@ -507,8 +539,21 @@ module.exports = (s,config,lang) => {
                                 cutLength: videoLength,
                             })
                             if(cutResponse.ok){
+                                const { ok, fileBinPath, fileBinInsertQuery } = await saveEventBaseRecordingClip({
+                                    groupKey,
+                                    monitorId,
+                                    filename: cutResponse.filename,
+                                    filePath: cutResponse.filePath,
+                                    details: {
+                                        source: `${response.filePath}`
+                                    }
+                                });
                                 response.filename = cutResponse.filename
                                 response.filePath = cutResponse.filePath
+                                if(ok){
+                                    response.fileBinPath = fileBinPath;
+                                    response.fileBinInsertQuery = fileBinInsertQuery;
+                                }
                             }else{
                                 s.debugLog('cutResponse',cutResponse)
                             }
