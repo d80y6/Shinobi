@@ -5,6 +5,7 @@ $(document).ready(function(){
     function getServers(){
         return new Promise((resolve) => {
             $.get(superApiPrefix + $user.sessionKey + '/mgmt/list',function(data){
+                console.log('mgmtServers',data)
                 resolve(data.mgmtServers)
             })
         })
@@ -30,17 +31,18 @@ $(document).ready(function(){
         })
     }
     function drawServerRow({ managementServer, peerConnectKey }){
-        theList.append(`<tr class="server-row" data-server="${managementServer}" data-peerconnectkey="${peerConnectKey}">
+        var notExist = $(`[data-server="${managementServer}"][data-peerconnectkey="${peerConnectKey}"]`).length === 0
+        if(notExist)theList.append(`<tr class="server-row" data-server="${managementServer}" data-peerconnectkey="${peerConnectKey}">
             <td>${managementServer}</td>
             <td>${peerConnectKey}</td>
-            <td><a class="btn btn-sm btn-danger delete"></a></td>
+            <td><a class="btn btn-sm btn-danger delete"><i class="fa fa-trash-o"></i></a></td>
         </tr>`)
     }
     async function drawServers(){
         const list = await getServers()
         for(managementServer in list){
             var peerConnectKey = list[managementServer];
-            drawServers({ managementServer, peerConnectKey })
+            drawServerRow({ managementServer, peerConnectKey })
         }
     }
     theEnclosure.find('.submit').click(function(){
@@ -78,5 +80,8 @@ $(document).ready(function(){
             drawServerRow(formValues)
         }
         return false
+    })
+    onInitSuccess(function(){
+        drawServers()
     })
 })

@@ -1,3 +1,4 @@
+const { Worker } = require('worker_threads')
 module.exports = (s,config,lang) => {
     const { getConnectionDetails } = require('./libs/connectDetails.js')(s,config,lang)
     const { modifyConfiguration, getConfiguration } = require('../system/utils.js')(config)
@@ -73,7 +74,7 @@ module.exports = (s,config,lang) => {
                 p2pKey,
             }
         });
-        worker.on('message', (data) => {
+        worker.on('message', async (data) => {
             switch(data.f){
                 case'connectDetailsRequest':
                     getConnectionDetails().then((connectDetails) => {
@@ -90,7 +91,7 @@ module.exports = (s,config,lang) => {
                     const newConfig = data.data.form;
                     const mgmtServersFromNewConfig = JSON.stringify(configFromFile.mgmtServers)
                     if(mgmtServers !== mgmtServersFromNewConfig){
-
+                        resetAllManagementServers()
                     }
                     modifyConfiguration(newConfig)
                 break;
@@ -133,11 +134,19 @@ module.exports = (s,config,lang) => {
         if(mgmtServers){
             for(serverIp in mgmtServers){
                 var p2pKey = mgmtServers[serverIp]
-                await connectToManagmentServer(serverIp, p2pKey)
+                await connectToManagementServer(serverIp, p2pKey)
             }
         }else{
             console.log(`Management Server Connection Not Configured!`)
         }
+    }
+    async function migrateOldConfiguration(){
+        await addManagementServer(config.managementServer, config.peerConnectKey)
+        await connectToManagementServer(config.managementServer, config.peerConnectKey)
+        const configFromFile = await getConfiguration()
+        delete(configFromFile.managementServer)
+        delete(configFromFile.peerConnectKey)
+        modifyConfiguration(configFromFile)
     }
     return {
         getManagementServers,
@@ -148,5 +157,6 @@ module.exports = (s,config,lang) => {
         resetConnectionToManagementServer,
         resetAllManagementServers,
         connectAllManagementServers,
+        migrateOldConfiguration,
     }
 }

@@ -8,7 +8,7 @@ let {
     config,
     serverIp: hostPeerServer,
     p2pKey: peerConnectKey,
-} = workerData.config
+} = workerData
 let sslInfo = config.ssl || {}
 const expectedConfigPath = `./conf.json`
 const fs = require("fs").promises

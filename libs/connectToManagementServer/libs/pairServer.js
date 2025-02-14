@@ -34,6 +34,7 @@ module.exports = (s,config,lang) => {
             const peerConnectKey = req.body.peerConnectKey;
             if(peerConnectKey){
                 response = await addManagementServer(managementServer, peerConnectKey)
+                await connectToManagementServer(managementServer, peerConnectKey)
             }else{
                 response.ok = false;
                 response.msg = 'No P2P API Key Provided';

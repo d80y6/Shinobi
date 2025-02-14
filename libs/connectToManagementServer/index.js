@@ -1,9 +1,3 @@
-const fs = require('fs').promises
-const { Worker } = require('worker_threads')
-const testMode = process.argv[2] === 'test'
-let passedJSON = false
-let passedConfig = {}
-const moduleName = 'connectToManagementServer'
 module.exports = (s,config,lang,app) => {
     if(!config.enableMgmtConnect){
         return;
@@ -17,11 +11,13 @@ module.exports = (s,config,lang,app) => {
         connectToManagementServer,
         disconnectFromManagmentServer,
         connectAllManagementServers,
+        migrateOldConfiguration,
     } = require('./utils.js')(s,config,lang)
     s.onLoadedUsersAtStartup(() => {
         connectAllManagementServers()
         if(config.managementServer && config.peerConnectKey){
-            connectToManagementServer(config.managementServer, config.peerConnectKey)
+            console.log(`Migrating Old Central Configuration`)
+            migrateOldConfiguration()
         }
     })
     /**
