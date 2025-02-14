@@ -4,19 +4,13 @@ process.on("uncaughtException", function(error) {
   console.error(error);
 });
 const activeTerminalCommands = {}
-let config = workerData.config
-let lang = workerData.lang
+let {
+    config,
+    serverIp: hostPeerServer,
+    p2pKey: peerConnectKey,
+} = workerData.config
 let sslInfo = config.ssl || {}
 const expectedConfigPath = `./conf.json`
-const hostPeerServer = config.managementServer;
-const peerConnectKey = config.peerConnectKey;
-if(!peerConnectKey || !hostPeerServer){
-    console.log(`Management Server Connection Not Configured!`)
-    setInterval(() => {
-
-    }, 1000 * 60 * 60 * 24)
-    return;
-}
 const fs = require("fs").promises
 const net = require("net")
 const bson = require('bson')

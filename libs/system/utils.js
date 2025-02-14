@@ -29,8 +29,7 @@ module.exports = (config) => {
         },
         getConfiguration: () => {
             return new Promise((resolve,reject) => {
-                const configPath = config.thisIsDocker ? "/config/conf.json" : s.location.config;
-
+                const configPath = s.location.config;
                 fs.readFile(configPath, 'utf8', (err, data) => {
                     resolve(JSON.parse(data))
                 });

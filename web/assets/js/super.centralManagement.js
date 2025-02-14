@@ -1,24 +1,82 @@
 $(document).ready(function(){
     var theEnclosure = $('#centralManagement')
+    var theList = $('#centralManagement-list')
     var theForm = theEnclosure.find('form')
+    function getServers(){
+        return new Promise((resolve) => {
+            $.get(superApiPrefix + $user.sessionKey + '/mgmt/list',function(data){
+                resolve(data.mgmtServers)
+            })
+        })
+    }
+    function addServer({ managementServer, peerConnectKey }){
+        return new Promise((resolve) => {
+            $.post(superApiPrefix + $user.sessionKey + '/mgmt/save',{
+                managementServer,
+                peerConnectKey,
+            },function(data){
+                resolve(data)
+            })
+        })
+    }
+    function removeServer({ managementServer, peerConnectKey }){
+        return new Promise((resolve) => {
+            $.post(superApiPrefix + $user.sessionKey + '/mgmt/disconnect',{
+                managementServer,
+                peerConnectKey,
+            },function(data){
+                resolve(data)
+            })
+        })
+    }
+    function drawServerRow({ managementServer, peerConnectKey }){
+        theList.append(`<tr class="server-row" data-server="${managementServer}" data-peerconnectkey="${peerConnectKey}">
+            <td>${managementServer}</td>
+            <td>${peerConnectKey}</td>
+            <td><a class="btn btn-sm btn-danger delete"></a></td>
+        </tr>`)
+    }
+    async function drawServers(){
+        const list = await getServers()
+        for(managementServer in list){
+            var peerConnectKey = list[managementServer];
+            drawServers({ managementServer, peerConnectKey })
+        }
+    }
     theEnclosure.find('.submit').click(function(){
         theForm.submit()
     })
-    theForm.submit(function(e){
+    theEnclosure.on('click', '.delete', function(){
+        var el = $(this).parents('.server-row')
+        var managementServer = el.attr('data-server')
+        var peerConnectKey = el.attr('data-peerconnectkey')
+        $.confirm.create({
+            title: lang["Delete"],
+            body: `${lang.DeleteThisMsg}`,
+            clickOptions: {
+                title: '<i class="fa fa-trash-o"></i> ' + lang.Delete,
+                class: 'btn-danger btn-sm'
+            },
+            clickCallback: async function(){
+                const response = await removeServer({ managementServer, peerConnectKey })
+                if(response.ok){
+                    el.remove();
+                }
+            }
+        });
+    })
+    theForm.submit(async function(e){
         e.preventDefault()
         var formValues = $(this).serializeObject()
-        $.post(superApiPrefix + $user.sessionKey + '/mgmt/save',{
-            data: JSON.stringify(formValues)
-        },function(data){
-            console.log(data)
-            if(data.ok){
-                new PNotify({
-                    type: 'success',
-                    title: lang['Settings Changed'],
-                    text: lang.centralManagementSaved,
-                })
-            }
-        })
+        var response = await addServer(formValues)
+        if(response.ok){
+            new PNotify({
+                type: 'success',
+                title: lang['Settings Changed'],
+                text: lang.centralManagementSaved,
+            })
+            drawServerRow(formValues)
+        }
         return false
     })
 })
