@@ -12,6 +12,7 @@ module.exports = async function(s,config,lang){
             }
             var cloudDiskUseStartupForWebDav = function(group,userDetails){
                 group.cloudDiskUse['webdav'].name = 'WebDAV'
+                group.cloudDiskUse['webdav'].maxDays = parseInt(userDetails.webdav_max_days);
                 group.cloudDiskUse['webdav'].sizeLimitCheck = (userDetails.use_webdav_size_limit === '1')
                 if(!userDetails.webdav_size_limit || userDetails.webdav_size_limit === ''){
                     group.cloudDiskUse['webdav'].sizeLimit = 10000
@@ -344,6 +345,14 @@ module.exports = async function(s,config,lang){
                     "default": "10000",
                     "example": "",
                     "possible": ""
+                 },
+                 {
+                     "hidden": true,
+                    "name": "detail=webdav_max_days",
+                    "field": lang['Number of Days to keep'],
+                    "form-group-class":"autosave_webdav_input autosave_webdav_1",
+                    "form-group-class-pre-layer":"h_webdavsld_input h_webdavsld_1",
+                    "example": "30",
                  },
                  {
                      "hidden": true,

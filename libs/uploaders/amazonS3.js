@@ -32,6 +32,7 @@ module.exports = function(s,config,lang){
     }
     function cloudDiskUseStartup(group,userDetails){
         group.cloudDiskUse['s3'].name = 'Amazon S3'
+        group.cloudDiskUse['s3'].maxDays = parseInt(userDetails.aws_s3_max_days);
         group.cloudDiskUse['s3'].sizeLimitCheck = (userDetails.use_aws_s3_size_limit === '1')
         if(!userDetails.aws_s3_size_limit || userDetails.aws_s3_size_limit === ''){
             group.cloudDiskUse['s3'].sizeLimit = 10000
@@ -499,6 +500,14 @@ module.exports = function(s,config,lang){
             "default": "10000",
             "example": "",
             "possible": ""
+         },
+         {
+             "hidden": true,
+            "name": "detail=aws_s3_max_days",
+            "field": lang['Number of Days to keep'],
+            "form-group-class":"autosave_aws_s3_input autosave_aws_s3_1",
+            "form-group-class-pre-layer":"h_s3sld_input h_s3sld_1",
+            "example": "30",
          },
          {
              "hidden": true,

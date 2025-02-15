@@ -38,6 +38,7 @@ module.exports = function(s,config,lang){
     }
     function cloudDiskUseStartup(group,userDetails){
         group.cloudDiskUse['mnt'].name = 'Mounted Drive'
+        group.cloudDiskUse['mnt'].maxDays = parseInt(userDetails.mnt_max_days);
         group.cloudDiskUse['mnt'].sizeLimitCheck = (userDetails.use_mnt_size_limit === '1')
         if(!userDetails.mnt_size_limit || userDetails.mnt_size_limit === ''){
             group.cloudDiskUse['mnt'].sizeLimit = 10000
@@ -311,6 +312,14 @@ module.exports = function(s,config,lang){
             "default": "10000",
             "example": "",
             "possible": ""
+         },
+         {
+             "hidden": true,
+            "name": "detail=mnt_max_days",
+            "field": lang['Number of Days to keep'],
+            "form-group-class":"autosave_mnt_input autosave_mnt_1",
+            "form-group-class-pre-layer":"h_mntsld_input h_mntsld_1",
+            "example": "30",
          },
          {
              "hidden": true,

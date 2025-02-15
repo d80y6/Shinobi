@@ -117,6 +117,26 @@ function beginProcessing(){
     const setDiskUsedForGroup = (groupKey,size,target,videoRow) => {
         postMessage({f:'s.setDiskUsedForGroup', ke: groupKey, size: size, target: target, videoRow: videoRow})
     }
+    const getCloudVideoMaxDays = (user, storageType) => {
+        return new Promise((resolve) => {
+            const groupKey = user.ke;
+            const requestId = generateRandomId();
+            pendingCallbacks[requestId] = (value) => {
+                resolve(value)
+            }
+            postMessage({f:'getCloudVideoMaxDays', ke: groupKey, rid: requestId, type: storageType })
+        })
+    }
+    const getAllCloudVideoMaxDays = (user) => {
+        return new Promise((resolve) => {
+            const groupKey = user.ke;
+            const requestId = generateRandomId();
+            pendingCallbacks[requestId] = (value) => {
+                resolve(value)
+            }
+            postMessage({f:'getAllCloudVideoMaxDays', ke: groupKey, rid: requestId })
+        })
+    }
     const knexQuery = (...args) => {
         const requestId = generateRandomId();
         const callback = args.pop();
@@ -567,6 +587,57 @@ function beginProcessing(){
                 resolve()
             }
         })
+    }
+    //cloud video max days
+    const deleteCloudVideosByDays = async function(user){
+        const cloudDiskUse = await getAllCloudVideoMaxDays(user);
+        const groupKey = user.ke;
+        let affectedRows = 0;
+        for(storageType in cloudDiskUse){
+            var maxDays = cloudDiskUse[storageType].maxDays
+            if(maxDays){
+                const { err, rows: videos } = await s.knexQueryPromise({
+                    action: "select",
+                    columns: "*",
+                    table: "Cloud Videos",
+                    where: [
+                        ['type','=', storageType],
+                        ['ke','=', groupKey],
+                        ['archive','!=', `1`],
+                        ['time','<', sqlDate(maxDays+' DAY')],
+                    ]
+                });
+                if(videos.length > 0){
+                    affectedRows += videos.length;
+                    for(video of videos){
+                        s.setCloudDiskUsedForGroup(groupKey,{
+                            amount : -(video.size/1048576),
+                            storageType : storageType
+                        })
+                        s.deleteVideoFromCloudExtensionsRunner({ke: groupKey},storageType,video)
+                    }
+                }
+            }
+        }
+        return {
+            ok: !err,
+            err,
+            affectedRows,
+        }
+    }
+    const deleteOldCloudVideos = async (v) => {
+        // v = group, admin user
+        if(config.cron.deleteOld === true){
+            const { affectedRows } = await deleteCloudVideosByDays(v,cloudDiskUse)
+            if(affectedRows > 0 || config.debugLog === true){
+                postMessage({
+                    f: 'deleteOldCloudVideos',
+                    msg: `${affectedRows} Cloud Videos deleted`,
+                    ke: v.ke,
+                    time: 'moment()',
+                })
+            }
+        }
     }
     //user processing function
     const processUser = async (v) => {
