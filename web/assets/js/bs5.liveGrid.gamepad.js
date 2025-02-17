@@ -160,6 +160,14 @@ $(document).ready(function() {
         runPtzCommand(selectedMonitor, 'center')
     }
 
+    function startPatrol(){
+        return onvifStartPatrol(selectedMonitor)
+    }
+
+    function stopPatrol(){
+        return onvifStopPatrol(selectedMonitor)
+    }
+
     function translatePointTiltStick(x, y){
         if(x > stickBase && !lastPtzDirection['right']){
             lastPtzDirection['right'] = true
@@ -264,10 +272,9 @@ $(document).ready(function() {
             const gp = navigator.getGamepads()[0];
             getButtonsPressed(gp, function(buttonCode){
                 if(buttonCode == 10){
-                    closeSnapshot()
-                    openSnapshot()
+                    startPatrol()
                 }else if(buttonCode == 11){
-                    closeSnapshot()
+                    stopPatrol()
                 }else{
                     buttonPressAction(buttonCode)
                 }

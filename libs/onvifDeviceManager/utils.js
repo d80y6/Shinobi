@@ -1,4 +1,5 @@
 // relies on https://gitlab.com/Shinobi-Systems/shinobi-onvif
+const currentlyPatrolling = {};
 const {
     mergeDeep
 } = require('../common.js')
@@ -498,6 +499,92 @@ const getUIFieldValues = async (onvifDevice) => {
         all: true,
     })
 }
+const getPresets = async (onvifDevice, asObject = false, profileToken = "__CURRENT_TOKEN", numberOf = 10) => {
+    const response = (await runOnvifMethod({
+        device: onvifDevice,
+        action: 'getPresets',
+        service: 'ptz',
+        options: { "ProfileToken": profileToken }
+    }));
+    const presets = response.responseFromDevice ? response.responseFromDevice.GetPresetsResponse.Preset.slice(0, numberOf).map((item) => {
+        return { token: item.$.token, name: item.Name }
+    }) : [];
+    if(asObject){
+        const theObject = {};
+        for(preset of presets){
+            theObject[preset.token] = preset
+        }
+        return theObject
+    }
+    return presets
+}
+const goToPreset = async (onvifDevice, presetToken, speed = 1) => {
+    const response = (await runOnvifMethod({
+        device: onvifDevice,
+        action: 'gotoPreset',
+        service: 'ptz',
+        options: {
+            "ProfileToken":"__CURRENT_TOKEN",
+            "PresetToken": presetToken,
+            "Speed": { x: speed, y: speed, z: speed }
+        }
+    })).responseFromDevice;
+    return response
+}
+const removePreset = async (onvifDevice, presetToken) => {
+    const response = (await runOnvifMethod({
+        device: onvifDevice,
+        action: 'removePreset',
+        service: 'ptz',
+        options: {
+            "ProfileToken":"__CURRENT_TOKEN",
+            "PresetToken": presetToken,
+        }
+    })).responseFromDevice;
+    return response
+}
+const setPreset = async (onvifDevice, presetToken, presetName) => {
+    const response = (await runOnvifMethod({
+        device: onvifDevice,
+        action: 'setPreset',
+        service: 'ptz',
+        options: {
+            "ProfileToken":"__CURRENT_TOKEN",
+            "PresetToken": presetToken,
+            "PresetName": presetName,
+        }
+    })).responseFromDevice;
+    return response
+}
+const getNextPresetToken = (presets, presetToken) => {
+    const currentIndex = presets.findIndex(item => item.token === presetToken);
+    const nextToken = presets[currentIndex + 1] ? presets[currentIndex + 1].token : presets[0].token;
+    return nextToken
+}
+const startPatrolPresets = async (patrolId, onvifDevice, startingPresetToken = '1', patrolIndexTimeout = 5000, speed = 1, onChange = () => {}) => {
+    await stopPatrolPresets(patrolId)
+    const presets = await getPresets(onvifDevice);
+    await goToPreset(onvifDevice, startingPresetToken, speed)
+    const nextFromStartToken = getNextPresetToken(presets, startingPresetToken)
+    const moveToPresetOnTimeout = (presetToken) => {
+        currentlyPatrolling[patrolId] = setTimeout(async () => {
+            await goToPreset(onvifDevice, presetToken, speed)
+            onChange(presetToken)
+            const nextToken = getNextPresetToken(presets, presetToken)
+            moveToPresetOnTimeout(nextToken)
+        }, patrolIndexTimeout)
+    }
+    moveToPresetOnTimeout(nextFromStartToken)
+}
+const stopPatrolPresets = (patrolId) => {
+    return new Promise((resolve) => {
+        clearTimeout(currentlyPatrolling[patrolId])
+        setTimeout(() => {
+            clearTimeout(currentlyPatrolling[patrolId])
+            resolve()
+        },1000)
+    })
+}
 module.exports = {
     getDeviceInformation: getDeviceInformation,
     setHostname: setHostname,
@@ -514,4 +601,11 @@ module.exports = {
     setDiscoveryMode: setDiscoveryMode,
     setNetworkInterface: setNetworkInterface,
     getUIFieldValues: getUIFieldValues,
+    setPreset,
+    getPresets,
+    goToPreset,
+    removePreset,
+    getNextPresetToken,
+    startPatrolPresets,
+    stopPatrolPresets,
 }

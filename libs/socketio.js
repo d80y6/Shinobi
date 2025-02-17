@@ -11,9 +11,6 @@ module.exports = function(s,config,lang,io){
         applyPermissionsToUser,
     } = require('./user/permissionSets.js')(s,config,lang)
     const {
-        ptzControl
-    } = require('./control/ptz.js')(s,config,lang)
-    const {
         legacyFilterEvents
     } = require('./events/utils.js')(s,config,lang)
     s.clientSocketConnection = {}
