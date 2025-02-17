@@ -273,6 +273,13 @@ module.exports = (processCwd,config) => {
             console.error(`Error deleting files: ${error.message}`);
         }
     }
+    function setTimeoutPromise(theTime){
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve()
+            },theTime)
+        })
+    }
     return {
         parseJSON: parseJSON,
         stringJSON: stringJSON,
@@ -297,5 +304,6 @@ module.exports = (processCwd,config) => {
         setDefaultIfUndefined,
         deleteFilesInFolder,
         moveFile,
+        setTimeoutPromise,
     }
 }

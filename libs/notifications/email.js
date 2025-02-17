@@ -160,7 +160,7 @@ module.exports = function(s,config,lang,getSnapshot){
                         let videoName = null
                         const eventBasedRecording = await getEventBasedRecordingUponCompletion({
                             ke: d.ke,
-                            mid: d.mid
+                            mid: d.mid || d.id
                         })
                         if(eventBasedRecording.filePath){
                             videoPath = eventBasedRecording.filePath

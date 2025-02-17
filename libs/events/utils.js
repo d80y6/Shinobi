@@ -492,7 +492,7 @@ module.exports = (s,config,lang) => {
     }){
         const response = { ok: true }
         try{
-            const fileBinFilePath = getFileBinDirectory({ ke: groupKey, mid: monitorId }) + filename;
+            const fileBinFilePath = s.getFileBinDirectory({ ke: groupKey, mid: monitorId }) + filename;
             const copyResponse = await copyFile(filePath,fileBinFilePath)
             const fileSize = (await fs.stat(fileBinFilePath)).size
             // s.file('delete',filePath)
@@ -510,26 +510,30 @@ module.exports = (s,config,lang) => {
             response.fileBinPath = fileBinFilePath
         }catch(err){
             response.ok = false;
+            console.log(err)
             response.err = err.toString();
         }
         return response;
     }
     const getEventBasedRecordingUponCompletion = function(options){
         const response = {ok: true}
-        return new Promise((resolve,reject) => {
+        return new Promise(async (resolve,reject) => {
             const groupKey = options.ke
             const monitorId = options.mid
             const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
-            if(activeMonitor && activeMonitor.eventBasedRecording && activeMonitor.eventBasedRecording.process){
-                const eventBasedRecording = activeMonitor.eventBasedRecording
+            if(!activeMonitor || !activeMonitor.eventBasedRecording){
+                return resolve(response)
+            }
+            const fileTime = options.fileTime || activeMonitor.eventBasedRecordingLastFileTime;
+            if(activeMonitor.eventBasedRecording[fileTime] && activeMonitor.eventBasedRecording[fileTime].process){
+                const eventBasedRecording = activeMonitor.eventBasedRecording[fileTime]
                 const monitorConfig = s.group[groupKey].rawMonitorConfigurations[monitorId]
                 const videoLength = parseInt(monitorConfig.details.detector_send_video_length) || 10
                 const recordingDirectory = s.getVideoDirectory(monitorConfig)
-                const fileTime = eventBasedRecording.lastFileTime
                 const filename = `${fileTime}.mp4`
                 response.filename = `${filename}`
                 response.filePath = `${recordingDirectory}${filename}`
-                eventBasedRecording.process.on('exit',function(){
+                eventBasedRecording.process.on('exit', async function(){
                     setTimeout(async () => {
                         if(!isNaN(videoLength)){
                             const cutResponse = await cutVideoLength({
