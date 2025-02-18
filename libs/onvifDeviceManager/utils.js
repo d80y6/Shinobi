@@ -561,7 +561,7 @@ const getNextPresetToken = (presets, presetToken) => {
     const nextToken = presets[currentIndex + 1] ? presets[currentIndex + 1].token : presets[0].token;
     return nextToken
 }
-const startPatrolPresets = async (patrolId, onvifDevice, startingPresetToken = '1', patrolIndexTimeout = 5000, speed = 1, onChange = () => {}) => {
+const startPatrolPresets = async (patrolId, onvifDevice, startingPresetToken = '1', patrolIndexTimeout = 20000, speed = 1, onChange = () => {}) => {
     await stopPatrolPresets(patrolId)
     const presets = await getPresets(onvifDevice);
     await goToPreset(onvifDevice, startingPresetToken, speed)
