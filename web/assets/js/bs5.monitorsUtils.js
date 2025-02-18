@@ -1205,6 +1205,10 @@ function incrementString(strNum) {
     }
     return incrementedStr;
 }
+function padToThreeDigits(input) {
+  const numericValue = parseInt(input, 10);
+  return numericValue.toString().padStart(3, '0');
+}
 $(document).ready(function(){
     $('body')
     .on('click','[system]',function(){

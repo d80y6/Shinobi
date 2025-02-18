@@ -499,7 +499,7 @@ const getUIFieldValues = async (onvifDevice) => {
         all: true,
     })
 }
-const getPresets = async (onvifDevice, asObject = false, profileToken = "__CURRENT_TOKEN", numberOf = 10) => {
+const getPresets = async (onvifDevice, asObject = false, profileToken = "__CURRENT_TOKEN", numberOf = 256) => {
     const response = (await runOnvifMethod({
         device: onvifDevice,
         action: 'getPresets',

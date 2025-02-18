@@ -251,7 +251,7 @@ async function drawPtzControlsOnLiveGridBlock(monitorId){
                     <button class="btn btn-sm btn-primary dropdown-toggle" type="button" id="goToPtzPreset_${monitorId}" data-bs-toggle="dropdown" aria-expanded="false">
                         ${lang['PTZ Presets']}
                     </button>
-                    <ul class="dropdown-menu shadow-lg dropdown-menu-dark bg-dark text-white" aria-labelledby="goToPtzPreset_${monitorId}">
+                    <ul class="dropdown-menu shadow-lg dropdown-menu-dark bg-dark text-white" aria-labelledby="goToPtzPreset_${monitorId}" style="overflow:auto;max-height:350px;">
                         <li><a class="dropdown-item cursor-pointer run-live-grid-monitor-ptz" data-ptz-control="center"><i class="fa fa-h-square"></i> ${lang['Home']}</a></li>
                         <li><hr class="dropdown-divider"></li>
                         ${onvifPresets.map(item => `<li><a class="dropdown-item cursor-pointer run-live-grid-monitor-onvif-goToPreset" data-preset="${item.token}">${item.name}</a></li>`).join('')}
@@ -261,7 +261,7 @@ async function drawPtzControlsOnLiveGridBlock(monitorId){
                     <button class="btn btn-sm btn-primary dropdown-toggle" type="button" id="savePtzPreset_${monitorId}" data-bs-toggle="dropdown" aria-expanded="false">
                         ${lang['Save PTZ Preset']}
                     </button>
-                    <ul class="dropdown-menu shadow-lg dropdown-menu-dark bg-dark text-white" aria-labelledby="savePtzPreset_${monitorId}">
+                    <ul class="dropdown-menu shadow-lg dropdown-menu-dark bg-dark text-white" aria-labelledby="savePtzPreset_${monitorId}" style="overflow:auto;max-height:350px;">
                         <li><a class="dropdown-item cursor-pointer run-live-grid-monitor-ptz" data-ptz-control="setHome"><i class="fa fa-h-square"></i> ${lang['Set Home']}</a></li>
                         <li><a class="dropdown-item cursor-pointer run-live-grid-monitor-onvif-addPreset"><i class="fa fa-h-plus"></i> ${lang['Add Preset']}</a></li>
                         <li><hr class="dropdown-divider"></li>
@@ -1193,12 +1193,15 @@ $(document).ready(function(e){
     .on('click','.run-live-grid-monitor-onvif-goToPreset',function(){
         var monitorId = $(this).parents('[data-mid]').attr('data-mid')
         var presetToken = $(this).attr('data-preset')
-        runPtzCommand(monitorId, 'goToPreset', { presetToken })
+        runPtzCommand(monitorId, 'goToPreset', { presetToken: padToThreeDigits(presetToken) })
     })
     .on('click','.run-live-grid-monitor-onvif-setPreset',function(){
         var monitorId = $(this).parents('[data-mid]').attr('data-mid')
         var presetToken = $(this).attr('data-preset')
-        runPtzCommand(monitorId, 'setPreset', { presetToken, presetName: presetToken })
+        var presetName = $(this).text()
+        var monitor = loadedMonitors[monitorId]
+        var nonStandardOnvif = monitor.details.onvif_non_standard === '1'
+        runPtzCommand(monitorId, 'setPreset', { presetToken: padToThreeDigits(presetToken), presetName: nonStandardOnvif ? undefined : presetName })
     })
     .on('click','.run-live-grid-monitor-onvif-startPatrol',function(){
         var monitorId = $(this).parents('[data-mid]').attr('data-mid')
@@ -1223,7 +1226,7 @@ $(document).ready(function(e){
                 var presetName = $('#ptz-preset-save-name').val();
                 var onvifPresets = await runPtzCommand(monitorId, 'getPresets');
                 var nextToken = incrementString(onvifPresets[onvifPresets.length - 1].token);
-                await runPtzCommand(monitorId, 'setPreset', { presetToken: nextToken, presetName });
+                await runPtzCommand(monitorId, 'setPreset', { presetToken: padToThreeDigits(nextToken), presetName });
                 await drawPtzControlsOnLiveGridBlock(monitorId)
                 await drawPtzControlsOnLiveGridBlock(monitorId)
             }
