@@ -4,9 +4,9 @@ module.exports = {
 
     shouldApply: isClient('sqlite'),
 
-    apply: function (config) {
-        config.client = 'sqlite3'
-        config.useNullAsDefault = true
+    apply: function (databaseOptions) {
+        databaseOptions.client = 'sqlite3'
+        databaseOptions.useNullAsDefault = true
     },
 
     install: npmCheckAndInstall('sqlite3')

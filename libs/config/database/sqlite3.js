@@ -4,9 +4,9 @@ module.exports = {
 
     shouldApply: isClient('sqlite3'),
 
-    apply: function (config) {
-        if (config.connection.filename === undefined) {
-            config.connection.filename = config.mainDirectory + "/shinobi.sqlite"
+    apply: function (databaseOptions) {
+        if (databaseOptions.connection.filename === undefined) {
+            databaseOptions.connection.filename = databaseOptions.mainDirectory + "/shinobi.sqlite"
         }
     },
 
