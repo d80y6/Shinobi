@@ -1,22 +1,22 @@
-const {
-    getDeviceInformation,
-    setHostname,
-    setProtocols,
-    setGateway,
-    setDNS,
-    setNTP,
-    rebootCamera,
-    setDateAndTime,
-    createUser,
-    deleteUser,
-    setVideoConfiguration,
-    setNetworkInterface,
-    setImagingSettings,
-    setDiscoveryMode,
-    getUIFieldValues,
-} = require('./onvifDeviceManager/utils.js')
-
 module.exports = function(s,config,lang,app,io){
+    const {
+        getDeviceInformation,
+        setHostname,
+        setProtocols,
+        setGateway,
+        setDNS,
+        setNTP,
+        rebootCamera,
+        setDateAndTime,
+        createUser,
+        deleteUser,
+        setVideoConfiguration,
+        setNetworkInterface,
+        setImagingSettings,
+        setDiscoveryMode,
+        getUIFieldValues,
+    } = require('./onvifDeviceManager/utils.js')(s,config,lang)
+
     async function getOnvifDevice(groupKey,monitorId){
         const onvifDevice = s.group[groupKey].activeMonitors[monitorId].onvifConnection || (await s.createOnvifDevice({id: monitorId, ke: groupKey})).device
         return onvifDevice

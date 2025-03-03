@@ -16,6 +16,7 @@ var copySettingsSelector = $('#copy_settings')
 var monitorPresetsSelection = $('#monitorPresetsSelection')
 var monitorPresetsNameField = $('#monitorPresetsName')
 var detectorsSelected = $('#detectorsSelected')
+var monitorSettingsEventPtz = $('#monitorSettingsEventPtz')
 var monitorsList = monitorEditorWindow.find('.monitors_list')
 var editorForm = monitorEditorWindow.find('form')
 var tagsInput = monitorEditorWindow.find('[name="tags"]')
@@ -453,6 +454,7 @@ window.getMonitorEditFormFields = function(){
     // monitorConfig.details = safeJsonParse(monitorConfig.details)
     monitorConfig.details.substream = getSubStreamChannelFields()
     monitorConfig.details.input_map_choices = monitorSectionInputMapsave()
+    monitorConfig.details.triggerMonitorsPtzTargets = getSelectedEventBasedPtzPresets()
     // TODO : Input Maps and Stream Channels (does old way at the moment)
 
 
@@ -610,6 +612,7 @@ async function importIntoMonitorEditor(options){
     var monitorGroups = monitorDetails.groups ? safeJsonParse(monitorDetails.groups) : []
     monitorTags = monitorTags.concat(monitorGroups)
     loadMonitorGroupTriggerList()
+    loadEventBasedPtzRows()
 	if (monitorConfig.ke && monitorConfig.mid) {
 		$.get(getApiPrefix()+'/hls/'+monitorConfig.ke+'/'+monitorConfig.mid+'/detectorStream.m3u8',function(data){
 			$('#monEditBufferPreview').html(data)
@@ -724,6 +727,7 @@ async function importIntoMonitorEditor(options){
             }
         }
     });
+
     //
     await getPluginsList(monitorConfig)
     //
@@ -1245,6 +1249,56 @@ editorForm.find('[name="type"]').change(function(e){
             triggerTagsInput.tagsinput('add',tag);
         });
     }
+    async function loadEventBasedPtzRows(){
+        var triggerMonitorsPtzTargets = monitorEditorSelectedMonitor && monitorEditorSelectedMonitor.details.triggerMonitorsPtzTargets ? monitorEditorSelectedMonitor.details.triggerMonitorsPtzTargets : {}
+        for(monitorId in triggerMonitorsPtzTargets){
+            const presetToken = triggerMonitorsPtzTargets;
+            drawEventBasedPtzRow(monitorId, presetToken)
+        }
+    }
+    async function drawEventBasedPtzRow(monitorId, presetToken){
+        var monitorOptions = Object.values(loadedMonitors).map(monitor => createOptionHtml({
+            label: monitor.name,
+            value: monitor.mid,
+            selected: monitor.mid === monitorId,
+        })).join('');
+        var html = `<tr class="monitorSettingsEventPtz-row">
+            <td><select class="form-control form-control-sm selected-monitor">${monitorOptions}</select></td>
+            <td><select class="form-control form-control-sm selected-preset">${monitorId ? await getMonitorOnvifPresetsHtml(monitorId, presetToken) : ''}</select></td>
+            <td><a class="btn btn-sm btn-danger remove-row"><i class="fa fa-trash-o"></i></a></td>
+        </tr>`
+        monitorSettingsEventPtz.html(html)
+    }
+    async function getMonitorOnvifPresetsHtml(monitorId, selectedPreset = ''){
+        var isOnvif = loadedMonitors[monitorId].details.is_onvif === '1';
+        if(!isOnvif)return;
+        var onvifPresets = await runPtzCommand(monitorId, 'getPresets');
+        if(onvifPresets.length === 0 && selectedPreset){
+            return createOptionHtml({
+                label: selectedPreset,
+                value: selectedPreset,
+                selected: true,
+            })
+        }else{
+            return onvifPresets.map(preset => createOptionHtml({
+                label: preset.name,
+                value: preset.token,
+                selected: preset.token === selectedPreset,
+            })).join('');
+        }
+    }
+    function getSelectedEventBasedPtzPresets(){
+        var selected = {};
+        monitorEditorWindow.find('.monitorSettingsEventPtz-row').each(function(n,v){
+            var el = $(v);
+            var monitorId = el.find('.selected-monitor').val();
+            var presetToken = el.find('.selected-preset').val();
+            if(monitorId && presetToken){
+                selected[monitorId] = presetToken;
+            }
+        });
+        return selected;
+    }
     window.writeToMonitorSettingsWindow = function(monitorValues){
         $.each(monitorValues,function(key,value){
             if(key === `details`){
@@ -1342,6 +1396,18 @@ editorForm.find('[name="type"]').change(function(e){
     });
     monitorEditorWindow.find('.probe_config').click(function(){
         $.pB.submit(buildMonitorURL(),true)
+    });
+    monitorEditorWindow.on('change', '.monitorSettingsEventPtz-row .selected-monitor', async function(){
+        var el = $(this);
+        var monitorId = el.val();
+        var presetField = el.parents('.monitorSettingsEventPtz-row').find('.selected-preset');
+        var html = await getMonitorOnvifPresetsHtml(monitorId);
+        presetField.html(html)
+    })
+    .on('click', '.monitorSettingsEventPtz-row .remove-row', function(){
+        var el = $(this);
+        var theRow = el.parents('.monitorSettingsEventPtz-row');
+        theRow.remove();
     });
     onWebSocketEvent(function (d){
         //     new PNotify({

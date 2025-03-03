@@ -93,3 +93,22 @@ function getListOfTagsFromMonitors(){
     })
     return listOftags
 }
+function formattedTime(time,twelveHourClock,utcConvert){
+    var theMoment = moment(time)
+    if(utcConvert)theMoment = theMoment.clone().utc()
+    return theMoment.format(twelveHourClock ? 'hh:mm:ss A YYYY-MM-DD' : 'HH:mm:ss YYYY-MM-DD')
+}
+
+function durationBetweenTimes(start,end){
+    var duration = moment.duration(moment(end).diff(moment(start)));
+    var hours = duration.asMinutes().toFixed(0);
+    return hours
+}
+function formattedTimeForFilename(time,utcConvert,timeFormat){
+    var theMoment = moment(time)
+    if(utcConvert)theMoment = theMoment.clone().utc()
+    return theMoment.format(timeFormat ? timeFormat : 'YYYY-MM-DDTHH:mm:ss')
+}
+function convertTZ(date) {
+    return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", {timeZone: serverTimezone}));
+}

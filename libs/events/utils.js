@@ -22,6 +22,11 @@ module.exports = (s,config,lang) => {
         moveCameraPtzToMatrix
     } = require('../control/ptz.js')(s,config,lang)
     const {
+        getOnvifDevice,
+        getPresets,
+        goToPreset,
+    } = require('../onvifDeviceManager/utils.js')(s,config,lang)
+    const {
         cutVideoLength,
         reEncodeVideoAndBinOriginalAddToQueue
     } = require('../video/utils.js')(s,config,lang)
@@ -478,9 +483,11 @@ module.exports = (s,config,lang) => {
             })
         }
 
+        moveAssociatedMonitorPtzTargets(groupKey, monitorId)
+
         for (var i = 0; i < s.onEventTriggerExtensions.length; i++) {
             const extender = s.onEventTriggerExtensions[i]
-            await extender(d,filter)
+            await extender(d,filter,eventTime)
         }
     }
     const saveEventBaseRecordingClip = async function({
@@ -923,7 +930,34 @@ module.exports = (s,config,lang) => {
         const tags = getObjectTagsFromMatrices(d)
         return `${tags.join(', ')} ${lang.detected} in ${monitorName}`
     }
+    function getAssociatedMonitorPtzTargets(groupKey, monitorId){
+        const monitorDetails = s.group[groupKey].rawMonitorConfigurations[monitorId].details;
+        const detectorEventPtz = monitorDetails.detectorEventPtz === '1';
+        if(detectorEventPtz){
+            const triggerMonitorsPtzTargets = monitorDetails.triggerMonitorsPtzTargets || {}
+            return triggerMonitorsPtzTargets;
+        }else{
+            return {}
+        }
+    }
+    async function moveAssociatedMonitorPtzTargets(groupKey, monitorId){
+        const response = { ok: true, responseFromDevices: {} };
+        const triggerMonitorsPtzTargets = getAssociatedMonitorPtzTargets(groupKey, monitorId);
+        if(triggerMonitorsPtzTargets.length > 0){
+            for(targetMonitorId in triggerMonitorsPtzTargets){
+                const presetToken = triggerMonitorsPtzTargets[targetMonitorId]
+                const onvifEnabled = s.group[groupKey].rawMonitorConfigurations[targetMonitorId].details.is_onvif === '1';
+                if(onvifEnabled){
+                    var onvifDevice = await getOnvifDevice(groupKey, targetMonitorId);
+                    response.responseFromDevices[targetMonitorId] = await goToPreset(onvifDevice, presetToken);
+                }
+            }
+        }
+        return response
+    }
     return {
+        getAssociatedMonitorPtzTargets,
+        moveAssociatedMonitorPtzTargets,
         getObjectTagNotifyText,
         getObjectTagsFromMatrices,
         countObjects: countObjects,

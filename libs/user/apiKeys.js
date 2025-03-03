@@ -9,6 +9,8 @@ module.exports = function(s,config,lang){
         { name: lang['Can View Snapshots'], value: 'watch_snapshot' },
         { name: lang['Can View Videos'], value: 'watch_videos' },
         { name: lang['Can Delete Videos'], value: 'delete_videos' },
+        { name: lang['Can View Alarm'], value: 'get_alarms' },
+        { name: lang['Can Edit Alarm'], value: 'edit_alarms' },
     ]
     function createFullAccessDetails(){
         const details = {}

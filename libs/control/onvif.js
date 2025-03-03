@@ -10,35 +10,15 @@ module.exports = function(s,config,lang,app,io){
         addCredentialsToStreamLink,
     } = require('../monitor/utils.js')(s,config,lang)
     const {
+        getOnvifDevice,
+        createOnvifDevice,
         startPatrolPresets,
         stopPatrolPresets,
         removePreset,
         getPresets,
         setPreset,
         goToPreset,
-    } = require('../onvifDeviceManager/utils.js')
-    const createOnvifDevice = async (onvifAuth) => {
-        var response = {ok: false}
-        const monitorConfig = s.group[onvifAuth.ke].rawMonitorConfigurations[onvifAuth.id]
-        const controlBaseUrl = monitorConfig.details.control_base_url || s.buildMonitorUrl(monitorConfig, true)
-        const controlURLOptions = s.cameraControlOptionsFromUrl(controlBaseUrl,monitorConfig)
-        //create onvif connection
-        const device = new onvif.OnvifDevice({
-            address : controlURLOptions.host + ':' + controlURLOptions.port,
-            user : controlURLOptions.username,
-            pass : controlURLOptions.password
-        })
-        s.group[onvifAuth.ke].activeMonitors[onvifAuth.id].onvifConnection = device
-        try{
-            const info = await device.init()
-            response.ok = true
-            response.device = device
-        }catch(err){
-            response.msg = 'Device responded with an error'
-            response.error = err
-        }
-        return response
-    }
+    } = require('../onvifDeviceManager/utils.js')(s,config,lang)
     const replaceDynamicInOptions = (Camera,options) => {
         const newOptions = {}
         Object.keys(options).forEach((key) => {
@@ -50,18 +30,6 @@ module.exports = function(s,config,lang,app,io){
             }
         })
         return newOptions
-    }
-    const getOnvifDevice = async (groupKey, monitorId) => {
-        const device = s.group[groupKey].activeMonitors[monitorId].onvifConnection;
-        if(
-            !device ||
-            !device.current_profile ||
-            !device.current_profile.token
-        ){
-            return (await createOnvifDevice({ ke: groupKey, id: monitorId })).device
-        }else{
-            return device
-        }
     }
     const runOnvifMethod = (onvifOptions,callback) => {
         return new Promise((resolve) => {

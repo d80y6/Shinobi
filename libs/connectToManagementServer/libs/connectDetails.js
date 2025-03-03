@@ -15,6 +15,8 @@ module.exports = (s,config,lang) => {
         "watch_snapshot": "1",
         "watch_videos": "1",
         "delete_videos": "1"
+        "get_alarms": "1"
+        "edit_alarms": "1"
     };
     async function generateSuperUserJson(){
         const baseConfig = [

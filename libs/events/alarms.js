@@ -1,0 +1,100 @@
+module.exports = function(s,config,lang){
+    const acceptableOperators = ['>=','>','<','<=']
+    function sanitizeOperator(startOrEndOperator = ''){
+        const theOperator = `${startOrEndOperator}`.trim()
+        if(!theOperator || acceptableOperators.indexOf(theOperator) === -1){
+            return undefined
+        }else{
+            return theOperator
+        }
+    }
+    async function getAlarm({ ke, mid, name, status, editedBy, start, startOperator = '>=', end, endOperator = '<=' }){
+        const whereQuery = [
+            ['ke','=',ke],
+        ];
+        if(mid)whereQuery.push(['mid','=',mid]);
+        if(name)whereQuery.push(['name','=',name]);
+        if(status !== undefined && status !== null)whereQuery.push(['status','=',status]);
+        if(editedBy)whereQuery.push(['editedBy','=',editedBy]);
+        if(start)whereQuery.push(['time',startOperator,start]);
+        if(end)whereQuery.push(['end',endOperator,end]);
+        const { rows } = await s.knexQueryPromise({
+            action: "select",
+            columns: "*",
+            table: "Alarms",
+            where: whereQuery
+        });
+        for(row of rows){
+            row.details = JSON.parse(row.details);
+        }
+        return rows
+    }
+    function getAlarmParams({ mid, name, fileBinName, videoTime, notes, status, editedBy, details = {}, start, end }){
+        const params = {};
+        params.details = s.stringJSON(details || {});
+        if(mid)params.mid = mid;
+        if(name)params.name = name;
+        if(fileBinName)params.fileBinName = fileBinName;
+        if(videoTime)params.videoTime = videoTime;
+        if(notes)params.notes = notes;
+        if(status !== undefined && status !== null)params.status = status;
+        if(editedBy)params.editedBy = editedBy;
+        if(start)params.start = start;
+        if(end)params.end = end;
+        return params
+    }
+    async function createAlarm({ ke, mid, name, fileBinName, videoTime, notes, status, editedBy, details = {}, start, end }){
+        const insertQuery = {
+            ke,
+            ...getAlarmParams({ ke, mid, name, fileBinName, videoTime, notes, status, editedBy, details = {}, start, end })
+        };
+        await s.knexQueryPromise({
+            action: "insert",
+            table: "Alarms",
+            insert: insertQuery
+        })
+        return insertQuery;
+    }
+    async function updateAlarm({ ke, mid, name, fileBinName, videoTime, notes, status, editedBy, details = {}, start, end }){
+        const whereQuery = {
+            ke,
+            mid,
+            start,
+        };
+        const updateQuery = getAlarmParams({ ke, name, fileBinName, videoTime, notes, status, editedBy, details = {}, end });
+        const response = { ok: true }
+        try{
+            if(Object.keys(updateQuery).length > 0){
+                await s.knexQueryPromise({
+                    action: "update",
+                    table: "Alarms",
+                    where: whereQuery,
+                    update: updateQuery
+                })
+            }
+        }catch(err){
+            response.ok = false;
+            response.err = err.toString();
+        }
+        return response;
+    }
+    async function deleteAlarm({ ke, mid, start }){
+        const whereQuery = {
+            ke,
+            mid,
+            start,
+        };
+        return await s.knexQueryPromise({
+            action: "delete",
+            table: "Alarms",
+            where: whereQuery
+        })
+    }
+    return {
+        getAlarm,
+        createAlarm,
+        updateAlarm,
+        deleteAlarm,
+        sanitizeOperator,
+    }
+}
