@@ -1,0 +1,14 @@
+.alarm-live-video iframe,
+.video_video {
+    width:100%;
+    height:100%;
+    background: #000;
+}
+
+.row {
+    height:50vh;
+}
+
+#alarm-fileBin-video {
+    background: #000;
+}

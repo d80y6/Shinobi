@@ -1250,9 +1250,10 @@ editorForm.find('[name="type"]').change(function(e){
         });
     }
     async function loadEventBasedPtzRows(){
+        monitorSettingsEventPtz.empty();
         var triggerMonitorsPtzTargets = monitorEditorSelectedMonitor && monitorEditorSelectedMonitor.details.triggerMonitorsPtzTargets ? monitorEditorSelectedMonitor.details.triggerMonitorsPtzTargets : {}
         for(monitorId in triggerMonitorsPtzTargets){
-            const presetToken = triggerMonitorsPtzTargets;
+            const presetToken = triggerMonitorsPtzTargets[monitorId];
             drawEventBasedPtzRow(monitorId, presetToken)
         }
     }
@@ -1262,12 +1263,16 @@ editorForm.find('[name="type"]').change(function(e){
             value: monitor.mid,
             selected: monitor.mid === monitorId,
         })).join('');
-        var html = `<tr class="monitorSettingsEventPtz-row">
-            <td><select class="form-control form-control-sm selected-monitor">${monitorOptions}</select></td>
-            <td><select class="form-control form-control-sm selected-preset">${monitorId ? await getMonitorOnvifPresetsHtml(monitorId, presetToken) : ''}</select></td>
-            <td><a class="btn btn-sm btn-danger remove-row"><i class="fa fa-trash-o"></i></a></td>
+        var tempId = generateId();
+        var html = `<tr associated-ptz-row="${tempId}" class="monitorSettingsEventPtz-row">
+            <td><select class="form-control selected-monitor">${monitorOptions}</select></td>
+            <td><select class="form-control selected-preset">${monitorId ? await getMonitorOnvifPresetsHtml(monitorId, presetToken) : ''}</select></td>
+            <td class="text-end"><a class="btn btn-sm btn-danger remove-row"><i class="fa fa-trash-o"></i></a></td>
         </tr>`
         monitorSettingsEventPtz.html(html)
+        if(monitorId && presetToken){
+            monitorSettingsEventPtz.find(`[associated-ptz-row="${tempId}"] .selected-preset`).val(padToThreeDigits(presetToken))
+        }
     }
     async function getMonitorOnvifPresetsHtml(monitorId, selectedPreset = ''){
         var isOnvif = loadedMonitors[monitorId].details.is_onvif === '1';
@@ -1276,13 +1281,13 @@ editorForm.find('[name="type"]').change(function(e){
         if(onvifPresets.length === 0 && selectedPreset){
             return createOptionHtml({
                 label: selectedPreset,
-                value: selectedPreset,
+                value: padToThreeDigits(selectedPreset),
                 selected: true,
             })
         }else{
             return onvifPresets.map(preset => createOptionHtml({
                 label: preset.name,
-                value: preset.token,
+                value: padToThreeDigits(preset.token),
                 selected: preset.token === selectedPreset,
             })).join('');
         }
@@ -1294,7 +1299,7 @@ editorForm.find('[name="type"]').change(function(e){
             var monitorId = el.find('.selected-monitor').val();
             var presetToken = el.find('.selected-preset').val();
             if(monitorId && presetToken){
-                selected[monitorId] = presetToken;
+                selected[monitorId] = padToThreeDigits(presetToken);
             }
         });
         return selected;
@@ -1408,6 +1413,9 @@ editorForm.find('[name="type"]').change(function(e){
         var el = $(this);
         var theRow = el.parents('.monitorSettingsEventPtz-row');
         theRow.remove();
+    })
+    .on('click','.monitor-settings-event-ptz-add',function(){
+        drawEventBasedPtzRow()
     });
     onWebSocketEvent(function (d){
         //     new PNotify({

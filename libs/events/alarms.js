@@ -1,5 +1,5 @@
 module.exports = function(s,config,lang){
-    const acceptableOperators = ['>=','>','<','<=']
+    const acceptableOperators = ['>=','>','<','<=','=']
     function sanitizeOperator(startOrEndOperator = ''){
         const theOperator = `${startOrEndOperator}`.trim()
         if(!theOperator || acceptableOperators.indexOf(theOperator) === -1){
@@ -8,7 +8,7 @@ module.exports = function(s,config,lang){
             return theOperator
         }
     }
-    async function getAlarm({ ke, mid, name, status, editedBy, start, startOperator = '>=', end, endOperator = '<=' }){
+    async function getAlarm({ ke, mid, name, status, editedBy, time, start, startOperator = '>=', end, endOperator = '<=' }){
         const whereQuery = [
             ['ke','=',ke],
         ];
@@ -16,12 +16,13 @@ module.exports = function(s,config,lang){
         if(name)whereQuery.push(['name','=',name]);
         if(status !== undefined && status !== null)whereQuery.push(['status','=',status]);
         if(editedBy)whereQuery.push(['editedBy','=',editedBy]);
-        if(start)whereQuery.push(['time',startOperator,start]);
+        if(time || start)whereQuery.push(['time',startOperator,time || start]);
         if(end)whereQuery.push(['end',endOperator,end]);
         const { rows } = await s.knexQueryPromise({
             action: "select",
             columns: "*",
             table: "Alarms",
+            orderBy: ['time','desc'],
             where: whereQuery
         });
         for(row of rows){
@@ -29,7 +30,7 @@ module.exports = function(s,config,lang){
         }
         return rows
     }
-    function getAlarmParams({ mid, name, fileBinName, videoTime, notes, status, editedBy, details = {}, start, end }){
+    function getAlarmParams({ mid, name, fileBinName, videoTime, notes, status, editedBy, details = {}, time, start, end }){
         const params = {};
         params.details = s.stringJSON(details || {});
         if(mid)params.mid = mid;
@@ -39,15 +40,19 @@ module.exports = function(s,config,lang){
         if(notes)params.notes = notes;
         if(status !== undefined && status !== null)params.status = status;
         if(editedBy)params.editedBy = editedBy;
-        if(start)params.start = start;
+        if(start)params.time = start;
+        if(time)params.time = time;
         if(end)params.end = end;
         return params
     }
-    async function createAlarm({ ke, mid, name, fileBinName, videoTime, notes, status, editedBy, details = {}, start, end }){
+    async function createAlarm({ ke, mid, name, fileBinName, videoTime, notes, status, editedBy, details = {}, time, end }){
         const insertQuery = {
             ke,
-            ...getAlarmParams({ ke, mid, name, fileBinName, videoTime, notes, status, editedBy, details = {}, start, end })
         };
+        const alarmParams = getAlarmParams({ ke, mid, name, fileBinName, videoTime, notes, status, editedBy, details, time, end });
+        for(param in alarmParams){
+            insertQuery[param] = alarmParams[param]
+        }
         await s.knexQueryPromise({
             action: "insert",
             table: "Alarms",
@@ -55,13 +60,13 @@ module.exports = function(s,config,lang){
         })
         return insertQuery;
     }
-    async function updateAlarm({ ke, mid, name, fileBinName, videoTime, notes, status, editedBy, details = {}, start, end }){
+    async function updateAlarm({ ke, mid, name, fileBinName, videoTime, notes, status, editedBy, details = {}, time, end }){
         const whereQuery = {
             ke,
             mid,
-            start,
+            time,
         };
-        const updateQuery = getAlarmParams({ ke, name, fileBinName, videoTime, notes, status, editedBy, details = {}, end });
+        const updateQuery = getAlarmParams({ ke, name, fileBinName, videoTime, notes, status, editedBy, details, end });
         const response = { ok: true }
         try{
             if(Object.keys(updateQuery).length > 0){
@@ -82,7 +87,7 @@ module.exports = function(s,config,lang){
         const whereQuery = {
             ke,
             mid,
-            start,
+            time,
         };
         return await s.knexQueryPromise({
             action: "delete",

@@ -6,6 +6,8 @@ $(document).ready(function(){
     var alarmFileBinVideo = $('#alarm-fileBin-video')
     var alarmTitle = $('#alarm-title')
     var alarmInfo = $('#alarm-info')
+    var alarmTime = getQueryString().time;
+    var websocketPath = checkCorrectPathEnding(urlPrefix.replace(location.origin, '')) + 'socket.io'
     function getApiPrefix(innerPart){
         return `${urlPrefix}${authKey}${innerPart ? `/${innerPart}/${groupKey}` : ''}`
     }
@@ -16,18 +18,19 @@ $(document).ready(function(){
     function getAlarms(options = {}){
         return new Promise((resolve,reject) => {
             const { start, startOperator } = options;
-            $.getJSON(`${getApiPrefix(`alarms`)}${monitorId}`,options,function({ alarms }){
+            $.getJSON(`${getApiPrefix(`alarms`)}/${monitorId}`,options,function({ alarms }){
                 if(startOperator === '='){
                     options.end = alarms[0].end;
                     options.limit = '1';
                 }else{
                     options.noLimit = '1';
                 }
+                options.startDate = start
                 // $.getJSON(`${getApiPrefix(`fileBin`)}${monitorId}`,options,function({ files }){
-                    $.getJSON(`${getApiPrefix(`events`)}${monitorId}`,options,function(eventData){
+                    $.getJSON(`${getApiPrefix(`events`)}/${monitorId}`,options,function(eventData){
                         var theEvents = eventData.events || eventData;
                         // alarms = applyDataListToVideos(alarms,files,'files')
-                        alarms = applyDataListToVideos(videos,theEvents,'events')
+                        alarms = applyDataListToVideos(alarms,theEvents,'events')
                         resolve({ alarms })
                     })
                 // })
@@ -37,7 +40,7 @@ $(document).ready(function(){
     function updateAlarm(form){
         return new Promise((resolve,reject) => {
             options.start = typeof options.start === 'date' ? formattedTimeForFilename(options.start,false) : options.start
-            $.post(`${getApiPrefix(`alarms`)}${monitorId}/${}`,form,function(response){
+            $.post(`${getApiPrefix(`alarms`)}/${monitorId}`,form,function(response){
                 resolve(response)
             })
         })
@@ -50,49 +53,65 @@ $(document).ready(function(){
     //     })
     // }
     async function getAlarm(startTime){
-        const alarm = await getAlarms({ startDate: startTime, startOperator: '=' })[0];
+        const time = moment(startTime).format('YYYY-MM-DDTHH:mm:ss')
+        const alarm = (await getAlarms({ start: time, startOperator: '=' })).alarms[0];
+        console.log('getAlarm',alarm)
         return alarm;
     }
     function drawLiveStream(monitorId, drawEl){
+        console.log('Drawing Live',monitorId,drawEl)
         var embedHost = getQueryString().host || `/`;
-        var isSelected = selectedMonitors[monitorId]
-        if(isSelected)return;
-        var numberOfSelected = Object.keys(selectedMonitors)
-        if(numberOfSelected > 3 && !featureIsActivated(true)){
-            return
-        }
-        selectedMonitors[monitorId] = Object.assign({}, loadedMonitors[monitorId]);
         drawEl.html(`<div class="alarm-live-video p-0 m-0" live-stream="${monitorId}"><iframe src="${getApiPrefix('embed')}/${monitorId}/fullscreen%7Cjquery%7Crelative?host=${embedHost}"></iframe></div>`)
     }
     function drawAlarmInfo(alarm){
-        alarmTitle.text(formattedTime(alarm.time, true))
-        alarmInfo.html(`<div class="notes">${alarm.notes}</div>`)
+        const time = formattedTime(alarm.time, true)
+        console.log(alarm)
+        alarmTitle.text(`${alarm.name ? `${alarm.name || ''} : ` : ''}${time}`)
+        alarmInfo.html(`<textarea class="form-control notes" placeholder="${lang.Notes}">${alarm.notes || ''}</textarea>`)
     }
     function drawFileBinVideo(alarm){
         const file = alarm.fileBinName;
         if(file){
             const href = getFileBinHref({ mid: monitorId, name: alarm.fileBinName });
-            alarmFileBinVideo.html(`<video class="video_video" style="width:100%" autoplay controls preload loop src="${href}"></video>`)
-        }else{
-            alarmFileBinVideo.text(lang['No Snippet Found'])
+            alarmFileBinVideo.html(`<video class="video_video" style="width:100%" muted autoplay controls preload loop src="${href}"></video>`)
         }
     }
     async function displayAlarm(startTime){
         // const monitor = await getMonitor(monitorId);
-        const associatedPtzMonitors = (monitor.details.triggerMonitorsPtzTargets || [])[0]
+        const associatedPtzMonitorId = Object.keys(monitor.details.triggerMonitorsPtzTargets || {})[0]
         const alarm = await getAlarm(startTime);
         drawFileBinVideo(alarm);
         drawAlarmInfo(alarm);
         drawLiveStream(monitorId, alarmLiveStream);
-        if(associatedPtzMonitors)drawLiveStream(monitorId, alarmLiveStreamPtz)
+        if(associatedPtzMonitorId)drawLiveStream(associatedPtzMonitorId, alarmLiveStreamPtz)
     }
     async function initPopup(){
-        const { time } = getQueryString();
-        if(time){
-            await displayAlarm(time);
+        if(alarmTime){
+            console.log(alarmTime)
+            await displayAlarm(alarmTime);
         }else{
             alarmTitle.html(lang['No Data'])
         }
     }
+    onWebSocketEvent((data) => {
+        switch(data.f){
+            case'alarm_created':
+                console.log('Alarm Created', data)
+            break;
+            case'alarm_updated':
+                const time = data.time
+                const thisTime = moment(alarmTime).format('YYYY-MM-DDTHH-mm-ss')
+                if(data.fileBinName && thisTime === time){
+                    drawFileBinVideo(data)
+                }
+            break;
+            case'alarm_deleted':
+                console.log('Alarm Deleted', data)
+            break;
+        }
+    })
+    createWebsocket(location.origin,{
+        path: websocketPath
+    });
     initPopup()
 });

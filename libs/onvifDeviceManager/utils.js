@@ -1,4 +1,5 @@
 // relies on https://gitlab.com/Shinobi-Systems/shinobi-onvif
+const onvif = require("shinobi-onvif");
 module.exports = function(s,config,lang){
     const currentlyPatrolling = {};
     const {

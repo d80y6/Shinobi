@@ -19,7 +19,8 @@ module.exports = (s,config,lang) => {
         splitForFFMPEG
     } = require('../ffmpeg/utils.js')(s,config,lang)
     const {
-        moveCameraPtzToMatrix
+        moveCameraPtzToMatrix,
+        moveToHomePositionTimeout,
     } = require('../control/ptz.js')(s,config,lang)
     const {
         getOnvifDevice,
@@ -883,6 +884,7 @@ module.exports = (s,config,lang) => {
             f: 'detector_trigger',
             id: d.id,
             ke: d.ke,
+            time: eventTime,
             details: eventDetails,
             doObjectDetection: d.doObjectDetection
         },`DETECTOR_${monitorConfig.ke}${monitorConfig.mid}`);
@@ -943,14 +945,13 @@ module.exports = (s,config,lang) => {
     async function moveAssociatedMonitorPtzTargets(groupKey, monitorId){
         const response = { ok: true, responseFromDevices: {} };
         const triggerMonitorsPtzTargets = getAssociatedMonitorPtzTargets(groupKey, monitorId);
-        if(triggerMonitorsPtzTargets.length > 0){
-            for(targetMonitorId in triggerMonitorsPtzTargets){
-                const presetToken = triggerMonitorsPtzTargets[targetMonitorId]
-                const onvifEnabled = s.group[groupKey].rawMonitorConfigurations[targetMonitorId].details.is_onvif === '1';
-                if(onvifEnabled){
-                    var onvifDevice = await getOnvifDevice(groupKey, targetMonitorId);
-                    response.responseFromDevices[targetMonitorId] = await goToPreset(onvifDevice, presetToken);
-                }
+        for(targetMonitorId in triggerMonitorsPtzTargets){
+            const presetToken = triggerMonitorsPtzTargets[targetMonitorId]
+            const onvifEnabled = s.group[groupKey].rawMonitorConfigurations[targetMonitorId].details.is_onvif === '1';
+            if(onvifEnabled){
+                var onvifDevice = await getOnvifDevice(groupKey, targetMonitorId);
+                response.responseFromDevices[targetMonitorId] = await goToPreset(onvifDevice, presetToken);
+                moveToHomePositionTimeout({ id: targetMonitorId, ke: groupKey }, 30000)
             }
         }
         return response

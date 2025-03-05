@@ -507,6 +507,30 @@ function beginProcessing(){
             }
         })
     }
+    //events - alarms
+    const deleteOldAlarms = function(v){
+        return new Promise((resolve,reject) => {
+            const daysOldForDeletion = v.d.event_days && !isNaN(v.d.event_days) ? parseFloat(v.d.event_days) : 10
+            if(config.cron.deleteEvents === true && daysOldForDeletion !== 0){
+                knexQuery({
+                    action: "delete",
+                    table: "Alarms",
+                    where: [
+                        ['ke','=',v.ke],
+                        ['time','<', sqlDate(daysOldForDeletion + ' DAY')],
+                    ]
+                },(err,rrr) => {
+                    resolve()
+                    if(err)return errorLog(err);
+                    if(rrr && rrr > 0 || config.debugLog === true){
+                        postMessage({f:'deleteEvents',msg:rrr + ' SQL rows older than ' + daysOldForDeletion + ' days deleted',ke:v.ke,time:'moment()'})
+                    }
+                })
+            }else{
+                resolve()
+            }
+        })
+    }
     //event counts
     const deleteOldEventCounts = function(v){
         return new Promise((resolve,reject) => {
@@ -594,6 +618,8 @@ function beginProcessing(){
                 debugLog('--- deleteOldFileBins Complete')
                 await deleteOldEvents(v)
                 debugLog('--- deleteOldEvents Complete')
+                await deleteOldAlarms(v)
+                debugLog('--- deleteOldAlarms Complete')
                 await deleteOldEventCounts(v)
                 debugLog('--- deleteOldEventCounts Complete')
                 await checkFilterRules(v)

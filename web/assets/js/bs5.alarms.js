@@ -5,10 +5,11 @@ $(document).ready(function(e){
     var alarmsDrawArea = $('#alarms_draw_area')
     var alarmsPreviewArea = $('#alarms_preview_area')
     var loadedAlarms = {};
+    var eventOpensAlarm = false;
     function getAlarms(options = {}){
         return new Promise((resolve,reject) => {
             const { monitorId, start, startOperator } = options;
-            $.getJSON(`${getApiPrefix(`alarms`)}${monitorId ? monitorId : ''}`,options,function({ alarms }){
+            $.getJSON(`${getApiPrefix(`alarms`)}/${monitorId ? monitorId : ''}`,options,function({ alarms }){
                 options.noLimit = '1';
                 // $.getJSON(`${getApiPrefix(`events`)}${monitorId ? monitorId : ''}`,options,function(eventData){
                 //     var theEvents = eventData.events || eventData;
@@ -31,7 +32,7 @@ $(document).ready(function(e){
                 end,
             });
             for(alarm of alarms){
-                loadedAlarms[`${alarm.mid}${alarm.time}`]
+                loadedAlarms[`${alarm.mid}${alarm.time}`] = alarm
             }
         }
         alarmsDrawArea.bootstrapTable({
@@ -40,8 +41,7 @@ $(document).ready(function(e){
             pageList: [10, 25, 50, 100, 1000, 2000],
             pageSize: pageSize, // Ensure the current page size is maintained
             pageNumber: pageNumber, // Ensure the current page number is maintained
-            totalRows: result.total, // Reflect total number of videos
-            onPostBody: loadFramesForVideosInView,
+            totalRows: alarms.length, // Reflect total number of videos
             columns: [
                 {
                     field: 'mid',
@@ -83,7 +83,7 @@ $(document).ready(function(e){
                 }
             ],
             data: alarms.map((file) => {
-                const href = getFileBinHref({ mid: monitorId, name: alarm.fileBinName });
+                const href = getFileBinHref({ mid: file.mid, name: file.fileBinName });
                 var loadedMonitor = loadedMonitors[file.mid];
                 return {
                     Monitor: loadedMonitor && loadedMonitor.name ? loadedMonitor.name : file.mid,
@@ -97,8 +97,9 @@ $(document).ready(function(e){
                     editedBy: `<span class="badge badge-${file.editedBy ? 'success' : 'warning'}">${file.editedBy ? file.editedBy : lang.Attention}</span>`,
                     status: `<span class="badge badge-primary">${file.status}</span>`,
                     buttons: `
-                    <div class="row-info btn-group" data-mid="${file.mid}" data-ke="${file.ke}" data-time="${file.time}" data-filename="${file.filename}" data-status="${file.status}" data-type="${file.type}">
-                        <a class="btn btn-sm btn-default btn-monitor-status-color open-video" href="${href}" title="${lang.Play}"><i class="fa fa-play"></i></a>
+                    <div class="row-info btn-group" data-mid="${file.mid}" data-ke="${file.ke}" data-time="${file.time}">
+                        <a class="btn btn-sm btn-default btn-monitor-status-color preview-video" href="${href}" title="${lang.Play}"><i class="fa fa-play"></i></a>
+                        <a class="btn btn-sm btn-default btn-monitor-status-color open-alarm-window" title="${lang.Alarm}"><i class="fa fa-pencil-square-o"></i></a>
                         <div class="dropdown d-inline-block">
                             <a class="btn btn-sm btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                               <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
@@ -115,10 +116,10 @@ $(document).ready(function(e){
     function drawPreviewVideo(alarm){
         const file = alarm.fileBinName;
         if(file){
-            const href = getFileBinHref({ mid: monitorId, name: alarm.fileBinName });
-            alarmFileBinVideo.html(`<video class="video_video" style="width:100%" autoplay controls preload loop src="${href}"></video>`)
+            const href = getFileBinHref({ mid: alarm.mid, name: alarm.fileBinName });
+            alarmsPreviewArea.html(`<video class="video_video" style="width:100%" autoplay controls preload loop src="${href}"></video>`)
         }else{
-            alarmFileBinVideo.text(lang['No Snippet Found'])
+            alarmsPreviewArea.text(lang['No Snippet Found'])
         }
     }
     function getSelectedRows(){
@@ -135,6 +136,12 @@ $(document).ready(function(e){
             })
         })
         return rowsSelected
+    }
+    function createAlarmWindow(monitorId,time){
+        var el = $(document)
+        var width = el.width()
+        var height = el.height()
+        window.open(`${getApiPrefix('alarm')}/${monitorId}?time=${time}`, 'alarm_'+monitorId, 'height=720,width=1280')
     }
     loadDateRangePicker(dateSelector,{
         onChange: function(start, end, label) {
@@ -157,6 +164,15 @@ $(document).ready(function(e){
         var alarm = loadedAlarms[`${monitorId}${alarmTime}`]
         setPreviewedVideoHighlight(el,alarmsDrawArea)
         drawPreviewVideo(alarm)
+        return false;
+    })
+    .on('click','.open-alarm-window',function(e){
+        e.preventDefault()
+        var el = $(this)
+        var rowEl = $(this).parents('[data-mid]')
+        var monitorId = rowEl.attr('data-mid')
+        var alarmTime = rowEl.attr('data-time')
+        createAlarmWindow(monitorId,alarmTime)
         return false;
     })
     .on('click','.refresh-data',function(e){
@@ -183,6 +199,9 @@ $(document).ready(function(e){
     })
     onWebSocketEvent((data) => {
         switch(data.f){
+            case'detector_trigger':
+                if(eventOpensAlarm)createAlarmWindow(data.id,data.time)
+            break;
             case'alarm_created':
                 console.log('Alarm Created', data)
             break;
@@ -210,4 +229,7 @@ $(document).ready(function(e){
 
         }
     })
+    dashboardSwitchCallbacks.alarmOpenedByEvent = function(toggleState){
+        eventOpensAlarm = toggleState == 1;
+    }
 })

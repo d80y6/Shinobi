@@ -1,6 +1,5 @@
 var os = require('os');
 var exec = require('child_process').exec;
-const onvif = require("shinobi-onvif");
 const {
     addCredentialsToUrl,
 } = require('../common.js')

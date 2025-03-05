@@ -40,9 +40,9 @@
 <script>window.$user=<%- JSON.stringify($user) %>;</script>
 <script>window.monitor=<%- JSON.stringify(monitor) %>;</script>
 <script>window.urlPrefix = "<%- urlPrefix || '' %>";</script>
-<script>window.groupKey = "<%- groupKey || '' %>";$user.ke = groupKey;</script>
-<script>window.monitorId = "<%- monitorId || '' %>";$user.ke = groupKey;</script>
-<script>window.authKey = "<%- authKey || '' %>";$user.auth_token = authKey;</script>
+<script>window.groupKey = "<%- groupKey || '' %>";</script>
+<script>window.monitorId = "<%- monitorId || '' %>";</script>
+<script>window.authKey = "<%- $user.auth_token || '' %>";</script>
 <!-- <script src="<%- urlPrefix %>assets/vendor/js/socket.io.min.js"></script> -->
 <script src="<%- urlPrefix %>assets/vendor/js/jquery.min.js"></script>
 <link rel="stylesheet" href="<%- urlPrefix %>assets/vendor/font-awesome/css/font-awesome.min.css">
@@ -52,26 +52,29 @@
 <link rel="stylesheet" href="<%- urlPrefix %>assets/vendor/pnotify.custom.min.css">
 <div id="alarm-container" class="container-fluid min-vh-100 d-flex flex-column">
     <div class="row flex-grow-1">
-        <div id="alarm-live-stream" class="col-6"></div>
-        <div id="alarm-live-stream-ptz" class="col-6"></div>
+        <div id="alarm-live-stream" class="col-6 p-0"></div>
+        <div id="alarm-live-stream-ptz" class="col-6 p-0"></div>
     </div>
     <div class="row flex-grow-1">
-        <div id="alarm-fileBin-video" class="col-6"></div>
+        <div id="alarm-fileBin-video" class="col-6 p-0 text-center">
+            <i class="fa-5x fa fa-spinner fa-pulse text-white" style="margin-top:50px"></i>
+        </div>
         <div class="col-6 text-center p-3">
             <div class="card">
+                <div id="alarm-title" class="card-header"></div>
                 <div id="alarm-info" class="card-body">
-                    <div id="alarm-title"></div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<!-- <script src="<%- urlPrefix %>assets/js/bs5.embed.utils.js"></script> -->
 <script src="<%- urlPrefix %>assets/js/bs5.embed.utils.js"></script>
+<script src="<%- urlPrefix %>assets/vendor/js/socket.io.min.js"></script>
 <script src="<%- urlPrefix %>assets/vendor/bootstrap5/js/bootstrap.bundle.min.js"></script>
+<script src="<%- urlPrefix %>assets/vendor/moment-with-locales.js"></script>
 <script src="<%- urlPrefix %>assets/vendor/js/pnotify.custom.min.js"></script>
 <script src="<%- urlPrefix %>assets/vendor/js/jquery-ui.min.js"></script>
-<!-- <script src="<%- urlPrefix %>assets/js/bs5.extenders.js"></script> -->
-<!-- <script src="<%- urlPrefix %>assets/js/bs5.websocket.js"></script> -->
+<script src="<%- urlPrefix %>assets/js/bs5.extenders.js"></script>
+<script src="<%- urlPrefix %>assets/js/bs5.websocket.js"></script>
 <script src="<%- urlPrefix %>assets/js/bs5.videos.js"></script>
 <script src="<%- urlPrefix %>assets/js/bs5.alarms.popup.js"></script>
