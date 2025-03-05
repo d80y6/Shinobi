@@ -100,7 +100,7 @@ module.exports = function(s,config,lang,app){
                     s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized'], alarms: []});
                     return
                 }
-                const { name, start, startOperator, end, endOperator } = req.query;
+                const { name, start, startOperator, end, endOperator, limit } = req.query;
                 const response = { ok: true }
                 const rows = await getAlarm({
                     ke: groupKey,
@@ -110,6 +110,7 @@ module.exports = function(s,config,lang,app){
                     end,
                     startOperator: sanitizeOperator(startOperator),
                     endOperator: sanitizeOperator(endOperator),
+                    limit,
                 });
                 response.alarms = rows;
                 s.closeJsonResponse(res,response)

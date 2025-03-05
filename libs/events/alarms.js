@@ -8,7 +8,7 @@ module.exports = function(s,config,lang){
             return theOperator
         }
     }
-    async function getAlarm({ ke, mid, name, status, editedBy, time, start, startOperator = '>=', end, endOperator = '<=' }){
+    async function getAlarm({ ke, mid, name, status, editedBy, time, start, startOperator = '>=', end, endOperator = '<=', limit }){
         const whereQuery = [
             ['ke','=',ke],
         ];
@@ -23,7 +23,8 @@ module.exports = function(s,config,lang){
             columns: "*",
             table: "Alarms",
             orderBy: ['time','desc'],
-            where: whereQuery
+            where: whereQuery,
+            limit
         });
         for(row of rows){
             row.details = JSON.parse(row.details);

@@ -43,6 +43,7 @@
 <script>window.groupKey = "<%- groupKey || '' %>";</script>
 <script>window.monitorId = "<%- monitorId || '' %>";</script>
 <script>window.authKey = "<%- $user.auth_token || '' %>";</script>
+<script>window.serverTimezone = `<%- config.timezone %>`</script>
 <!-- <script src="<%- urlPrefix %>assets/vendor/js/socket.io.min.js"></script> -->
 <script src="<%- urlPrefix %>assets/vendor/js/jquery.min.js"></script>
 <link rel="stylesheet" href="<%- urlPrefix %>assets/vendor/font-awesome/css/font-awesome.min.css">

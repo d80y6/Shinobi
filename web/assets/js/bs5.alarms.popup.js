@@ -53,9 +53,8 @@ $(document).ready(function(){
     //     })
     // }
     async function getAlarm(startTime){
-        const time = moment(startTime).format('YYYY-MM-DDTHH:mm:ss')
+        const time = formattedTimeForFilename(convertTZ(startTime, serverTimezone),null,'YYYY-MM-DDTHH:mm:ss')
         const alarm = (await getAlarms({ start: time, startOperator: '=' })).alarms[0];
-        console.log('getAlarm',alarm)
         return alarm;
     }
     function drawLiveStream(monitorId, drawEl){
@@ -100,7 +99,7 @@ $(document).ready(function(){
             break;
             case'alarm_updated':
                 const time = data.time
-                const thisTime = moment(alarmTime).format('YYYY-MM-DDTHH-mm-ss')
+                const thisTime = formattedTimeForFilename(convertTZ(alarmTime, serverTimezone),null,'YYYY-MM-DDTHH-mm-ss')
                 if(data.fileBinName && thisTime === time){
                     drawFileBinVideo(data)
                 }
