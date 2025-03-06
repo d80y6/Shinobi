@@ -28,15 +28,16 @@ module.exports = function(s,config,lang){
         });
         for(row of rows){
             row.details = JSON.parse(row.details);
+            row.fileBinVideos = JSON.parse(row.fileBinVideos || '{}');
         }
         return rows
     }
-    function getAlarmParams({ mid, name, fileBinName, videoTime, notes, status, editedBy, details = {}, time, start, end }){
+    function getAlarmParams({ mid, name, fileBinVideos, videoTime, notes, status, editedBy, details, time, start, end }, isForUpdate){
         const params = {};
-        params.details = s.stringJSON(details || {});
+        if(isForUpdate && details)params.details = s.stringJSON(details || {});
+        if(isForUpdate && fileBinVideos)params.fileBinVideos = s.stringJSON(fileBinVideos || {});
         if(mid)params.mid = mid;
         if(name)params.name = name;
-        if(fileBinName)params.fileBinName = fileBinName;
         if(videoTime)params.videoTime = videoTime;
         if(notes)params.notes = notes;
         if(status !== undefined && status !== null)params.status = status;
@@ -46,11 +47,11 @@ module.exports = function(s,config,lang){
         if(end)params.end = end;
         return params
     }
-    async function createAlarm({ ke, mid, name, fileBinName, videoTime, notes, status, editedBy, details = {}, time, end }){
+    async function createAlarm({ ke, mid, name, fileBinVideos, videoTime, notes, status, editedBy, details = {}, time, end }){
         const insertQuery = {
             ke,
         };
-        const alarmParams = getAlarmParams({ ke, mid, name, fileBinName, videoTime, notes, status, editedBy, details, time, end });
+        const alarmParams = getAlarmParams({ ke, mid, name, fileBinVideos, videoTime, notes, status, editedBy, details, time, end });
         for(param in alarmParams){
             insertQuery[param] = alarmParams[param]
         }
@@ -61,13 +62,13 @@ module.exports = function(s,config,lang){
         })
         return insertQuery;
     }
-    async function updateAlarm({ ke, mid, name, fileBinName, videoTime, notes, status, editedBy, details = {}, time, end }){
+    async function updateAlarm({ ke, mid, name, fileBinVideos, videoTime, notes, status, editedBy, details, time, start, end }){
         const whereQuery = {
             ke,
             mid,
-            time,
+            time: time || start,
         };
-        const updateQuery = getAlarmParams({ ke, name, fileBinName, videoTime, notes, status, editedBy, details, end });
+        const updateQuery = getAlarmParams({ ke, name, fileBinVideos, videoTime, notes, status, editedBy, details, end }, true);
         const response = { ok: true }
         try{
             if(Object.keys(updateQuery).length > 0){

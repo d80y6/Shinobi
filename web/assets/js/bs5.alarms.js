@@ -6,6 +6,17 @@ $(document).ready(function(e){
     var alarmsPreviewArea = $('#alarms_preview_area')
     var loadedAlarms = {};
     var eventOpensAlarm = false;
+    const statusLegend = {
+        '0': { label: lang.Attention,    color: 'danger' },
+        '1': { label: lang.Acknowledged, color: 'info'   },
+        '2': { label: lang.InProgress,   color: 'warning'},
+        '3': { label: lang.Resolved,     color: 'success'},
+        '4': { label: lang.Cleared,      color: 'light'  },
+        '5': { label: lang.Dismissed,    color: 'secondary' },
+        '6': { label: lang.Verified,     color: 'primary' },
+        '7': { label: lang.Escalated,    color: 'danger' },
+        '8': { label: lang.FalseAlarm,   color: 'dark'   }
+    };
     function getAlarms(options = {}){
         return new Promise((resolve,reject) => {
             const { monitorId, start, startOperator } = options;
@@ -19,29 +30,25 @@ $(document).ready(function(e){
             })
         })
     }
-    async function drawAlarmsTable(pageNumber, pageSize, usePreloadedData) {
+    async function drawAlarmsTable(usePreloadedData) {
         loadedAlarms = {}
         var dateRange = getSelectedTime(dateSelector);
         var start = dateRange.startDate;
         var end = dateRange.endDate;
         var monitorId = monitorsList.val();
-        if (!usePreloadedData) {
-            var { alarms } = await getAlarms({
-                monitorId,
-                start,
-                end,
-            });
-            for(alarm of alarms){
-                loadedAlarms[`${alarm.mid}${alarm.time}`] = alarm
-            }
+        var { alarms } = await getAlarms({
+            monitorId,
+            start,
+            end,
+        });
+        for(alarm of alarms){
+            loadedAlarms[`${alarm.mid}${alarm.time}`] = alarm
         }
         alarmsDrawArea.bootstrapTable({
             pagination: true,
             search: true,
             pageList: [10, 25, 50, 100, 1000, 2000],
-            pageSize: pageSize, // Ensure the current page size is maintained
-            pageNumber: pageNumber, // Ensure the current page number is maintained
-            totalRows: alarms.length, // Reflect total number of videos
+            totalRows: alarms.length,
             columns: [
                 {
                     field: 'mid',
@@ -83,8 +90,8 @@ $(document).ready(function(e){
                 }
             ],
             data: alarms.map((file) => {
-                const href = getFileBinHref({ mid: file.mid, name: file.fileBinName });
                 var loadedMonitor = loadedMonitors[file.mid];
+                var status = statusLegend[file.status];
                 return {
                     Monitor: loadedMonitor && loadedMonitor.name ? loadedMonitor.name : file.mid,
                     mid: file.mid,
@@ -94,29 +101,23 @@ $(document).ready(function(e){
                            <div><small><b>${lang.Start} :</b> ${formattedTime(file.time, 'DD-MM-YYYY hh:mm:ss AA')}</small></div>
                            <div><small><b>${lang.End} :</b> ${formattedTime(file.end, 'DD-MM-YYYY hh:mm:ss AA')}</small></div>`,
                     notes: file.notes,
-                    editedBy: `<span class="badge badge-${file.editedBy ? 'success' : 'warning'}">${file.editedBy ? file.editedBy : lang.Attention}</span>`,
-                    status: `<span class="badge badge-primary">${file.status}</span>`,
+                    editedBy: `${file.editedBy ? `<span class="badge badge-primary">${file.editedBy}</span>` : ''}`,
+                    status: `<span class="badge badge-${status.color}">${status.label}</span>`,
                     buttons: `
                     <div class="row-info btn-group" data-mid="${file.mid}" data-ke="${file.ke}" data-time="${file.time}">
-                        <a class="btn btn-sm btn-default btn-monitor-status-color preview-video" href="${href}" title="${lang.Play}"><i class="fa fa-play"></i></a>
+                        <a class="btn btn-sm btn-default btn-monitor-status-color preview-video" title="${lang.Play}"><i class="fa fa-play"></i></a>
                         <a class="btn btn-sm btn-default btn-monitor-status-color open-alarm-window" title="${lang.Alarm}"><i class="fa fa-pencil-square-o"></i></a>
-                        <div class="dropdown d-inline-block">
-                            <a class="btn btn-sm btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
-                              <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
-                            </a>
-                            <ul class="dropdown-menu ${definitions.Theme.isDark ? 'dropdown-menu-dark bg-dark' : ''} shadow-lg">
-                            </ul>
-                        </div>
                     </div>
                     `,
                 }
             })
         })
     }
-    function drawPreviewVideo(alarm){
-        const file = alarm.fileBinName;
-        if(file){
-            const href = getFileBinHref({ mid: alarm.mid, name: alarm.fileBinName });
+    function drawPreviewVideo(alarm, triggerVideoMonitorId){
+        const monitorId = alarm.mid;
+        const triggerVideo = alarm.fileBinVideos[triggerVideoMonitorId || monitorId];
+        if(triggerVideo){
+            const href = getFileBinHref({ mid: monitorId, name: triggerVideo });
             alarmsPreviewArea.html(`<video class="video_video" style="width:100%" autoplay controls preload loop src="${href}"></video>`)
         }else{
             alarmsPreviewArea.text(lang['No Snippet Found'])
@@ -177,6 +178,7 @@ $(document).ready(function(e){
     })
     .on('click','.refresh-data',function(e){
         e.preventDefault()
+        alarmsDrawArea.bootstrapTable('destroy');
         drawAlarmsTable()
         return false;
     })

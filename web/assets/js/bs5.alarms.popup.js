@@ -5,7 +5,10 @@ $(document).ready(function(){
     var alarmLiveStreamPtz = $('#alarm-live-stream-ptz')
     var alarmFileBinVideo = $('#alarm-fileBin-video')
     var alarmTitle = $('#alarm-title')
-    var alarmInfo = $('#alarm-info')
+    var alarmName = $('#alarm-name')
+    var alarmNotes = $('#alarm-notes')
+    var alarmStatus = $('#alarm-status')
+    var alarmFileBinVideos = $('#alarm-fileBin-videos')
     var alarmTime = getQueryString().time;
     var websocketPath = checkCorrectPathEnding(urlPrefix.replace(location.origin, '')) + 'socket.io'
     function getApiPrefix(innerPart){
@@ -39,59 +42,116 @@ $(document).ready(function(){
     }
     function updateAlarm(form){
         return new Promise((resolve,reject) => {
-            options.start = typeof options.start === 'date' ? formattedTimeForFilename(options.start,false) : options.start
-            $.post(`${getApiPrefix(`alarms`)}/${monitorId}`,form,function(response){
+            form.time = formattedTimeForFilename(convertTZ(alarmTime, serverTimezone),null,'YYYY-MM-DDTHH:mm:ss')
+            $.post(`${getApiPrefix(`alarms`)}/${form.mid}`,form,function(response){
                 resolve(response)
             })
         })
     }
-    // function getMonitor(monitorId){
-    //     return new Promise((resolve,reject) => {
-    //         $.getJSON(`${getApiPrefix(`alarms`)}${monitorId}`,options,function(monitors){
-    //             resolve(monitors[0])
-    //         })
-    //     })
-    // }
+    function getMonitor(monitorId){
+        return new Promise((resolve,reject) => {
+            $.getJSON(`${getApiPrefix(`monitor`)}/${monitorId}`,function(monitors){
+                resolve(monitors[0])
+            })
+        })
+    }
     async function getAlarm(startTime){
         const time = formattedTimeForFilename(convertTZ(startTime, serverTimezone),null,'YYYY-MM-DDTHH:mm:ss')
         const alarm = (await getAlarms({ start: time, startOperator: '=' })).alarms[0];
         return alarm;
     }
     function drawLiveStream(monitorId, drawEl){
-        console.log('Drawing Live',monitorId,drawEl)
         var embedHost = getQueryString().host || `/`;
         drawEl.html(`<div class="alarm-live-video p-0 m-0" live-stream="${monitorId}"><iframe src="${getApiPrefix('embed')}/${monitorId}/fullscreen%7Cjquery%7Crelative?host=${embedHost}"></iframe></div>`)
     }
     function drawAlarmInfo(alarm){
         const time = formattedTime(alarm.time, true)
-        console.log(alarm)
         alarmTitle.text(`${alarm.name ? `${alarm.name || ''} : ` : ''}${time}`)
-        alarmInfo.html(`<textarea class="form-control notes" placeholder="${lang.Notes}">${alarm.notes || ''}</textarea>`)
+        alarmNotes.val(alarm.notes)
+        alarmStatus.val(alarm.status)
     }
-    function drawFileBinVideo(alarm){
-        const file = alarm.fileBinName;
-        if(file){
-            const href = getFileBinHref({ mid: monitorId, name: alarm.fileBinName });
-            alarmFileBinVideo.html(`<video class="video_video" style="width:100%" muted autoplay controls preload loop src="${href}"></video>`)
+    async function drawAlarmFileBinVideoLinks(alarm){
+        const fileBinVideos = alarm.fileBinVideos || {};
+        let html = ''
+        for(monitorId in fileBinVideos){
+            const gottenMonitor = await getMonitor(monitorId)
+            const fileBinName = fileBinVideos[monitorId]
+            html += `<li><a data-mid="${monitorId}" data-filename="${fileBinName}" class="btn preview-video">${gottenMonitor.name}</a></li>`
+        }
+        alarmFileBinVideos.html(html)
+    }
+    function drawFileBinVideo(alarm, triggerVideoMonitorId, fileBinName){
+        const monitorId = alarm.mid;
+        const chosenMonitorId = triggerVideoMonitorId || monitorId;
+        const triggerVideo = fileBinName || alarm.fileBinVideos[chosenMonitorId];
+        if(triggerVideo){
+            const href = getFileBinHref({ mid: chosenMonitorId, name: triggerVideo });
+            alarmFileBinVideo.html(`<video class="video_video" style="width:100%" autoplay controls preload loop src="${href}"></video>`)
         }
     }
     async function displayAlarm(startTime){
-        // const monitor = await getMonitor(monitorId);
-        const associatedPtzMonitorId = Object.keys(monitor.details.triggerMonitorsPtzTargets || {})[0]
+        const associatedPtzMonitorId = getAssociatedMonitorPtzTargets(true)[0]
         const alarm = await getAlarm(startTime);
-        drawFileBinVideo(alarm);
         drawAlarmInfo(alarm);
         drawLiveStream(monitorId, alarmLiveStream);
+        drawAlarmFileBinVideoLinks(alarm);
         if(associatedPtzMonitorId)drawLiveStream(associatedPtzMonitorId, alarmLiveStreamPtz)
+        if(alarm.fileBinVideos[associatedPtzMonitorId]){
+            drawFileBinVideo(alarm, associatedPtzMonitorId);
+        }else{
+            drawFileBinVideo(alarm, monitorId);
+        }
+    }
+    function getAssociatedMonitorPtzTargets(monitorIdsOnly){
+        const monitorDetails = monitor.details;
+        const detectorEventPtz = monitorDetails.detectorEventPtz === '1';
+        if(detectorEventPtz){
+            const triggerMonitorsPtzTargets = monitorDetails.triggerMonitorsPtzTargets || {}
+            return monitorIdsOnly ? Object.keys(triggerMonitorsPtzTargets) : triggerMonitorsPtzTargets;
+        }else{
+            return monitorIdsOnly ? [] : {}
+        }
     }
     async function initPopup(){
         if(alarmTime){
-            console.log(alarmTime)
             await displayAlarm(alarmTime);
         }else{
             alarmTitle.html(lang['No Data'])
         }
     }
+    alarmContainer.on('click','.preview-video',function(){
+        const el = $(this);
+        const monitorId = el.attr('data-mid')
+        const fileBinName = el.attr('data-filename')
+        drawFileBinVideo({ mid: monitorId }, monitorId, fileBinName)
+    })
+    alarmName.change(function(){
+        const el = $(this);
+        const value = el.val();
+        updateAlarm({
+            mid: monitorId,
+            time: alarmTime,
+            name: value
+        })
+    })
+    alarmNotes.change(function(){
+        const el = $(this);
+        const value = el.val();
+        updateAlarm({
+            mid: monitorId,
+            time: alarmTime,
+            notes: value
+        })
+    })
+    alarmStatus.change(function(){
+        const el = $(this);
+        const value = el.val();
+        updateAlarm({
+            mid: monitorId,
+            time: alarmTime,
+            status: value
+        })
+    })
     onWebSocketEvent((data) => {
         switch(data.f){
             case'alarm_created':
@@ -100,8 +160,10 @@ $(document).ready(function(){
             case'alarm_updated':
                 const time = data.time
                 const thisTime = formattedTimeForFilename(convertTZ(alarmTime, serverTimezone),null,'YYYY-MM-DDTHH-mm-ss')
-                if(data.fileBinName && thisTime === time){
-                    drawFileBinVideo(data)
+                if(data.fileBinVideos && thisTime === time){
+                    const associatedPtzMonitorId = getAssociatedMonitorPtzTargets(true)[0]
+                    drawFileBinVideo(data, associatedPtzMonitorId || data.mid)
+                    drawAlarmFileBinVideoLinks(data)
                 }
             break;
             case'alarm_deleted':

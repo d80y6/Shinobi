@@ -192,8 +192,7 @@ module.exports = function(s,config){
             {name: 'ke', length: 50, type: 'string'},
             {name: 'mid', length: 100, type: 'string'},
             {name: 'name', length: 100, type: 'string'},
-            {name: 'fileBinName', length: 100, type: 'string'},
-            {name: 'videoTime', length: 100, type: 'string'},
+            {name: 'fileBinVideos', type: 'text'},
             {name: 'notes', length: 100, type: 'string'},
             {name: 'status', type: 'tinyint', length: 1, defaultTo: 0},
             {name: 'editedBy', length: 50, type: 'string'},
@@ -205,6 +204,7 @@ module.exports = function(s,config){
         await require('./migrate/2022-08-22.js')(s,config)
         await require('./migrate/2022-12-18.js')(s,config)
         await require('./migrate/2023-03-11.js')(s,config)
+        await require('./migrate/2025-03-05.js')(s,config)
         delete(s.preQueries)
     }
 }

@@ -63,7 +63,36 @@
         <div class="col-6 text-center p-3">
             <div class="card">
                 <div id="alarm-title" class="card-header"></div>
-                <div id="alarm-info" class="card-body">
+                <div class="card-body">
+                    <div class="form-group mb-3">
+                        <input id="alarm-name" class="form-control" placeholder="<%- lang.Name %>">
+                    </div>
+                    <div class="form-group mb-3">
+                        <textarea id="alarm-notes" class="form-control" placeholder="<%- lang.Notes %>"></textarea>
+                    </div>
+                    <div class="form-group mb-3">
+                        <select id="alarm-status" class="form-control">
+                            <%-
+                            [
+                                { id: 0, label: lang.Attention,    color: 'danger'   },
+                                { id: 1, label: lang.Acknowledged, color: 'info'     },
+                                { id: 2, label: lang.InProgress,   color: 'warning'  },
+                                { id: 3, label: lang.Resolved,     color: 'success'  },
+                                { id: 4, label: lang.Cleared,      color: 'light'    },
+                                { id: 5, label: lang.Dismissed,    color: 'secondary'},
+                                { id: 6, label: lang.Verified,     color: 'primary'  },
+                                { id: 7, label: lang.Escalated,    color: 'danger'   },
+                                { id: 8, label: lang.FalseAlarm,   color: 'dark'     },
+                            ].map(item => `<option value="${item.id}">${item.label}</option>`).join('')
+                             %>
+                        </select>
+                    </div>
+                    <div class="dropup d-block">
+                        <a class="btn d-block btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
+                            <%- lang.Videos %>
+                        </a>
+                        <ul id="alarm-fileBin-videos" class="dropdown-menu shadow-lg"></ul>
+                    </div>
                 </div>
             </div>
         </div>

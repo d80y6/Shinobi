@@ -582,6 +582,36 @@ module.exports = (s,config,lang) => {
             }
         })
     }
+    const getEventBasedRecordingsUponCompletion = function(groupKey, monitorIds, withPath = false, asObject = true){
+        return new Promise((resolve) => {
+            const response = asObject ? {} : [];
+            const total = monitorIds.length;
+            let currentCount = 0;
+            monitorIds.forEach((monitorId) => {
+                getEventBasedRecordingUponCompletion({
+                    ke: groupKey,
+                    mid: monitorId
+                }).then(({ filename, filePath }) => {
+                    if(filename && filePath){
+                        if(asObject){
+                            response[monitorId] = filename;
+                        }else{
+                            const foundData = {
+                                mid: monitorId,
+                                filename,
+                            }
+                            if(withPath)foundData.filePath = filePath;
+                            response.push(foundData)
+                        }
+                    }
+                    ++currentCount;
+                    if(currentCount === total){
+                        resolve(response)
+                    }
+                });
+            })
+        })
+    }
     const createEventBasedRecording = function(d,fileTime){
         if(!fileTime)fileTime = s.formattedTime()
         const logTitleText = lang["Traditional Recording"]
@@ -980,5 +1010,6 @@ module.exports = (s,config,lang) => {
         triggerEvent: triggerEvent,
         addEventDetailsToString: addEventDetailsToString,
         getEventBasedRecordingUponCompletion: getEventBasedRecordingUponCompletion,
+        getEventBasedRecordingsUponCompletion,
     }
 }

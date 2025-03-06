@@ -8,7 +8,8 @@ module.exports = function(s,config,lang,app){
             sanitizeOperator,
         } = require('./events/alarms.js')(s,config,lang);
         const {
-            getEventBasedRecordingUponCompletion,
+            getAssociatedMonitorPtzTargets,
+            getEventBasedRecordingsUponCompletion,
         } = require('./events/utils.js')(s,config,lang)
         const {
             addMenuItem,
@@ -34,22 +35,18 @@ module.exports = function(s,config,lang,app){
                     mid: monitorId,
                     time: startTime
                 };
+                const associatedMonitors = [monitorId, ...Object.keys(getAssociatedMonitorPtzTargets(groupKey, monitorId))]
                 createAlarm(createData)
                 sendWebsocketMessage('alarm_updated',createData)
-                getEventBasedRecordingUponCompletion({
-                    ke: d.ke,
-                    mid: d.mid || d.id
-                }).then(({ filename, filePath }) => {
-                    if(filename && filePath){
-                        const updateData = {
-                            ke: groupKey,
-                            mid: monitorId,
-                            time: startTime,
-                            fileBinName: filename,
-                        }
-                        updateAlarm(updateData);
-                        sendWebsocketMessage('alarm_updated',updateData)
+                getEventBasedRecordingsUponCompletion(groupKey, associatedMonitors, false, true).then((recordedFiles) => {
+                    const updateData = {
+                        ke: groupKey,
+                        mid: monitorId,
+                        time: startTime,
+                        fileBinVideos: recordedFiles,
                     }
+                    updateAlarm(updateData);
+                    sendWebsocketMessage('alarm_updated',updateData)
                 })
             }
             clearTimeout(onGoingAlarmTimeouts[alarmTarget])
@@ -143,17 +140,18 @@ module.exports = function(s,config,lang,app){
                     s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized'], alarms: []});
                     return
                 }
-                const { name, start, fileBinName, videoTime, notes, status, editedBy, details, end } = req.body;
+                const { name, fileBinVideos, videoTime, notes, status, editedBy, details, time, start, end } = req.body;
                 const response = await updateAlarm({
                     ke: groupKey,
                     mid: monitorId,
                     name,
-                    fileBinName,
+                    fileBinVideos: s.parseJSON(fileBinVideos),
                     videoTime,
                     notes,
                     status,
-                    editedBy,
+                    editedBy: user.uid,
                     details,
+                    time,
                     start,
                     end,
                 });
