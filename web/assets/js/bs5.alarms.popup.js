@@ -67,6 +67,7 @@ $(document).ready(function(){
     function drawAlarmInfo(alarm){
         const time = formattedTime(alarm.time, true)
         alarmTitle.text(`${alarm.name ? `${alarm.name || ''} : ` : ''}${time}`)
+        alarmName.val(alarm.name)
         alarmNotes.val(alarm.notes)
         alarmStatus.val(alarm.status)
     }
