@@ -82,7 +82,7 @@ $(document).ready(function(){
         const triggerVideo = videoName || alarm.videos[chosenMonitorId] || alarm.videos[monitorId];
         if(triggerVideo){
             const href = getApiPrefix('videos') + '/'+monitorId+'/'+triggerVideo;
-            alarmVideoPlayerContainer.html(`<video class="video_video" style="width:100%" autoplay controls preload loop muted src="${href}"></video>`)
+            alarmVideoPlayerContainer.html(`<a download href="${href}" class="btn btn-success download"><i class="fa fa-download"></i></a><video class="video_video" autoplay controls preload loop muted src="${href}"></video>`)
         }
     }
     async function displayAlarm(startTime){
