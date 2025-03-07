@@ -38,12 +38,12 @@ module.exports = function(s,config,lang,app){
                 const associatedMonitors = [monitorId, ...Object.keys(getAssociatedMonitorPtzTargets(groupKey, monitorId))]
                 createAlarm(createData)
                 sendWebsocketMessage('alarm_updated',createData)
-                getEventBasedRecordingsUponCompletion(groupKey, associatedMonitors, false, true).then((recordedFiles) => {
+                getEventBasedRecordingsUponCompletion(groupKey, associatedMonitors, false, true, true).then((recordedFiles) => {
                     const updateData = {
                         ke: groupKey,
                         mid: monitorId,
                         time: startTime,
-                        fileBinVideos: recordedFiles,
+                        videos: recordedFiles,
                     }
                     updateAlarm(updateData);
                     sendWebsocketMessage('alarm_updated',updateData)
@@ -140,12 +140,12 @@ module.exports = function(s,config,lang,app){
                     s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized'], alarms: []});
                     return
                 }
-                const { name, fileBinVideos, videoTime, notes, status, editedBy, details, time, start, end } = req.body;
+                const { name, videos, videoTime, notes, status, editedBy, details, time, start, end } = req.body;
                 const response = await updateAlarm({
                     ke: groupKey,
                     mid: monitorId,
                     name,
-                    fileBinVideos: s.parseJSON(fileBinVideos),
+                    videos: s.parseJSON(videos),
                     videoTime,
                     notes,
                     status,

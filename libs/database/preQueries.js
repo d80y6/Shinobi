@@ -192,7 +192,7 @@ module.exports = function(s,config){
             {name: 'ke', length: 50, type: 'string'},
             {name: 'mid', length: 100, type: 'string'},
             {name: 'name', length: 100, type: 'string'},
-            {name: 'fileBinVideos', type: 'text'},
+            {name: 'videos', type: 'text'},
             {name: 'notes', length: 100, type: 'string'},
             {name: 'status', type: 'tinyint', length: 1, defaultTo: 0},
             {name: 'editedBy', length: 50, type: 'string'},

@@ -33,14 +33,40 @@ $(document).ready(function() {
     var stickMax = 4096
     var deadZoneThreshold = 0.35
     var outerDeadZone = 1.01
-    var selectedMonitor = dashboardOptions().gamepadMonitorSelection;
+    var selectedMonitor = null;
     var monitorKeys = {};
-    var onMonitorOpenForGamepad = () => {}
     var sequenceButtonPressList = []
     var sequenceButtonPressTimeout = null
     var buttonPressAction = null;
+
+    function runPtzCommand(monitorId,switchChosen){
+        switch(switchChosen){
+            case'setHome':
+                $.getJSON(getApiPrefix(`control`) + '/' + monitorId + '/setHome',function(data){
+                    console.log(data)
+                })
+            break;
+            default:
+                mainSocket.f({
+                    f: 'control',
+                    direction: switchChosen,
+                    id: monitorId,
+                    ke: $user.ke
+                })
+            break;
+        }
+    }
+
+    function runPtzMove(monitorId,switchChosen,doMove){
+        mainSocket.f({
+            f: doMove ? 'startMove' : 'stopMove',
+            direction: switchChosen,
+            id: monitorId,
+            ke: $user.ke
+        })
+    }
+
     window.setGamepadMonitorSelection = (monitorId) => {
-        dashboardOptions('gamepadMonitorSelection', monitorId);
         selectedMonitor = `${monitorId}`;
     }
 
@@ -97,58 +123,13 @@ $(document).ready(function() {
         })
     }
 
-    function setCameraFromButtonCode(buttonCode = 0, preAdded){
-        const addedOneToButtonCode = preAdded ? buttonCode : parseInt(buttonCode) + 1
-        try{
-            const monitor = loadedMonitors[monitorKeys[addedOneToButtonCode]];
-            const isFullscreened = !!document.fullscreenElement;
-            if(isFullscreened) {
-                document.exitFullscreen()
-                closeAllLiveGridPlayers(true)
-            }
-            openMonitorInLiveGrid(monitor.mid, function(){
-                if(isFullscreened) {
-                    fullScreenLiveGridStreamById(monitor.mid)
-                }
-            })
-
-        }catch(err){
-            new PNotify({
-                title: lang['Invalid Action'],
-                text: `${lang.ptzControlIdNotFound}<br><br>${lang['Button Code']} : ${addedOneToButtonCode}`,
-                type: 'warning'
-            });
-            console.log('No Monitor Associated :', buttonCode)
-        }
-    }
-
-    // function setCameraFromButtonNumbers(){
-    //     const buttons = Object.keys(buttonsPressed).filter(code => buttonsPressed[code]);
-    //     console.log('pressed', buttons)
-    //     if(buttons.length > 1){
-    //
-    //     }else if(buttons.length > 0){
-    //         const monitor = loadedMonitors[monitorKeys[buttons[0]]];
-    //         console.log(monitorKeys[buttons[0]])
-    //         openMonitorInLiveGrid(monitor.mid)
-    //     }
-    // }
-
-    function openMonitorInLiveGrid(monitorId, callback){
-        lastPtzDirection = {};
-        setGamepadMonitorSelection(monitorId)
-        mainSocket.f({
-            f: 'monitor',
-            ff: 'watch_on',
-            id: monitorId
-        })
-        onMonitorOpenForGamepad = (monitorId) => {
-            setTimeout(() => {
-                if(monitorId === selectedMonitor){
-                    onMonitorOpenForGamepad = () => {}
-                    if(callback)callback()
-                }
-            }, 200)
+    function fullScreenInit(target){
+        if (target.requestFullscreen) {
+          target.requestFullscreen();
+        } else if (target.mozRequestFullScreen) {
+          target.mozRequestFullScreen();
+        } else if (target.webkitRequestFullscreen) {
+          target.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
         }
     }
 
@@ -201,7 +182,6 @@ $(document).ready(function() {
             lastPtzDirection['down'] = false
             lastPtzDirection['up'] = false
         }
-        console.log(lastPtzDirection)
     }
 
     function translateZoomAxis(value){
@@ -232,11 +212,8 @@ $(document).ready(function() {
                 }else if(buttonCode == 7){
                     sendPtzCommand('zoom_in', true)
                 }else if(buttonCode == 8){
-                    if($('.popped-image').length > 0){
-                        closeSnapshot()
-                    }else{
-                        openSnapshot()
-                    }
+                    // closeSnapshot()
+                    // openSnapshot()
                 }else if(buttonCode == 9){
                     sentPtzToHome()
                 }else if(buttonCode == 11){
@@ -245,8 +222,6 @@ $(document).ready(function() {
                     }else{
                         document.exitFullscreen()
                     }
-                }else{
-                    buttonPressAction(buttonCode)
                 }
             }, function(buttonCode){
                 if(buttonCode == 6){
@@ -293,21 +268,13 @@ $(document).ready(function() {
         }
     }
 
-    function openSnapshot(){
-        getSnapshot(loadedMonitors[selectedMonitor],function(url){
-            popImage(url)
-        })
-    }
-    function closeSnapshot(){
-        popImageClose()
-    }
-
-
     function startReporting(){
         if(hasGP){
             console.log('Reading Gamepad')
             window.clearInterval(repGP)
             repGP = window.setInterval(reportOnGamepad, reportInterval);
+        }else{
+            console.log('No Gamepad')
         }
     }
 
@@ -316,54 +283,28 @@ $(document).ready(function() {
         window.clearInterval(repGP)
     }
 
-    function generateMonitorKeysFromPtzIds(){
-        monitorKeys = []
-        Object.values(loadedMonitors)
-            .filter(item => !!parseInt(item.details.ptz_id))
-            .sort((a, b) => parseInt(b.details.ptz_id) - parseInt(a.details.ptz_id))
-            .forEach((item) => {
-                console.log(item.details.ptz_id)
-                monitorKeys[item.details.ptz_id] = item.mid;
-            });
-            console.log(monitorKeys)
-    }
-
     function setControllerType(gamepadId){
         switch(true){
             case gamepadId.includes('Xbox'):
                 reportInterval = 200;
                 reportOnGamepad = reportOnXboxGamepad
-                buttonPressAction = setCameraFromButtonCode
                 console.log('Xbox Controller found!')
             break;
             default:
                 reportInterval = 50;
                 reportOnGamepad = reportOnGenericGamepad
-                buttonPressAction = sequenceButtonPress
             break;
         }
     }
     var reportOnGamepad = reportOnXboxGamepad;
 
-    function sequenceButtonPress(buttonCode){
-        sequenceButtonPressList.push(buttonCode)
-        clearTimeout(sequenceButtonPressTimeout)
-        sequenceButtonPressTimeout = setTimeout(() => {
-            const newButtonCode = parseInt(sequenceButtonPressList.map(item => `${parseInt(item) + 1}`).join(''))
-            setCameraFromButtonCode(newButtonCode, true)
-            sequenceButtonPressList = []
-        },300)
-    }
-
     if(canGame()) {
         $(window).on("gamepadconnected", function(e) {
+            console.error('Gamepad Connected!')
             hasGP = true;
-            if(tabTree.name === 'liveGrid'){
-                startReporting()
-            }
+            startReporting()
             const gamepadName = e.originalEvent.gamepad.id;
             setControllerType(gamepadName)
-            console.log('Gamepad Connected!', gamepadName)
         })
         .on("gamepaddisconnected", function() {
             if(!navigator.getGamepads()[0]){
@@ -371,32 +312,11 @@ $(document).ready(function() {
                 console.log('Gamepad Disconnected!')
             }
         })
+    }else{
+        console.error('No Gamepad detected!')
     }
-    onDashboardReady(function(d){
-        generateMonitorKeysFromPtzIds();
-    })
-    onWebSocketEvent(function(d){
-        switch(d.f){
-            case'monitor_edit':
-                generateMonitorKeysFromPtzIds();
-            break;
-            case'monitor_watch_on':
-                var monitorId = d.mid || d.id;
-                onMonitorOpenForGamepad(monitorId)
-            break;
-        }
-    })
-    addOnTabOpen('liveGrid', function () {
-        startReporting()
-    })
-    addOnTabReopen('liveGrid', function () {
-        startReporting()
-    })
-    addOnTabAway('liveGrid', function () {
-        stopReporting()
-    })
     addActionToExtender('windowFocus', function () {
-        if(tabTree.name === 'liveGrid')startReporting()
+        startReporting()
     })
     addActionToExtender('windowBlur', function () {
         stopReporting()

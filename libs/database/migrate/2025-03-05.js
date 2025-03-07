@@ -4,6 +4,6 @@ module.exports = async function(s,config){
         addColumn,
     } = require('../utils.js')(s,config)
     await addColumn('Alarms',[
-        {name: 'fileBinVideos', type: 'text'},
+        {name: 'videos', type: 'text'},
     ])
 }

@@ -245,8 +245,10 @@ var windowFocus = true
 $(window).focus(function() {
     windowFocus = true
     clearInterval(soundAlarmInterval)
+    executeExtender('windowFocus')
 }).blur(function() {
     windowFocus = false
+    executeExtender('windowBlur')
 })
 onDashboardReady(function(){
     loadSwitchStates()

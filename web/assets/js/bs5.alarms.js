@@ -115,7 +115,7 @@ $(document).ready(function(e){
     }
     function drawPreviewVideo(alarm, triggerVideoMonitorId){
         const monitorId = alarm.mid;
-        const triggerVideo = alarm.fileBinVideos[triggerVideoMonitorId || monitorId];
+        const triggerVideo = alarm.videos[triggerVideoMonitorId || monitorId];
         if(triggerVideo){
             const href = getFileBinHref({ mid: monitorId, name: triggerVideo });
             alarmsPreviewArea.html(`<video class="video_video" style="width:100%" autoplay controls preload loop src="${href}"></video>`)

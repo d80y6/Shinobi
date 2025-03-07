@@ -29,3 +29,5 @@ var onToggleSideBarMenuHideExtensions = [];
 function onToggleSideBarMenuHide(...extender){
     onToggleSideBarMenuHideExtensions.push(...extender)
 }
+addExtender('windowBlur')
+addExtender('windowFocus')

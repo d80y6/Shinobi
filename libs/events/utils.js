@@ -523,7 +523,7 @@ module.exports = (s,config,lang) => {
         }
         return response;
     }
-    const getEventBasedRecordingUponCompletion = function(options){
+    const getEventBasedRecordingUponCompletion = function(options, getNonCut){
         const response = {ok: true}
         return new Promise(async (resolve,reject) => {
             const groupKey = options.ke
@@ -543,7 +543,7 @@ module.exports = (s,config,lang) => {
                 response.filePath = `${recordingDirectory}${filename}`
                 eventBasedRecording.process.on('exit', async function(){
                     setTimeout(async () => {
-                        if(!isNaN(videoLength)){
+                        if(!getNonCut && !isNaN(videoLength)){
                             const cutResponse = await cutVideoLength({
                                 ke: groupKey,
                                 mid: monitorId,
@@ -570,6 +570,7 @@ module.exports = (s,config,lang) => {
                                 s.debugLog('cutResponse',cutResponse)
                             }
                         }
+                        console.log(response)
                         resolve(response)
                         for (var i = 0; i < s.onEventBasedRecordingCompleteExtensions.length; i++) {
                             const extender = s.onEventBasedRecordingCompleteExtensions[i]
@@ -582,7 +583,7 @@ module.exports = (s,config,lang) => {
             }
         })
     }
-    const getEventBasedRecordingsUponCompletion = function(groupKey, monitorIds, withPath = false, asObject = true){
+    const getEventBasedRecordingsUponCompletion = function(groupKey, monitorIds, withPath = false, asObject = true, getNonCut){
         return new Promise((resolve) => {
             const response = asObject ? {} : [];
             const total = monitorIds.length;
@@ -591,7 +592,7 @@ module.exports = (s,config,lang) => {
                 getEventBasedRecordingUponCompletion({
                     ke: groupKey,
                     mid: monitorId
-                }).then(({ filename, filePath }) => {
+                }, getNonCut).then(({ filename, filePath }) => {
                     if(filename && filePath){
                         if(asObject){
                             response[monitorId] = filename;
