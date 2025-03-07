@@ -10,6 +10,7 @@ $(document).ready(function(){
     var alarmNotes = $('#alarm-notes')
     var alarmStatus = $('#alarm-status')
     var alarmVideos = $('#alarm-videos')
+    var alarmUpdateForm = $('#alarm-update-form')
     var alarmTime = getQueryString().time;
     var websocketPath = checkCorrectPathEnding(urlPrefix.replace(location.origin, '')) + 'socket.io'
     function getApiPrefix(innerPart){
@@ -124,32 +125,23 @@ $(document).ready(function(){
         const videoName = el.attr('data-filename')
         drawVideoPlayer({ mid: monitorId }, monitorId, videoName)
     })
-    alarmName.change(function(){
-        const el = $(this);
-        const value = el.val();
-        updateAlarm({
-            mid: monitorId,
-            time: alarmTime,
-            name: value
-        })
+    alarmUpdateForm.find('.submit').click(function(e){
+        alarmUpdateForm.submit()
     })
-    alarmNotes.change(function(){
-        const el = $(this);
-        const value = el.val();
+    alarmUpdateForm.submit(function(e){
+        e.preventDefault();
         updateAlarm({
             mid: monitorId,
             time: alarmTime,
-            notes: value
+            name: alarmName.val(),
+            notes: alarmNotes.val(),
+            status: alarmStatus.val(),
+        }).then(response => {
+            if(response.ok){
+                new PNotify({ title: lang.Saved, type: 'success' })
+            }
         })
-    })
-    alarmStatus.change(function(){
-        const el = $(this);
-        const value = el.val();
-        updateAlarm({
-            mid: monitorId,
-            time: alarmTime,
-            status: value
-        })
+        return false;
     })
     $(window).focus(function() {
         windowFocus = true

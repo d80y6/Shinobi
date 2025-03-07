@@ -63,7 +63,7 @@
         <div class="col-6 text-center p-3">
             <div class="card">
                 <div id="alarm-title" class="card-header"></div>
-                <div class="card-body">
+                <form id="alarm-update-form" class="card-body">
                     <div class="form-group mb-3">
                         <input id="alarm-name" class="form-control" placeholder="<%- lang.Name %>">
                     </div>
@@ -87,13 +87,18 @@
                              %>
                         </select>
                     </div>
+                    <div class="form-group mb-3">
+                        <a class="btn d-block btn-success submit">
+                            <%- lang.Save %>
+                        </a>
+                    </div>
                     <div class="dropup d-block">
                         <a class="btn d-block btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                             <%- lang.Videos %>
                         </a>
                         <ul id="alarm-videos" class="dropdown-menu shadow-lg"></ul>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
     </div>
