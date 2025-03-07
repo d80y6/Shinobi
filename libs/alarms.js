@@ -33,7 +33,8 @@ module.exports = function(s,config,lang,app){
                 const createData = {
                     ke: groupKey,
                     mid: monitorId,
-                    time: startTime
+                    time: startTime,
+                    details: d.details
                 };
                 const associatedMonitors = [monitorId, ...Object.keys(getAssociatedMonitorPtzTargets(groupKey, monitorId))]
                 createAlarm(createData)
