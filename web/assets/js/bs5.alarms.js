@@ -142,7 +142,7 @@ $(document).ready(function(e){
         var el = $(document)
         var width = el.width()
         var height = el.height()
-        window.open(`${getApiPrefix('alarm')}/${monitorId}?time=${time}`, 'alarm_'+monitorId, 'height=720,width=1280')
+        window.open(`${getApiPrefix('alarm')}/${monitorId}?time=${time}`, 'alarm_'+monitorId, 'height=800,width=1280')
     }
     loadDateRangePicker(dateSelector,{
         onChange: function(start, end, label) {
