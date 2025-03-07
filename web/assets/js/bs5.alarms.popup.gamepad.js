@@ -269,18 +269,20 @@ $(document).ready(function() {
     }
 
     function startReporting(){
+        if(!selectedMonitor)return console.log('No PTZ Monitor')
         if(hasGP){
             console.log('Reading Gamepad')
             window.clearInterval(repGP)
             repGP = window.setInterval(reportOnGamepad, reportInterval);
-        }else{
-            console.log('No Gamepad')
+            delete(repGP)
         }
     }
 
     function stopReporting(){
-        console.log('Stopping Gamepad')
-        window.clearInterval(repGP)
+        if(repGP){
+            console.log('Stopping Gamepad')
+            window.clearInterval(repGP)
+        }
     }
 
     function setControllerType(gamepadId){
