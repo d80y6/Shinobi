@@ -570,7 +570,6 @@ module.exports = (s,config,lang) => {
                                 s.debugLog('cutResponse',cutResponse)
                             }
                         }
-                        console.log(response)
                         resolve(response)
                         for (var i = 0; i < s.onEventBasedRecordingCompleteExtensions.length; i++) {
                             const extender = s.onEventBasedRecordingCompleteExtensions[i]
