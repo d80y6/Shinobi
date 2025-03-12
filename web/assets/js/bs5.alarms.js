@@ -117,7 +117,7 @@ $(document).ready(function(e){
         const monitorId = alarm.mid;
         const triggerVideo = alarm.videos[triggerVideoMonitorId || monitorId];
         if(triggerVideo){
-            const href = getFileBinHref({ mid: monitorId, name: triggerVideo });
+            const href = getApiPrefix('videos') + '/'+monitorId+'/'+triggerVideo;
             alarmsPreviewArea.html(`<video class="video_video" style="width:100%" autoplay controls preload loop src="${href}"></video>`)
         }else{
             alarmsPreviewArea.text(lang['No Snippet Found'])
