@@ -39,4 +39,5 @@ function sendToCentralManagement(data) {
 module.exports = {
     createWebSocketServer,
     createWebSocketClient,
+    sendToCentralManagement
 }
