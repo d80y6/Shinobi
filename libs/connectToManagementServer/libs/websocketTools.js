@@ -1,4 +1,5 @@
 const WebSocket = require('cws');
+const centralManagementSocket = new WebSocket('ws://central-management-server-url');
 function createWebSocketServer(options){
     const theWebSocket = new WebSocket.Server(options ? options : {
         noServer: true
@@ -24,6 +25,15 @@ function createWebSocketClient(connectionHost,options){
         });
     }
     return clientConnection
+}
+
+function sendToCentralManagement(data) {
+    console.log('Sending data to central management server: ', data);
+    if (centralManagementSocket.readyState === WebSocket.OPEN) {
+        centralManagementSocket.send(JSON.stringify(data));
+    } else {
+        console.error('WebSocket is not connected to the central management server.');
+    }
 }
 
 module.exports = {

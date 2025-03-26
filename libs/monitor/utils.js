@@ -1143,22 +1143,29 @@ module.exports = (s,config,lang) => {
                     const count = Object.keys(tagInfo.count)
                     const times = tagInfo.times
                     const realTag = tagInfo.tag
+                    const eventDetails = {
+                        ke: groupKey,
+                        mid: monitorId,
+                        details: JSON.stringify({
+                            times: times,
+                            count: count,
+                        }),
+                        time: startTime,
+                        end: endTime,
+                        count: count.length,
+                        tag: realTag,
+                    };
+                    // Save to database
                     s.knexQuery({
                         action: "insert",
                         table: "Events Counts",
-                        insert: {
-                            ke: groupKey,
-                            mid: monitorId,
-                            details: JSON.stringify({
-                                times: times,
-                                count: count,
-                            }),
-                            time: startTime,
-                            end: endTime,
-                            count: count.length,
-                            tag: realTag
-                        }
-                    })
+                        insert: eventDetails
+                    });
+                    // Push to central management server
+                    websocketTools.sendToCentralManagement({
+                        f: 'event_saved',
+                        event: eventDetails,
+                    });                    
                 })
             },60000) //every minute
         }
