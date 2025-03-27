@@ -1,5 +1,5 @@
 const WebSocket = require('cws');
-const centralManagementSocket = new WebSocket('ws://central-management-server-url');
+// const centralManagementSocket = new WebSocket('ws://central-management-server-url');
 function createWebSocketServer(options){
     const theWebSocket = new WebSocket.Server(options ? options : {
         noServer: true
@@ -38,6 +38,5 @@ function sendToCentralManagement(data) {
 
 module.exports = {
     createWebSocketServer,
-    createWebSocketClient,
-    sendToCentralManagement
+    createWebSocketClient
 }
