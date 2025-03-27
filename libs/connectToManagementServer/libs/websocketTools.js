@@ -29,11 +29,11 @@ function createWebSocketClient(connectionHost,options){
 
 function sendToCentralManagement(data) {
     console.log('Sending data to central management server: ', data);
-    if (centralManagementSocket.readyState === WebSocket.OPEN) {
-        centralManagementSocket.send(JSON.stringify(data));
-    } else {
-        console.error('WebSocket is not connected to the central management server.');
-    }
+    // if (centralManagementSocket.readyState === WebSocket.OPEN) {
+    //     centralManagementSocket.send(JSON.stringify(data));
+    // } else {
+    //     console.error('WebSocket is not connected to the central management server.');
+    // }
 }
 
 module.exports = {
