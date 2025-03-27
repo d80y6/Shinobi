@@ -1161,11 +1161,12 @@ module.exports = (s,config,lang) => {
                         table: "Events Counts",
                         insert: eventDetails
                     });
+                    console.log('Event Count Saved: ', eventDetails);
                     // Push to central management server
-                    websocketTools.sendToCentralManagement({
-                        f: 'event_saved',
-                        event: eventDetails,
-                    });                    
+                    // websocketTools.sendToCentralManagement({
+                    //     f: 'event_saved',
+                    //     event: eventDetails,
+                    // });                    
                 })
             },60000) //every minute
         }
