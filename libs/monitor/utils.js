@@ -1124,7 +1124,9 @@ module.exports = (s,config,lang) => {
         return activeMonitor.spawn
     }
     function createEventCounter(monitor){
-        console.log('createEventCounterCalled:', monitor.details.detector_obj_count);
+        console.log('createEventCounterCalled:', monitor);
+        console.log('monitor.details:', monitor.details);
+        console.log('monitor.details.detector_obj_count:', monitor.details?.detector_obj_count);
         if(monitor.details.detector_obj_count === '1'){
             const activeMonitor = s.group[monitor.ke].activeMonitors[monitor.id]
             activeMonitor.eventsCountStartTime = new Date()
