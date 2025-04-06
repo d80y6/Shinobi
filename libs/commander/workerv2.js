@@ -295,7 +295,7 @@ function startConnection(p2pServerAddress,subscriptionId){
         requestConnections[requestId].pause()
     })
     onIncomingMessage('pong',function(data,requestId){
-        refreshHeartBeatCheck()
+        // refreshHeartBeatCheck()
         // s.debugLog('Heartbeat')
     })
     onIncomingMessage('init',function(data,requestId){
