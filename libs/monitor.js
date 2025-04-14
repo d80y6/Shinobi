@@ -854,7 +854,7 @@ module.exports = function(s,config,lang){
             apiKeyPermissions: {},
             userPermissions: {},
         }
-        const permissions = user.permissions
+        const permissions = user.permissions || {}
         const details = user.details;
         [
             'auth_socket',

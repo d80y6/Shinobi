@@ -111,6 +111,7 @@ module.exports = function(s,config){
             {name: 'mid', length: 100, type: 'string'},
             {name: 'tag', length: 30, type: 'string'},
             {name: 'details', type: 'text'},
+            {name: 'name', length: 255, type: 'string'},
             {name: 'count', type: 'integer', length: 10, defaultTo: 1},
             {name: 'time', type: 'timestamp', defaultTo: currentTimestamp()},
             {name: 'end', type: 'timestamp', defaultTo: currentTimestamp()},

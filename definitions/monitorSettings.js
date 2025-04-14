@@ -2962,6 +2962,65 @@ module.exports = (s,config,lang) => {
                    ]
                },
                 {
+                   hidden: true,
+                  "name": lang['Line Counter'],
+                  "color": "orange",
+                  id: "monSectionLineCounter",
+                  isSection: true,
+                  isFormGroupGroup: true,
+                  "section-class": "h_det_input h_det_1",
+                  "info": [
+                        {
+                            "name": "detail=detectorLineCounter",
+                            "field": lang.Enabled,
+                            "description": lang["fieldTextDetectorLineCounter"],
+                            "default": "0",
+                            "fieldType": "select",
+                            "selector": "h_det_line",
+                            "possible": yesNoPossibility
+                        },
+                        {
+                            "id": "monitorSettings-lineCounter-canvas-container",
+                            "form-group-class": "h_det_line_input h_det_line_1",
+                            "fieldType": "div",
+                            "style": "overflow-x: auto; width: 100%; text-align: center",
+                        },
+                        {
+                            "id": "detector-line-counter-spacing",
+                            "form-group-class": "h_det_line_input h_det_line_1",
+                            "field": lang['Line Spacing'],
+                            "fieldType": "number",
+                            "numberMin": "10",
+                            "placeholder": "40"
+                        },
+                        {
+                            "name": "detail=detectorLineCounterTags",
+                            "form-group-class": "h_det_line_input h_det_line_1",
+                            "field": lang['Objects to Count'],
+                            "placeholder": "person"
+                        },
+                        {
+                            "id": "detector-line-counter-name-down",
+                            "form-group-class": "h_det_line_input h_det_line_1 col-md-6",
+                            "field": lang['Down Label'],
+                            "placeholder": "Down"
+                        },
+                        {
+                            "id": "detector-line-counter-name-up",
+                            "form-group-class": "h_det_line_input h_det_line_1 col-md-6",
+                            "field": lang['Up Label'],
+                            "placeholder": "Up"
+                        }
+                        {
+                            "id": "detector-line-counter-reset-daily",
+                            "form-group-class": "h_det_line_input h_det_line_1",
+                            "field": lang['Reset Daily'],
+                            "fieldType": "select",
+                            "possible": yesNoPossibility
+                        }
+                    ]
+                },
+                {
                     hidden: true,
                    "name": lang['Event-Based Recording'],
                    "input-mapping": "detector_sip_buffer",

@@ -452,6 +452,7 @@ window.getMonitorEditFormFields = function(){
     monitorConfig.details.substream = getSubStreamChannelFields()
     monitorConfig.details.input_map_choices = monitorSectionInputMapsave()
     monitorConfig.details.triggerMonitorsPtzTargets = getSelectedEventBasedPtzPresets()
+    monitorConfig.details.detectorLineCounterSettings = getLineCounterState()
     // TODO : Input Maps and Stream Channels (does old way at the moment)
 
 
@@ -724,7 +725,14 @@ async function importIntoMonitorEditor(options){
             }
         }
     });
-
+    //
+    if(monitorDetails.detectorLineCounter == '1'){
+        setTimeout(function(){
+            drawLineCounterCanvas(Object.assign({}, monitorConfig, { details: monitorDetails }))
+        },2000)
+    }else{
+        clearLineCounterCanvas()
+    }
     //
     await getPluginsList(monitorConfig)
     //

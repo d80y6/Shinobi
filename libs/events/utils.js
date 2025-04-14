@@ -42,6 +42,7 @@ module.exports = (s,config,lang) => {
         fetchTimeout,
         copyFile,
     } = require('../basic/utils.js')(process.cwd(),config)
+    require('./lineCrossCounter.js')(s,config,lang);
     const glyphs = require('../../definitions/glyphs.js')
     async function saveImageFromEvent(options,frameBuffer){
         const monitorId = options.mid || options.id
