@@ -4165,19 +4165,6 @@ module.exports = (s,config,lang) => {
              isSection: true,
              "info": [
                  {
-                    "name": "detail=detector_cascades",
-                 },
-                 {
-                    "name": "detail=stream_channels",
-                 },
-                 {
-                    "name": "detail=input_maps",
-                 },
-                 {
-                    "name": "detail=input_map_choices",
-                    "preFill": "{}",
-                 },
-                 {
                     "name": "details",
                     "preFill": "{}",
                  }

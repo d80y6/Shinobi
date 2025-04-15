@@ -94,6 +94,7 @@ module.exports = async (s,config,lang,onFinish) => {
                                 var checkLog = function(x){return string.indexOf(x)>-1}
                                 switch(true){
                                     case checkLog('pkt->duration = 0'):
+                                    case checkLog('bad cseq'):
                                     case checkLog('[hls @'):
                                     case checkLog('Past duration'):
                                     case checkLog('Last message repeated'):

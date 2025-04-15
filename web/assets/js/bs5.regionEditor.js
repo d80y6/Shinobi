@@ -186,7 +186,6 @@ $(document).ready(function(e){
             liveElement.attr('width',regionViewerDetails.detector_scale_x)
             liveElement.attr('height',regionViewerDetails.detector_scale_y)
         }
-
     }
     var initCanvas = function(dontReloadStream){
         var newArray = [];

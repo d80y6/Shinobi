@@ -1423,6 +1423,7 @@ module.exports = (s,config,lang) => {
                 break;
                 case checkLog(d,'pkt->duration = 0'):
                 case checkLog(d,'[hls @'):
+                case checkLog(d,'bad cseq'):
                 case checkLog(d,'Past duration'):
                 case checkLog(d,'Last message repeated'):
                 case checkLog(d,'Non-monotonous DTS'):
@@ -1804,7 +1805,7 @@ module.exports = (s,config,lang) => {
         const monitorId = e.mid || e.id
         const activeMonitor = getActiveMonitor(groupKey,monitorId);
         //parse Objects
-        (['detector_cascades','cords','detector_filters','input_map_choices']).forEach(function(v){
+        (['cords','detector_filters','input_map_choices']).forEach(function(v){
             if(e.details && e.details[v]){
                 try{
                     if(!e.details[v] || e.details[v] === '')e.details[v] = '{}'
@@ -1839,8 +1840,8 @@ module.exports = (s,config,lang) => {
         (['stream_channels','input_maps']).forEach(function(v){
             if(e.details&&e.details[v]&&(e.details[v] instanceof Array)===false){
                 try{
-                    e.details[v]=JSON.parse(e.details[v]);
-                    if(!e.details[v])e.details[v]=[];
+                    e.details[v] = s.parseJSON(e.details[v]);
+                    if(!e.details[v])e.details[v] = [];
                 }catch(err){
                     e.details[v]=[];
                 }

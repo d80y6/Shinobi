@@ -890,7 +890,7 @@ module.exports = (s,config,lang) => {
                 if(code === 0){
                     resolve(buffer);
                 }else{
-                    reject(new Error(`FFmpeg process exited with code ${code}`));
+                    reject(new Error(`FFmpeg process exited with code ${code} : ${ffmpegArgs.join(' ')}`));
                 }
             });
 

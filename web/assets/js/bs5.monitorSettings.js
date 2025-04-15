@@ -450,11 +450,11 @@ window.getMonitorEditFormFields = function(){
     monitorConfig.details = getDetailValues(editorForm)
     // monitorConfig.details = safeJsonParse(monitorConfig.details)
     monitorConfig.details.substream = getSubStreamChannelFields()
-    monitorConfig.details.input_map_choices = monitorSectionInputMapsave()
+    monitorConfig.details.input_maps = getInputMapConnectionInfo()
+    monitorConfig.details.input_map_choices = getInputMapDesignations()
+    monitorConfig.details.stream_channels = getStreamChannelConnectionInfo()
     monitorConfig.details.triggerMonitorsPtzTargets = getSelectedEventBasedPtzPresets()
     monitorConfig.details.detectorLineCounterSettings = getLineCounterState()
-    // TODO : Input Maps and Stream Channels (does old way at the moment)
-
 
 //    if(monitorConfig.protocol=='rtsp'){monitorConfig.ext='mp4',monitorConfig.type='rtsp'}
     if(errorsFound.length > 0){
@@ -856,7 +856,7 @@ var mapPlacementInit = function(){
         _this.find('.place').text(n+1)
     })
 }
-var monitorSectionInputMapsave = function(){
+function getInputMapDesignations(){
     var mapContainers = monitorEditorWindow.find('[input-mapping]');
     var stringForSave = {}
     mapContainers.each(function(q,t){
@@ -873,6 +873,18 @@ var monitorSectionInputMapsave = function(){
     });
     return stringForSave
 }
+function getInputMapConnectionInfo(){
+    var el = monitorSectionInputMaps.find('.input-map')
+    var selectedMaps = []
+    el.each(function(n,v){
+        var map={}
+        $.each($(v).find('[map-detail]'),function(m,b){
+            map[$(b).attr('map-detail')]=$(b).val()
+        });
+        selectedMaps.push(map)
+    });
+    return selectedMaps
+}
 monitorSectionInputMaps.on('click','.delete',function(){
     $(this).parents('.input-map').remove()
     var inputs = $('[map-detail]')
@@ -885,18 +897,6 @@ monitorSectionInputMaps.on('click','.delete',function(){
     }
     mapPlacementInit()
 })
-monitorEditorWindow.on('change','[map-detail]',function(){
-    var el = monitorSectionInputMaps.find('.input-map')
-    var selectedMaps = []
-    el.each(function(n,v){
-        var map={}
-        $.each($(v).find('[map-detail]'),function(m,b){
-            map[$(b).attr('map-detail')]=$(b).val()
-        });
-        selectedMaps.push(map)
-    });
-    monitorEditorWindow.find('[detail="input_maps"]').val(JSON.stringify(selectedMaps)).change()
-})
 monitorEditorWindow.on('click','[input-mapping] .add_map_row',function(){
     drawInputMapSelectorHtml({},$(this).parents('[input-mapping]').find('.choices'))
 })
@@ -905,17 +905,17 @@ monitorEditorWindow.on('click','[input-mapping] .delete_map_row',function(){
 })
 //////////////////
 //Stream Channels
-var monitorStreamChannelsave = function(){
+function getStreamChannelConnectionInfo(){
     var el = monitorStreamChannels.find('.stream-channel')
     var selectedChannels = []
     el.each(function(n,v){
         var channel={}
         $.each($(v).find('[channel-detail]'),function(m,b){
-            channel[$(b).attr('channel-detail')]=$(b).val()
+            channel[$(b).attr('channel-detail')] = $(b).val()
         });
         selectedChannels.push(channel)
     });
-    monitorEditorWindow.find('[detail="stream_channels"]').val(JSON.stringify(selectedChannels)).change()
+    return selectedChannels
 }
 var channelPlacementInit = function(){
     $('.stream-channel').each(function(n,v){
@@ -1042,11 +1042,7 @@ function setFieldVisibility(){
 }
 monitorStreamChannels.on('click','.delete',function(){
     $(this).parents('.stream-channel').remove()
-    monitorStreamChannelsave()
     channelPlacementInit()
-})
-monitorEditorWindow.on('change','[channel-detail]',function(){
-    monitorStreamChannelsave()
 })
 monitorEditorWindow.find('.probe-monitor-settings').click(function(){
     $.pB.submit(buildMonitorURL())

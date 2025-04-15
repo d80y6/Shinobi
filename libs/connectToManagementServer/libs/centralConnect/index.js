@@ -100,7 +100,7 @@ class CentralConnection {
 
     for (const interfaceName in interfaces) {
       for (const iface of interfaces[interfaceName]) {
-        if (iface.family === 'IPv4' && !iface.internal) {
+        if (iface.family === 'IPv4' && !iface.internal && iface.address !== '127.0.0.1' && !iface.address.includes(':')) {
           addresses.push(iface.address);
         }
       }
