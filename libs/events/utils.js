@@ -874,23 +874,31 @@ module.exports = (s,config,lang) => {
             if(!passedMotionLock)return
         }
         const thisHasMatrices = hasMatrices(eventDetails)
-        if(thisHasMatrices && monitorDetails.detector_obj_region === '1'){
-            var regions = s.group[monitorConfig.ke].activeMonitors[monitorConfig.mid].parsedObjects.cordsForObjectDetection
-            var matricesInRegions = isAtleastOneMatrixInRegion(regions,eventDetails.matrices)
-            eventDetails.matrices = matricesInRegions
-            if(matricesInRegions.length === 0)return;
-            if(filter.countObjects && monitorDetails.detector_obj_count === '1' && monitorDetails.detector_obj_count_in_region === '1' && !didCountingAlready){
-                countObjects(eventDetails.matrices)
+        if(thisHasMatrices){
+            if(monitorDetails.detector_obj_region === '1'){
+                var regions = s.group[monitorConfig.ke].activeMonitors[monitorConfig.mid].parsedObjects.cordsForObjectDetection
+                var matricesInRegions = isAtleastOneMatrixInRegion(regions,eventDetails.matrices)
+                eventDetails.matrices = matricesInRegions
+                if(matricesInRegions.length === 0)return;
+                if(filter.countObjects && monitorDetails.detector_obj_count === '1' && monitorDetails.detector_obj_count_in_region === '1' && !didCountingAlready){
+                    countObjects(eventDetails.matrices)
+                }
             }
-        }
-        if(thisHasMatrices && monitorDetails.detector_object_ignore_not_move === '1'){
-            const trackerId = `${groupKey}${monitorId}`
-            trackObjectWithTimeout(trackerId,eventDetails.matrices)
-            const trackedObjects = getTracked(trackerId)
-            const objectsThatMoved = getAllMatricesThatMoved(monitorConfig,trackedObjects)
-            setLastTracked(trackerId, trackedObjects)
-            if(objectsThatMoved.length === 0)return;
-            eventDetails.matrices = objectsThatMoved
+            if(monitorDetails.detector_object_ignore_not_move === '1'){
+                const trackerId = `${groupKey}${monitorId}`
+                trackObjectWithTimeout(trackerId,eventDetails.matrices)
+                const trackedObjects = getTracked(trackerId)
+                const objectsThatMoved = getAllMatricesThatMoved(monitorConfig,trackedObjects)
+                setLastTracked(trackerId, trackedObjects)
+                if(objectsThatMoved.length === 0)return;
+                eventDetails.matrices = objectsThatMoved
+            }else if(activeMonitor.lineCounter){
+                const trackerId = `${groupKey}${monitorId}`
+                trackObjectWithTimeout(trackerId,eventDetails.matrices)
+                const trackedObjects = getTracked(trackerId)
+                setLastTracked(trackerId, trackedObjects)
+                eventDetails.matrices = trackedObjects
+            }
         }
         //
         d.doObjectDetection = (

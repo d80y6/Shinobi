@@ -3000,17 +3000,24 @@ module.exports = (s,config,lang) => {
                             "placeholder": "person"
                         },
                         {
-                            "id": "detector-line-counter-name-down",
-                            "form-group-class": "h_det_line_input h_det_line_1 col-md-6",
-                            "field": lang['Down Label'],
-                            "placeholder": "Down"
+                            "id": "monitorSettings-lineCounter-canvas-container",
+                            "class": "row",
+                            "fieldType": "div",
+                            "info": [
+                                {
+                                    "id": "detector-line-counter-name-down",
+                                    "form-group-class": "h_det_line_input h_det_line_1 col-md-6",
+                                    "field": lang['Down Label'],
+                                    "placeholder": "Down"
+                                },
+                                {
+                                    "id": "detector-line-counter-name-up",
+                                    "form-group-class": "h_det_line_input h_det_line_1 col-md-6",
+                                    "field": lang['Up Label'],
+                                    "placeholder": "Up"
+                                }
+                            ],
                         },
-                        {
-                            "id": "detector-line-counter-name-up",
-                            "form-group-class": "h_det_line_input h_det_line_1 col-md-6",
-                            "field": lang['Up Label'],
-                            "placeholder": "Up"
-                        }
                         {
                             "id": "detector-line-counter-reset-daily",
                             "form-group-class": "h_det_line_input h_det_line_1",

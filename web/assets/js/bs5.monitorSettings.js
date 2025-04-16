@@ -729,7 +729,7 @@ async function importIntoMonitorEditor(options){
     if(monitorDetails.detectorLineCounter == '1'){
         setTimeout(function(){
             drawLineCounterCanvas(Object.assign({}, monitorConfig, { details: monitorDetails }))
-        },2000)
+        },500)
     }else{
         clearLineCounterCanvas()
     }

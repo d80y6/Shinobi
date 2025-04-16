@@ -206,6 +206,7 @@ module.exports = function(s,config){
         await require('./migrate/2022-12-18.js')(s,config)
         await require('./migrate/2023-03-11.js')(s,config)
         await require('./migrate/2025-03-05.js')(s,config)
+        await require('./migrate/2025-04-13.js')(s,config)
         delete(s.preQueries)
     }
 }

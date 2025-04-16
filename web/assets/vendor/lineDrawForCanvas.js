@@ -207,7 +207,7 @@ class ParallelLineDrawer {
         if (!this.currentLines) return null;
 
         // Return lines in original coordinates (divide by current ratio)
-        return this.currentLines.map(line => ({
+        const newLines = this.currentLines.map(line => ({
             start: {
                 x: line.start.x / this.currentRatio,
                 y: line.start.y / this.currentRatio
@@ -217,6 +217,8 @@ class ParallelLineDrawer {
                 y: line.end.y / this.currentRatio
             }
         }));
+        console.log(newLines,this.currentLines[0].start.x,this.currentRatio)
+        return newLines
     }
 
     // Configuration setters

@@ -1,5 +1,3 @@
-const Tracker = require('./simpleTracker.js');
-
 class LineCrossCounter {
     constructor(imageWidth, imageHeight, lines = [], tags = ['person']) {
         this.imageWidth = imageWidth;
@@ -12,8 +10,7 @@ class LineCrossCounter {
         ];
 
         this.tags = Array.isArray(tags) ? tags : [tags];
-        this.offset = 6;
-        this.tracker = new Tracker();
+        this.offset = 15;
 
         // Tracking state
         this.resetCounters();
@@ -24,8 +21,11 @@ class LineCrossCounter {
         this.resetHour = 0; // Midnight (12:00 AM)
         this.resetMinute = 0;
         this.lastResetCheck = null;
-        
+
         this.calculateLineEquations();
+
+        this.trackingHistory = new Map();
+        this.historyDuration = 10000;
     }
 
     enableDailyReset(hour = 0, minute = 0) {
@@ -103,6 +103,7 @@ class LineCrossCounter {
         }
         const distance = Math.abs(line.A * x + line.B * y + line.C) /
                        Math.sqrt(line.A * line.A + line.B * line.B);
+        console.log('distance',distance, 'line : ' + lineIndex,', pass :',distance <= this.offset)
         return distance <= this.offset;
     }
 
@@ -111,20 +112,25 @@ class LineCrossCounter {
         this.lastFrameTime = new Date();
         this.frameCount++;
 
+        // Clean up old history entries
+        const now = Date.now();
+        for (const [id, entry] of this.trackingHistory.entries()) {
+            if (now - entry.lastSeen > this.historyDuration) {
+                this.trackingHistory.delete(id);
+            }
+        }
+
         if (this.frameCount % 3 !== 0) {
             return {
                 frameResult: this.getCounts(),
                 changedCount: {
                     total: { down: 0, up: 0 },
-                    byTag: {} // Empty when no changes
+                    byTag: {}
                 }
             };
         }
 
         const filtered = detections.filter(d => d.tag && this.tags.includes(d.tag));
-        const rects = filtered.map(d => [d.x, d.y, d.width, d.height]);
-        const bboxId = this.tracker.update(rects);
-
         const newNearLine1 = new Set();
         const newNearLine2 = new Set();
         const changedCount = {
@@ -133,11 +139,28 @@ class LineCrossCounter {
         };
 
         // Process each detection
-        bboxId.forEach(([x, y, w, h, id], index) => {
-            const detection = filtered[index];
-            const cx = Math.floor(x + w / 2);
-            const cy = Math.floor(y + h / 2);
-            const idTag = `${id}:${detection.tag}`;
+        filtered.forEach(detection => {
+            const { x, y, width, height, id, tag } = detection;
+            const cx = Math.floor(x + width / 2);
+            const cy = Math.floor(y + height / 2);
+            const idTag = `${id}:${tag}`;
+
+            // Update tracking history
+            if (!this.trackingHistory.has(id)) {
+                this.trackingHistory.set(id, {
+                    lastSeen: now,
+                    positions: [],
+                    tag: tag
+                });
+            }
+            const history = this.trackingHistory.get(id);
+            history.lastSeen = now;
+            history.positions.push({ x: cx, y: cy, timestamp: now });
+
+            // Keep only recent positions
+            history.positions = history.positions.filter(
+                pos => now - pos.timestamp <= this.historyDuration
+            );
 
             // Check line proximity
             const nearLine1 = this.isPointNearLine(cx, cy, 0);
@@ -146,18 +169,26 @@ class LineCrossCounter {
             if (nearLine1) newNearLine1.add(idTag);
             if (nearLine2) newNearLine2.add(idTag);
 
-            // Count crossings
-            if (nearLine2 && this.currentNearLine1.has(idTag)) {
-                this.counts.total.down++;
-                this.counts.byTag[detection.tag].down++;
-                changedCount.total.down++;
-                changedCount.byTag[detection.tag].down++;
-            }
-            if (nearLine1 && this.currentNearLine2.has(idTag)) {
-                this.counts.total.up++;
-                this.counts.byTag[detection.tag].up++;
-                changedCount.total.up++;
-                changedCount.byTag[detection.tag].up++;
+            // Check historical positions for crossings
+            if (history.positions.length > 1) {
+                const crossedLine1To2 = this.checkHistoricalCrossing(history.positions, 0, 1);
+                const crossedLine2To1 = this.checkHistoricalCrossing(history.positions, 1, 0);
+
+                if (crossedLine1To2 && !this.countedCrossings.has(`${id}:down`)) {
+                    this.counts.total.down++;
+                    this.counts.byTag[tag].down++;
+                    changedCount.total.down++;
+                    changedCount.byTag[tag].down++;
+                    this.countedCrossings.add(`${id}:down`);
+                }
+
+                if (crossedLine2To1 && !this.countedCrossings.has(`${id}:up`)) {
+                    this.counts.total.up++;
+                    this.counts.byTag[tag].up++;
+                    changedCount.total.up++;
+                    changedCount.byTag[tag].up++;
+                    this.countedCrossings.add(`${id}:up`);
+                }
             }
         });
 
@@ -177,6 +208,21 @@ class LineCrossCounter {
                 byTag: filteredChangedTags
             }
         };
+    }
+
+    checkHistoricalCrossing(positions, fromLineIndex, toLineIndex) {
+        // Check if object crossed from one line to another in its position history
+        let wasNearFromLine = false;
+
+        for (const pos of positions) {
+            const nearFromLine = this.isPointNearLine(pos.x, pos.y, fromLineIndex);
+            const nearToLine = this.isPointNearLine(pos.x, pos.y, toLineIndex);
+
+            if (nearFromLine) wasNearFromLine = true;
+            if (wasNearFromLine && nearToLine) return true;
+        }
+
+        return false;
     }
 
     getCounts() {

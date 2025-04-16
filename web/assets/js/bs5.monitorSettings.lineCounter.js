@@ -6,6 +6,8 @@ $(document).ready(function(){
     const lineCounterDownName = $('#detector-line-counter-name-down')
     const lineCounterResetDailyField = $('#detector-line-counter-reset-daily')
     const lineCounterToggle = monitorEditorWindow.find('[detail=detectorLineCounter]')
+    const scaleXObject = monitorEditorWindow.find('[detail=detector_scale_x_object]')
+    const scaleYObject = monitorEditorWindow.find('[detail=detector_scale_y_object]')
     let currentLineCounterCanvas = null;
     let lastEmbedUrl = '';
     function loadLineCounterForMonitorSettings(monitor){
@@ -130,6 +132,16 @@ $(document).ready(function(){
             drawLineCounterCanvas(monitorEditorSelectedMonitor)
         }else{
             clearLineCounterCanvas()
+        }
+    });
+    scaleXObject.change(function(e){
+        if(lineCounterToggle.val() === '1'){
+            drawLineCounterCanvas(monitorEditorSelectedMonitor)
+        }
+    });
+    scaleYObject.change(function(e){
+        if(lineCounterToggle.val() === '1'){
+            drawLineCounterCanvas(monitorEditorSelectedMonitor)
         }
     });
     lineCounterSpacingField.change(function(e){
