@@ -60,7 +60,10 @@ module.exports = function(s,config,lang,io){
                 columns: "*",
                 table: "Monitors",
             },function(err,monitors) {
-                foundMonitors = monitors
+                foundMonitors = monitors.map(item => {
+                    item.details = JSON.parse(item.details)
+                    return item
+                })
                 if(err){s.systemLog('Startup Error', err.toString())}
                 if(monitors && monitors[0]){
                     var didNotLoad = 0

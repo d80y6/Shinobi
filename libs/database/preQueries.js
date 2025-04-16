@@ -201,6 +201,15 @@ module.exports = function(s,config){
             {name: 'time', type: 'timestamp', defaultTo: currentTimestamp()},
             {name: 'end', type: 'timestamp', defaultTo: currentTimestamp()},
         ]);
+        await createTable('Custom Settings',[
+            isMySQL ? {name: 'utf8', type: 'charset'} : null,
+            isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
+            {name: 'ke', length: 50, type: 'string'},
+            {name: 'uid', length: 50, type: 'string'},
+            {name: 'name', length: 100, type: 'string'},
+            {name: 'details', type: 'text'},
+            {name: 'time', type: 'timestamp', defaultTo: currentTimestamp()},
+        ]);
         // additional requirements for older installs
         await require('./migrate/2022-08-22.js')(s,config)
         await require('./migrate/2022-12-18.js')(s,config)

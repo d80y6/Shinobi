@@ -159,7 +159,7 @@ class CentralConnection {
   onWebsocketError(err) {
     console.log('Central tunnelToCentral Error:', err);
     console.log('Central Restarting...');
-    this.scheduleReconnection();
+    this.disconnectedConnection();
   }
 
   onWebsocketClose() {

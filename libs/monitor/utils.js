@@ -1633,7 +1633,7 @@ module.exports = (s,config,lang) => {
                                     }
                                 }
                                 s.onMonitorStartExtensions.forEach(function(extender){
-                                    extender(Object.assign(theGroup.rawMonitorConfigurations[monitorId],{}),e)
+                                    extender(Object.assign({},theGroup.rawMonitorConfigurations[monitorId]),e)
                                 })
                                 resolve()
                             })
@@ -1740,12 +1740,13 @@ module.exports = (s,config,lang) => {
     async function monitorStart(e){
         const groupKey = e.ke
         const monitorId = e.mid || e.id
-        const monitorConfig = getMonitorConfiguration(groupKey,monitorId);
+        let monitorConfig = getMonitorConfiguration(groupKey,monitorId);
         monitorConfigurationMigrator(e)
         s.initiateMonitorObject({ke:groupKey,mid:monitorId})
         const activeMonitor = getActiveMonitor(groupKey,monitorId)
         if(!monitorConfig){
-            s.group[groupKey].rawMonitorConfigurations[monitorId] = s.cleanMonitorObject(e)
+            monitorConfig = s.cleanMonitorObject(e)
+            s.group[groupKey].rawMonitorConfigurations[monitorId] = monitorConfig
         }
         if(activeMonitor.isStarted === true){
             s.debugLog('Monitor Already Started!')

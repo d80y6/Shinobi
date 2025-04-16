@@ -656,6 +656,9 @@ module.exports = (s,config,lang) => {
                 let outputMap = `-map 0:0 `
                 const analyzeDuration = parseInt(monitorDetails.event_record_aduration) || 1000
                 const probeSize = parseInt(monitorDetails.event_record_probesize) || 32
+                const audioCodec = monitorDetails.detector_buffer_acodec;
+                const noAudio = audioCodec === 'no';
+                const autoAudio = !audioCodec || audioCodec === 'auto';
                 s.userLog(d,{
                     type: logTitleText,
                     msg: lang["Started"]
@@ -666,31 +669,37 @@ module.exports = (s,config,lang) => {
                 }
                 //-t 00:'+s.timeObject(new Date(detector_timeout * 1000 * 60)).format('mm:ss')+'
                 if(
-                    monitorDetails.detector_buffer_acodec &&
-                    monitorDetails.detector_buffer_acodec !== 'no' &&
-                    monitorDetails.detector_buffer_acodec !== 'auto'
+                    audioCodec &&
+                    audioCodec !== 'no' &&
+                    audioCodec !== 'auto'
                 ){
                     outputMap += `-map 0:1? `
                 }
                 const secondsBefore = parseInt(monitorDetails.detector_buffer_seconds_before) || 5
                 let LiveStartIndex = parseInt(secondsBefore / 2 + 1)
-                const ffmpegCommand = `-loglevel warning -live_start_index -${LiveStartIndex} -analyzeduration ${analyzeDuration} -probesize ${probeSize} -re -i "${s.dir.streams+groupKey+'/'+monitorId}/detectorStream.m3u8" ${outputMap}-movflags faststart -fflags +igndts -c:v copy -c:a aac -strict -2 -strftime 1 -y "${s.getVideoDirectory(monitorConfig) + filename}"`
+                const ffmpegCommand = `-loglevel warning -live_start_index -${LiveStartIndex} -analyzeduration ${analyzeDuration} -probesize ${probeSize} -re -i "${s.dir.streams+groupKey+'/'+monitorId}/detectorStream.m3u8" ${outputMap}-movflags faststart -fflags +igndts -c:v copy ${noAudio ? '-an' : autoAudio ? '' : `-c:a aac`} -strict -2 -strftime 1 -y "${s.getVideoDirectory(monitorConfig) + filename}"`
                 s.debugLog(ffmpegCommand)
                 activeMonitor.eventBasedRecording[fileTime].process = spawn(
                     config.ffmpegDir,
                     splitForFFMPEG(ffmpegCommand)
                 )
+                activeMonitor.eventBasedRecording[fileTime].process.stdout.on('data',function(data){
+                    s.userLog(d,{
+                        type: `${logTitleText} : STDOUT`,
+                        msg: data.toString()
+                    })
+                })
                 activeMonitor.eventBasedRecording[fileTime].process.stderr.on('data',function(data){
                     s.userLog(d,{
-                        type: logTitleText,
+                        type: `${logTitleText} : STDERR`,
                         msg: data.toString()
                     })
                 })
                 activeMonitor.eventBasedRecording[fileTime].process.on('close',function(){
                     if(!activeMonitor.eventBasedRecording[fileTime].allowEnd){
                         s.userLog(d,{
-                            type: logTitleText,
-                            msg: lang["Detector Recording Process Exited Prematurely. Restarting."]
+                            type: `${logTitleText} : ${lang["Detector Recording Process Exited Prematurely. Restarting."]}`,
+                            msg: ffmpegCommand
                         })
                         runRecord()
                         return
