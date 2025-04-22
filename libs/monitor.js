@@ -655,10 +655,8 @@ module.exports = function(s,config,lang){
                 await s.camera(form.mode,monitorConfig);
             }
             s.tx(txData,'STR_'+form.ke)
-            console.log(`WebSocket Data Sent to STR_${form.ke}:`, txData);
         }
         s.tx(txData,'GRP_'+form.ke)
-        console.log(`WebSocket Data Sent to GRP_${form.ke}:`, txData);
         if(callback)callback(!endData.ok,endData);
         if(monitorExists || canDoTheDo){
             let monitorConfig = copyMonitorConfiguration(form.ke,form.mid)
