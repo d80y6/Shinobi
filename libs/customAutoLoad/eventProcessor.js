@@ -13,7 +13,7 @@ module.exports = function (s, config, lang, app, io) {
 
         const payload = {
             monitorId: d.id,
-            serverId: s.conf.serverId,
+            serverId: conf.serverId,
             eventType: d.reason,
             timestamp: d.currentTimestamp,
             fullEvent: d
