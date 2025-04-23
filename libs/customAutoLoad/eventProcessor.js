@@ -1,5 +1,6 @@
 require('dotenv').config(); // Load .env file
 const axios = require('axios');
+const conf =  require('../conf.json');
 
 module.exports = function(s, config, lang, app, io) {
     const webhookUrl = process.env.GLOBAL_WEBHOOK_URL;
@@ -12,7 +13,7 @@ module.exports = function(s, config, lang, app, io) {
 
         axios.post(webhookUrl, {
             monitorId: d.id,
-            groupKey: d.ke,
+            serverId: conf.serverId,
             eventType: d.reason,
             timestamp: d.currentTimestamp,
             fullEvent: d
@@ -23,11 +24,6 @@ module.exports = function(s, config, lang, app, io) {
         });
     };
 
-    const sendMonitorEvents = function(d, filter) {
-       console.log(`Monitor event: `,JSON.stringify(d, null, 2));
-    };
-
     s.onEventTrigger(sendEventToWebhook);
-    s.onMonitorSave(sendMonitorEvents);
     console.log('✅ Loaded customAutoLoad module with .env webhook');
 };
