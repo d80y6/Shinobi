@@ -1,6 +1,5 @@
 require('dotenv').config(); // Load .env file
 const axios = require('axios');
-const conf = require("../../conf.json");
 
 module.exports = function (s, config, lang, app, io) {
     const webhookUrl = process.env.GLOBAL_WEBHOOK_URL;
@@ -13,7 +12,7 @@ module.exports = function (s, config, lang, app, io) {
 
         const payload = {
             monitorId: d.id,
-            serverId: conf.serverId,
+            serverId: s.conf.serverId,
             eventType: d.reason,
             timestamp: d.currentTimestamp,
             fullEvent: d
