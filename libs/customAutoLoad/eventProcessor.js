@@ -5,6 +5,7 @@ module.exports = function (s, config, lang, app, io) {
     const webhookUrl = process.env.GLOBAL_WEBHOOK_URL;
 
     const sendEventToWebhook = function (d, filter) {
+        const conf = require("../../conf.json");
         if (!webhookUrl) {
             console.warn('❌ GLOBAL_WEBHOOK_URL not set in .env');
             return;
