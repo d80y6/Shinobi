@@ -1,6 +1,6 @@
 require('dotenv').config(); // Load .env file
 const axios = require('axios');
-const conf =  require(`${__dirname}/../../conf.json`);
+const conf =  require("../../conf.json");
 
 module.exports = function(s, config, lang, app, io) {
     const webhookUrl = process.env.GLOBAL_WEBHOOK_URL;
