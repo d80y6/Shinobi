@@ -74,6 +74,9 @@ class CentralConnection {
           data.connectDetails.peerConnectKey = this.peerConnectKey;
           _this.internalEvents.emit('connectDetails', data.connectDetails);
           break;
+        case 'knexQueryPromise':
+          _this.internalEvents.emit('knexQueryPromise', data.response);
+          break;
         case 'exit':
           _this.logger.debugLog('Closing Central Connection...');
           process.exit(0);
@@ -120,6 +123,15 @@ class CentralConnection {
         resolve(data);
       });
       parentPort.postMessage({ f: 'connectDetailsRequest' });
+    });
+  }
+
+  async knexQueryPromise(...args) {
+    return new Promise((resolve) => {
+      this.internalEvents.once('knexQueryPromise', (response) => {
+        resolve(response);
+      });
+      parentPort.postMessage({ f: 'knexQueryPromise', args });
     });
   }
 
@@ -428,6 +440,8 @@ class CentralConnection {
       this.stayDisconnected = !data?.retryLater;
       if (data?.retryLater) console.log('Retrying Central Later...');
     });
+
+    require('./failover.js')(this, parentPort)
   }
 }
 

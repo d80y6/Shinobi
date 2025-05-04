@@ -8,7 +8,7 @@ module.exports = (s,config,lang) => {
     function parseNewConnectionAddress(serverIp){
         let parsedIp = `${serverIp}`
         if(parsedIp.indexOf('://') === -1)parsedIp = `ws://${parsedIp}`
-        if(parsedIp.split(':').length === 2)parsedIp = `ws://${parsedIp}:8663`
+        if(parsedIp.split(':').length === 2)parsedIp = `${parsedIp}:8663`
         return parsedIp;
     }
     function getManagementServers(){
@@ -148,6 +148,10 @@ module.exports = (s,config,lang) => {
                         console.error('FAILED TO GET connectDetails', serverIp, error)
                         worker.postMessage({ f: 'connectDetails', connectDetails: {} })
                     })
+                break;
+                case'knexQueryPromise':
+                    const knexResponse = await s.knexQueryPromise(...data.args);
+                    worker.postMessage({ f: 'knexQueryPromise', response: knexResponse });
                 break;
                 case'modifyConfiguration':
                     console.log('Editing Configuration...', serverIp, data.data.form)
