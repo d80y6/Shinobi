@@ -22,5 +22,8 @@ module.exports = (centralConnection, parentPort) => {
             const response = await deleteAllData();
             outboundMessage('deleteAllData', response, requestId)
         })
+        centralConnection.onIncomingMessage('restartServer', (data, requestId) => {
+            parentPort.postMessage({ f: 'restartServer' });
+        })
     }
 }

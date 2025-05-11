@@ -168,6 +168,10 @@ module.exports = (s,config,lang) => {
                     s.systemLog('Restarting Central Connection...', serverIp)
                     worker.terminate()
                 break;
+                case'restartServer':
+                    s.systemLog('Central is Restarting Shinobi...', serverIp)
+                    process.exit()
+                break;
             }
         });
         worker.on('error', (err) => {
