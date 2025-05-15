@@ -5,6 +5,7 @@ module.exports = function(s,config,lang,app,io){
     const loadedLibraries = {
         //cloud storage
         s3based: require('./uploaders/s3based.js'),
+        minio: require('./uploaders/minio.js'),
         backblazeB2: require('./uploaders/backblazeB2.js'),
         amazonS3: require('./uploaders/amazonS3.js'),
         webdav: require('./uploaders/webdav.js'),
