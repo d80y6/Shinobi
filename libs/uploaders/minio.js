@@ -291,7 +291,7 @@ module.exports = function(s, config, lang) {
 
     return {
         "evaluation": "details.use_minio !== '0'",
-        "name": lang["MinIO Storage"],
+        "name": lang["MinIO"],
         "color": "forestgreen",
         "uploaderId": 'minio',
         "info": [
@@ -335,7 +335,7 @@ module.exports = function(s, config, lang) {
             },
             {
                 "hidden": true,
-                "field": lang['Access Key'],
+                "field": lang.aws_accessKeyId,
                 "name": "detail=minio_accessKeyId",
                 "form-group-class": "autosave_minio_input autosave_minio_1",
                 "description": "",
@@ -348,7 +348,7 @@ module.exports = function(s, config, lang) {
                 "name": "detail=minio_secretAccessKey",
                 "fieldType": "password",
                 "placeholder": "",
-                "field": lang['Secret Key'],
+                "field": lang.aws_secretAccessKey,
                 "form-group-class": "autosave_minio_input autosave_minio_1",
                 "description": "",
                 "default": "",

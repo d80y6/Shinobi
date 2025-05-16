@@ -550,6 +550,7 @@
    "accountSettingsError": "Account Settings Error",
    "Could not create Bucket.": "Could not create Bucket.",
    "Amazon S3": "Amazon S3",
+   "MinIO": "MinIO",
    "Wasabi Hot Cloud Storage": "Wasabi Hot Cloud Storage",
    "Database": "Database",
    "Database Not Found": "Database Not Found",
