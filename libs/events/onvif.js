@@ -3,30 +3,59 @@ function hasOnvifEventsEnabled(monitorConfig) {
 }
 
 module.exports = function (s, config, lang) {
-    const {Cam} = require("onvif");
+    const { Cam } = require("onvif");
     const {
         triggerEvent,
     } = require('./utils.js')(s, config, lang)
 
-    function handleEvent(event, monitorConfig, onvifEventLog) {
-        const eventValue = event.message?.message?.data?.simpleItem?.$?.Value;
-        if (eventValue === false) {
-            onvifEventLog(`ONVIF Event Stopped`, `topic ${event.topic?._}`)
-            return
-        }
-        onvifEventLog(`ONVIF Event Detected!`, `topic ${event.topic?._}`)
-        triggerEvent({
-            f: 'trigger',
-            id: monitorConfig.mid,
-            ke: monitorConfig.ke,
-            details: {
-                plug: 'onvifEvent',
-                name: 'onvifEvent',
-                reason: event.topic?._,
-                confidence: 100,
-                [event.message?.message?.data?.simpleItem?.$?.Name]: eventValue
+    function handleEvent(event, monitorConfig, onvifEventLog, callback = () => {}) {
+        try{
+            const monitorId = monitorConfig.mid;
+            const groupKey = monitorConfig.ke;
+            s.runExtensionsForArray('onOnvifEventTrigger', null, [event, groupKey, monitorId]);
+            const message = event.message && event.message.message ? event.message.message : event.message;
+            if(!message){
+                console.error(`Missing Message in ONVIF Event from ${monitorConfig.name}`)
+                console.error(err)
+                console.error(JSON.stringify(event,null,3))
+                return
             }
-        })
+            if(!message.source){
+                // ignore event with no source
+                return;
+            }
+            const topicInternalName = event.topic?._;
+            const sourceSimpleItem = message.source?.simpleItem;
+            const sourceSelected = (sourceSimpleItem instanceof Array ? sourceSimpleItem[sourceSimpleItem.length - 1] : sourceSimpleItem).$;
+            const data = message.data?.simpleItem?.$;
+            const topicShortName = sourceSelected.Value;
+            const eventValue = data.Value;
+            if(topicShortName === "Processor_Usage"){
+                // ignore camera CPU stats
+                return
+            }else if (eventValue === false) {
+                onvifEventLog(`ONVIF Event Stopped`, `topic ${topicInternalName}`)
+                return
+            }
+            onvifEventLog(`ONVIF Event Detected!`, `topic ${topicInternalName}`)
+            callback({
+                f: 'trigger',
+                id: monitorId,
+                ke: groupKey,
+                details: {
+                    plug: 'onvifEvent',
+                    name: 'onvifEvent',
+                    reason: topicInternalName,
+                    confidence: 100,
+                    token: topicShortName,
+                    [data.Name]: eventValue
+                }
+            })
+        }catch(err){
+            console.error(`Failure to parse ONVIF Event from ${monitorConfig.name}`)
+            console.error(err)
+            console.error(JSON.stringify(event,null,3))
+        }
     }
 
     function configureOnvif(monitorConfig, onvifEventLog) {
@@ -46,8 +75,10 @@ module.exports = function (s, config, lang) {
                 onvifEventLog(`ONVIF Event Error`,error)
                 return
             }
-            this.on('event', function (event) {
+            this.on('event', config.noEventTriggerForOnvifEvent ? function (event) {
                 handleEvent(event, monitorConfig, onvifEventLog);
+            } : function (event) {
+                handleEvent(event, monitorConfig, onvifEventLog, triggerEvent);
             })
             this.on('eventsError', function (e) {
                 onvifEventLog(`ONVIF Event Error`,e)
