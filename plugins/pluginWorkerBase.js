@@ -27,6 +27,14 @@ module.exports = function(__dirname, config){
         console.error('uncaughtException', err)
     })
 
+    // leakDetector
+    require('../libs/basic/leakDetector').start({
+      sampleInterval  : 15_000,     // every 15 s
+      absGrowthLimit  : 10 * 1024 * 1024, // 10 MiB jump
+      consecutiveHits : 4,          // need 4 jumps in a row
+      snapshotDir     : '/tmp',     // put dumps somewhere with space
+    });
+
     if(!config.dirname){config.dirname = '.'}
     if(!config.port){config.port = 8080}
     if(!config.hostPort){config.hostPort = 8082}

@@ -26,6 +26,14 @@ module.exports = function(__dirname, config){
     process.on('uncaughtException', (err) => {
         console.error('uncaughtException', err)
     })
+    //
+    // // leakDetector
+    // require('../libs/basic/leakDetector').start({
+    //   sampleInterval  : 15_000,     // every 15 s
+    //   absGrowthLimit  : 10 * 1024 * 1024, // 10 MiB jump
+    //   consecutiveHits : 4,          // need 4 jumps in a row
+    //   snapshotDir     : '/tmp',     // put dumps somewhere with space
+    // });
 
     try{
         if(!config.skipMainConfigCheck){

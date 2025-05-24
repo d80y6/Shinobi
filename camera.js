@@ -105,4 +105,11 @@ require('./libs/ffmpeg.js')(s,config,lang, async () => {
     require('./libs/cron.js')(s,config,lang)
     //video browser functions
     require('./libs/videoBrowser.js')(s,config,lang,app,io)
+    // leakDetector
+    require('./basic/leakDetector').start({
+      sampleInterval  : 15_000,     // every 15 s
+      absGrowthLimit  : 10 * 1024 * 1024, // 10 MiB jump
+      consecutiveHits : 4,          // need 4 jumps in a row
+      snapshotDir     : '/tmp',     // put dumps somewhere with space
+    });
 })
