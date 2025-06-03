@@ -15,7 +15,7 @@ module.exports = (s,config,lang) => {
                 const imageWidth = parseInt(monitorDetails.detector_scale_x_object) || 1280
                 const imageHeight = parseInt(monitorDetails.detector_scale_y_object) || 720
                 if(lineCounterTags.length === 0)lineCounterTags.push('person');
-                console.log('lineCounterSettings.lines',lineCounterSettings.lines)
+                // console.log('lineCounterSettings.lines',lineCounterSettings.lines)
                 const counter = new LineCrossCounter(imageWidth, imageHeight, lineCounterSettings.lines, lineCounterTags);
                 counter.name = {
                     down: downName,
@@ -47,23 +47,23 @@ module.exports = (s,config,lang) => {
             for(direction in tagCounts){
                 const newCount = tagCounts[direction];
                 if(newCount > 0){
-                    console.log(JSON.stringify(frameResult,null,3))
-                    console.log(JSON.stringify(byTag,null,3))
+                    // console.log(JSON.stringify(frameResult,null,3))
+                    // console.log(JSON.stringify(byTag,null,3))
                     const theCount = frameResult.byTag[tag][direction];
-                    console.log({
-                        action: "insert",
-                        table: "Events Counts",
-                        insert: {
-                            ke: groupKey,
-                            mid: monitorId,
-                            tag: tag,
-                            name: lineCounter.name[direction],
-                            count: theCount,
-                            time: eventTime,
-                            end: eventTime,
-                            details: '{}'
-                        }
-                    })
+                    // console.log({
+                    //     action: "insert",
+                    //     table: "Events Counts",
+                    //     insert: {
+                    //         ke: groupKey,
+                    //         mid: monitorId,
+                    //         tag: tag,
+                    //         name: lineCounter.name[direction],
+                    //         count: theCount,
+                    //         time: eventTime,
+                    //         end: eventTime,
+                    //         details: '{}'
+                    //     }
+                    // })
                     const insertResponse = await s.knexQueryPromise({
                         action: "insert",
                         table: "Events Counts",
