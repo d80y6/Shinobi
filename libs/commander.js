@@ -107,7 +107,7 @@ module.exports = function(s,config,lang,app){
         const workerProcess = new Worker(pathToWorkerScript,{
             workerData: {
                 config: config,
-                lang: lang
+                lang
             }
         })
         workerProcess.on('message',function(data){

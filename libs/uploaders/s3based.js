@@ -33,6 +33,7 @@ module.exports = function(s,config,lang){
     }
     function cloudDiskUseStartup(group,userDetails){
         group.cloudDiskUse['whcs'].name = 'S3-Based Network Storage'
+        group.cloudDiskUse['whcs'].maxDays = parseInt(userDetails.whcs_max_days);
         group.cloudDiskUse['whcs'].sizeLimitCheck = (userDetails.use_whcs_size_limit === '1')
         if(!userDetails.whcs_size_limit || userDetails.whcs_size_limit === ''){
             group.cloudDiskUse['whcs'].sizeLimit = 10000
@@ -494,14 +495,25 @@ module.exports = function(s,config,lang){
          },
          {
              "hidden": true,
-            "name": "detail=whcs_size_limit",
-            "field": lang['Max Storage Amount'],
+            "attribute": `size-adjust='[detail=whcs_size_limit]'`,
             "form-group-class":"autosave_whcs_input autosave_whcs_1",
             "form-group-class-pre-layer":"h_whcssld_input h_whcssld_1",
-            "description": "",
+            "field": lang["Max Storage Amount"],
+            "default": "10 GB",
+         },
+         {
+             "hidden": true,
+            "name": "detail=whcs_size_limit",
+            "field": lang['Max Storage Amount'],
             "default": "10000",
-            "example": "",
-            "possible": ""
+         },
+         {
+             "hidden": true,
+            "name": "detail=whcs_max_days",
+            "field": lang['Number of Days to keep'],
+            "form-group-class":"autosave_whcs_input autosave_whcs_1",
+            "form-group-class-pre-layer":"h_whcssld_input h_whcssld_1",
+            "example": "30",
          },
          {
              "hidden": true,

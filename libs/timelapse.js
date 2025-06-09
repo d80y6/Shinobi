@@ -636,7 +636,7 @@ module.exports = function(s,config,lang,app,io){
         req.params.protocol=req.protocol;
         s.auth(req.params,function(user){
             // if(user.permissions.watch_stream==="0"||user.details.sub&&user.details.allmonitors!=='1'&&user.details.monitors.indexOf(req.params.id)===-1){
-            //     res.end(user.lang['Not Permitted'])
+            //     res.end(lang['Not Permitted'])
             //     return
             // }
             req.params.uid = user.uid
@@ -644,7 +644,7 @@ module.exports = function(s,config,lang,app,io){
                 $user: user,
                 data: req.params,
                 config: s.getConfigWithBranding(req.hostname),
-                lang: user.lang,
+                lang,
                 originalURL: s.getOriginalUrl(req)
             })
         },res,req);

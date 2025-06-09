@@ -991,7 +991,7 @@ function drawIndicatorBar(item){
             </div>
             <div>
                 ${!item.multiple ? `<div class="progress">
-                    <div class="progress-bar progress-bar-warning" role="progressbar" style="width: 0%;"></div>
+                    <div class="progress-bar progress-bar-info" role="progressbar" style="width: 0%;"></div>
                 </div>` : `<div class="progress">
                     <div class="progress-bar progress-bar-info" role="progressbar" style="width: 0%;"></div>
                     <div class="progress-bar progress-bar-danger" role="progressbar" style="width: 0%;"></div>

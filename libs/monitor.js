@@ -10,6 +10,7 @@ const { queryStringToObject, createQueryStringFromObject } = require('./common.j
 module.exports = function(s,config,lang){
     const {
         asyncSetTimeout,
+        cleanStringsInObject,
     } = require('./basic/utils.js')(process.cwd(),config)
     const {
         splitForFFMPEG,
@@ -73,10 +74,14 @@ module.exports = function(s,config,lang){
         if(!e.status || !e.code)console.error(JSON.stringify(e),new Error());
         const groupKey = e.ke
         const monitorId = e.mid || e.id
-        const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
-        activeMonitor.monitorStatus = `${e.status}`
-        activeMonitor.monitorStatusCode = `${e.code}`
-        s.tx(Object.assign(e,{f:'monitor_status'}),'GRP_'+e.ke)
+        try{
+            const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
+            activeMonitor.monitorStatus = `${e.status}`
+            activeMonitor.monitorStatusCode = `${e.code}`
+            s.tx(Object.assign(e,{f:'monitor_status'}),'GRP_'+e.ke)
+        }catch(err){
+
+        }
     }
     s.getMonitorCpuUsage = function(e,callback){
         if(s.group[e.ke].activeMonitors[e.mid] && s.group[e.ke].activeMonitors[e.mid].spawn){
@@ -155,6 +160,7 @@ module.exports = function(s,config,lang){
         return s.dir.streams + monitor.ke + '/' + (monitor.mid || monitor.id) + '/'
     }
     s.getRawSnapshotFromMonitor = function(monitor,options){
+        if(!monitor || !monitor.details)return {};
         return new Promise((resolve,reject) => {
             options = options instanceof Object ? options : {flags: ''}
             s.checkDetails(monitor)
@@ -557,6 +563,7 @@ module.exports = function(s,config,lang){
             if(callback)callback(endData);
             return
         }
+        cleanStringsInObject(form)
         form.mid = form.mid.replace(/[^\w\s]/gi,'').replace(/ /g,'')
         const selectResponse = await s.knexQueryPromise({
             action: "select",
@@ -607,7 +614,7 @@ module.exports = function(s,config,lang){
                 }
             })
             s.userLog(form,{type:'Monitor Updated',msg:'by user : '+user.uid})
-            endData.msg = user.lang['Monitor Updated by user']+' : '+user.uid
+            endData.msg = lang['Monitor Updated by user']+' : '+user.uid
             s.knexQuery({
                 action: "update",
                 table: "Monitors",
@@ -629,7 +636,7 @@ module.exports = function(s,config,lang){
                 }
             })
             s.userLog(form,{type:'Monitor Added',msg:'by user : '+user.uid})
-            endData.msg = user.lang['Monitor Added by user']+' : '+user.uid
+            endData.msg = lang['Monitor Added by user']+' : '+user.uid
             s.knexQuery({
                 action: "insert",
                 table: "Monitors",
@@ -639,7 +646,7 @@ module.exports = function(s,config,lang){
         }else{
             txData.f = 'monitor_edit_failed'
             txData.ff = 'max_reached'
-            endData.msg = !systemMax ? user.lang.monitorEditFailedMaxReachedUnactivated : user.lang.monitorEditFailedMaxReached
+            endData.msg = !systemMax ? lang.monitorEditFailedMaxReachedUnactivated : lang.monitorEditFailedMaxReached
         }
         if(affectMonitor === true){
             form.details = JSON.parse(form.details)
@@ -789,12 +796,12 @@ module.exports = function(s,config,lang){
                         s.tx({f:'change_group_state',ke:groupKey,name:stateName},'GRP_'+groupKey)
                         callback(endData)
                     }else{
-                        endData.msg = user.lang['State Configuration has no monitors associated']
+                        endData.msg = lang['State Configuration has no monitors associated']
                         callback(endData)
                     }
                 })
             }else{
-                endData.msg = user.lang['State Configuration Not Found']
+                endData.msg = lang['State Configuration Not Found']
                 callback(endData)
             }
         })
@@ -851,6 +858,9 @@ module.exports = function(s,config,lang){
         const details = user.details;
         [
             'auth_socket',
+            'create_api_keys',
+            'edit_user',
+            'edit_permissions',
             'get_monitors',
             'edit_monitors',
             'control_monitors',
@@ -875,6 +885,7 @@ module.exports = function(s,config,lang){
             'monitor_create',
             'user_change',
             'view_logs',
+            'edit_permissions',
         ].forEach((key) => {
             response.userPermissions[key] = details[key] === '1' || !details[key];
             response.userPermissions[`${key}_disallowed`] = details[key] === '0';

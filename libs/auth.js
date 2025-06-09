@@ -1,5 +1,8 @@
 var fs = require('fs');
 module.exports = function(s,config,lang){
+    const {
+        applyPermissionsToUser,
+    } = require('./user/permissionSets.js')(s,config,lang)
     //Authenticator functions
     s.api = {}
     s.superUsersApi = {}
@@ -78,17 +81,17 @@ module.exports = function(s,config,lang){
             var isSessionKey = false
             if(apiKey){
                 var sessionKey = params.auth
-                getUserByUid(apiKey,'mail,details',function(err,user){
+                getUserByUid(apiKey,'mail,details',async function(err,user){
                     if(user){
-                        createSession(apiKey,{
+                        await createSession(apiKey,{
                             auth: sessionKey,
-                            permissions: s.parseJSON(apiKey.details),
+                            permissions: s.parseJSON(apiKey.details) || {},
                             mail: user.mail,
                             details: s.parseJSON(user.details),
                             lang: s.getLanguageFile(user.details.lang)
                         })
                     }else{
-                        createSession(apiKey,{
+                        await createSession(apiKey,{
                             auth: sessionKey,
                             permissions: s.parseJSON(apiKey.details),
                             details: {}
@@ -97,9 +100,9 @@ module.exports = function(s,config,lang){
                     callback(err,s.api[params.auth])
                 })
             }else{
-                getUserBySessionKey(params,function(err,user){
+                getUserBySessionKey(params,async function(err,user){
                     if(user){
-                        createSession(user,{
+                        await createSession(user,{
                             auth: params.auth,
                             details: JSON.parse(user.details),
                             isSessionKey: true,
@@ -113,7 +116,7 @@ module.exports = function(s,config,lang){
             }
         })
     }
-    var createSession = function(user,additionalData){
+    var createSession = async function(user,additionalData){
         if(user){
             var generatedId
             if(!additionalData)additionalData = {}
@@ -124,8 +127,14 @@ module.exports = function(s,config,lang){
                 generatedId = user.auth || user.code
             }
             user.details = s.parseJSON(user.details)
+            const apiKeyPermissions = additionalData.permissions || {};
+            const permissionSet = apiKeyPermissions.permissionSet;
+            const treatAsSub = apiKeyPermissions.treatAsSub === '1';
+            if(permissionSet)additionalData.details.permissionSet = permissionSet;
+            if(treatAsSub)additionalData.details.sub = '1';
             user.permissions = {}
             s.api[generatedId] = Object.assign({},user,additionalData)
+            await applyPermissionsToUser(s.api[generatedId])
             return generatedId
         }
     }
@@ -172,10 +181,6 @@ module.exports = function(s,config,lang){
                     params.ip && (params.ip.indexOf(activeSession.ip) > -1)
                 )
             ){
-                if(!user.lang){
-                    var details = s.parseJSON(user.details).lang
-                    user.lang = s.getLanguageFile(user.details.lang) || s.copySystemDefaultLanguage()
-                }
                 onSuccessComplete(user)
             }else{
                 onFail()
@@ -184,9 +189,6 @@ module.exports = function(s,config,lang){
         if(s.group[params.ke] && s.group[params.ke].users && s.group[params.ke].users[params.auth] && s.group[params.ke].users[params.auth].details){
             var activeSession = s.group[params.ke].users[params.auth]
             activeSession.permissions = {}
-            if(!activeSession.lang){
-                activeSession.lang = s.copySystemDefaultLanguage()
-            }
             onSuccessComplete(activeSession)
         }else if(s.api[params.auth] && s.api[params.auth].details){
             var activeSession = s.api[params.auth]
@@ -195,10 +197,10 @@ module.exports = function(s,config,lang){
                resetActiveSessionTimer(activeSession)
             }
         }else if(params.username && params.username !== '' && params.password && params.password !== ''){
-            loginWithUsernameAndPassword(params,'*',function(err,user){
+            loginWithUsernameAndPassword(params,'*',async function(err,user){
                 if(user){
                     params.auth = user.auth
-                    createSession(user)
+                    await createSession(user)
                     resetActiveSessionTimer(s.api[params.auth])
                     onSuccess(user)
                 }else{
@@ -253,7 +255,7 @@ module.exports = function(s,config,lang){
                     ip : ip,
                     $user: userSelected,
                     config: chosenConfig,
-                    lang: lang
+                    lang
                 })
             }
             if(params.auth && Object.keys(s.superUsersApi).indexOf(params.auth) > -1){
@@ -300,7 +302,7 @@ module.exports = function(s,config,lang){
     }
     s.basicOrApiAuthentication = function(username,password,callback){
         var splitUsername = username.split('@')
-        if(splitUsername[1] && splitUsername[1].toLowerCase().indexOf('shinobi') > -1){
+        if(username.endsWith('@') || (splitUsername[1] && splitUsername[1].toLowerCase().indexOf('shinobi') > -1)){
             getApiKey({
                 auth: splitUsername[0],
                 ke: password

@@ -15,7 +15,8 @@ $(document).ready(function(){
                 <div addStorageFields="${storage.path}">
                     <div class="form-group">
                         <div class="mb-2"><span>${lang['Max Storage Amount']} : ${storage.name}</span></div>
-                        <div><input class="form-control" placeholder="10000" addStorageItem="limit" value="${theStorage.limit || ''}"></div>
+                        <div><input class="form-control" placeholder="10 GB" size-adjust='[addStorageFields="${storage.path}"] [addStorageItem="limit"]'></div>
+                        <div><input class="hidden form-control" placeholder="10000" addStorageItem="limit" value="${theStorage.limit || ''}"></div>
                     </div>
                     <div class="form-group">
                         <div class="mb-2"><span>${lang["Video Share"]} : ${storage.name}</span></div>
@@ -32,6 +33,16 @@ $(document).ready(function(){
             console.log(err)
         }
     }
+    function fillSizeAdjustFields(){
+        theForm.find('[size-adjust]').each(function(n,v){
+            var el = $(this);
+            var targetElTag = el.attr('size-adjust');
+            var targetEl = theForm.find(targetElTag);
+            var value = targetEl.val() || '10000';
+            var translatedVal = mbToHumanReadable(value);
+            el.val(translatedVal);
+        })
+    }
     function fillFormFields(){
         $.each($user,function(n,v){
             theForm.find(`[name="${n}"]`).val(v).change()
@@ -39,6 +50,7 @@ $(document).ready(function(){
         $.each($user.details,function(n,v){
             theForm.find(`[detail="${n}"]`).val(v).change()
         })
+        fillSizeAdjustFields()
         accountSettings.onLoadFieldsExtensions.forEach(function(extender){
             extender(theForm)
         })
@@ -62,6 +74,65 @@ $(document).ready(function(){
         })
         return json
     }
+    function mbToHumanReadable(mb) {
+      const units = ["MB", "GB", "TB", "PB", "EB"];  // Extend if needed
+      let unitIndex = 0;
+      let value = parseInt(mb);
+      while (value >= 1000 && unitIndex < units.length - 1) {
+        value /= 1000;
+        unitIndex++;
+      }
+      value = parseFloat(value.toFixed(2));
+      return `${value} ${units[unitIndex]}`;
+    }
+    function humanReadableToMb(str) {
+      const cleanedStr = str.toUpperCase().replace(/ /g, '').trim();
+      const pattern = /^([\d.]+)(MB|GB|TB|PB|EB)$/i;
+      let match = cleanedStr.match(pattern);
+
+      if (!match) {
+        const numericMatch = cleanedStr.match(/[\d.]+/);
+        if (!numericMatch) {
+          return 10000;
+        }
+        let value = parseFloat(numericMatch[0]);
+        if (isNaN(value)) {
+          return 10000;
+        }
+        return value;
+      }
+
+      let [ , numericPart, unit ] = match;
+      let value = parseFloat(numericPart);
+      switch (unit) {
+        case "MB":
+          break;
+        case "GB":
+          value *= 1000;
+          break;
+        case "TB":
+          value *= 1000 * 1000;
+          break;
+        case "PB":
+          value *= 1000 * 1000 * 1000;
+          break;
+        case "EB":
+          value *= 1000 * 1000 * 1000 * 1000;
+          break;
+        default:
+          break;
+      }
+
+      return value;
+    }
+    theForm.on('change', '[size-adjust]', function(){
+        var el = $(this);
+        var targetElTag = el.attr('size-adjust');
+        var targetEl = theForm.find(targetElTag);
+        var value = el.val();
+        var translatedVal = humanReadableToMb(value);
+        targetEl.val(translatedVal);
+    })
     theForm.find('[detail]').change(onDetailFieldChange)
     theForm.find('[detail]').change(function(){
         onDetailFieldChange(this)
@@ -109,8 +180,8 @@ $(document).ready(function(){
         }
         return false
     })
-    fillFormFields()
     drawAddStorageFields()
+    fillFormFields()
     drawSubMenuItems('accountSettings',definitions['Account Settings'])
     onWebSocketEvent(function (d){
         switch(d.f){

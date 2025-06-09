@@ -53,7 +53,10 @@ function createWebsocket(theURL,thePath){
             break;
             case'callback':
                 console.log('Callback from Websocket Request',d)
-                queuedCallbacks[d.callbackId](...d.args)
+                if(queuedCallbacks[d.callbackId]){
+                    queuedCallbacks[d.callbackId](...d.args)
+                    delete(queuedCallbacks[d.callbackId])
+                }
             break;
         }
         $.each(onWebSocketEventFunctions,function(n,theAction){

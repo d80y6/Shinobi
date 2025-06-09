@@ -48,7 +48,7 @@ module.exports = function(s,config,lang,app){
                 return;
             }
             if(user.permissions.watch_stream==="0"||user.details.sub&&user.details.allmonitors!=='1'&&user.details.monitors.indexOf(req.params.id)===-1){
-                res.end(user.lang['Not Permitted'])
+                res.end(lang['Not Permitted'])
                 return
             }
             if(s.group[req.params.ke]&&s.group[req.params.ke].activeMonitors[req.params.id]){
@@ -68,16 +68,16 @@ module.exports = function(s,config,lang,app){
                         baseUrl: req.protocol+'://'+req.hostname,
                         config: s.getConfigWithBranding(req.hostname),
                         define: s.getDefinitonFile(user.details ? user.details.lang : config.lang),
-                        lang: lang,
+                        lang,
                         $user: $user,
                         mon: Object.assign({},s.group[req.params.ke].rawMonitorConfigurations[req.params.id]),
                         originalURL: s.getOriginalUrl(req)
                     });
                 }else{
-                    res.end(user.lang['Cannot watch a monitor that isn\'t running.'])
+                    res.end(lang['Cannot watch a monitor that isn\'t running.'])
                 }
             }else{
-                res.end(user.lang['No Monitor Exists with this ID.'])
+                res.end(lang['No Monitor Exists with this ID.'])
             }
         },res,req);
     });
@@ -162,7 +162,7 @@ module.exports = function(s,config,lang,app){
                 s.checkChildProxy(req.params,function(){
                     if(s.group[req.params.ke]&&s.group[req.params.ke].activeMonitors&&s.group[req.params.ke].activeMonitors[req.params.id]){
                         if(user.permissions.watch_stream==="0"||user.details.sub&&user.details.allmonitors!=='1'&&user.details.monitors.indexOf(req.params.id)===-1){
-                            res.end(user.lang['Not Permitted'])
+                            res.end(lang['Not Permitted'])
                             return
                         }
 
@@ -232,7 +232,7 @@ module.exports = function(s,config,lang,app){
             s.checkChildProxy(req.params,function(){
                 noCache(res)
                 if(user.permissions.watch_stream==="0"||user.details.sub&&user.details.allmonitors!=='1'&&user.details.monitors.indexOf(req.params.id)===-1){
-                    res.end(user.lang['Not Permitted'])
+                    res.end(lang['Not Permitted'])
                     return
                 }
                 req.dir=s.dir.streams+req.params.ke+'/'+req.params.id+'/'
@@ -263,7 +263,7 @@ module.exports = function(s,config,lang,app){
             s.checkChildProxy(req.params,function(){
                 noCache(res)
                 if(user.details.sub&&user.details.allmonitors!=='1'&&user.details.monitors&&user.details.monitors.indexOf(req.params.id)===-1){
-                    res.end(user.lang['Not Permitted'])
+                    res.end(lang['Not Permitted'])
                     return
                 }
                 req.dir=s.dir.streams+req.params.ke+'/'+req.params.id+'/s.jpg';
@@ -427,7 +427,7 @@ module.exports = function(s,config,lang,app){
                 user.permissions.watch_stream === "0"
                 && user.details.allmonitors !== '1'
             ){
-                res.end(user.lang['Not Permitted'])
+                res.end(lang['Not Permitted'])
                 return
             }
             const $user = await getAdminUser(groupKey, user.uid);
@@ -438,7 +438,7 @@ module.exports = function(s,config,lang,app){
                 baseUrl: req.protocol + '://' + req.hostname,
                 config: s.getConfigWithBranding(req.hostname),
                 define: s.getDefinitonFile(user.details ? user.details.lang : config.lang),
-                lang: lang,
+                lang,
                 $user,
                 authKey: authKey,
                 groupKey: groupKey,

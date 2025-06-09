@@ -54,11 +54,11 @@ module.exports = function(s,config,lang,getSnapshot){
                 sendMessage({
                     from: config.mail.from,
                     to: checkEmail(r.mail),
-                    subject: r.lang['2-Factor Authentication'],
-                    html: r.lang['Enter this code to proceed']+' <b>'+s.factorAuth[r.ke][r.uid].key+'</b>. '+r.lang.FactorAuthText1,
+                    subject: lang['2-Factor Authentication'],
+                    html: lang['Enter this code to proceed']+' <b>'+s.factorAuth[r.ke][r.uid].key+'</b>. '+lang.FactorAuthText1,
                 }, (error, info) => {
                     if (error) {
-                        s.systemLog(r.lang.MailError,error)
+                        s.systemLog(lang.MailError,error)
                         return
                     }
                 })
@@ -160,7 +160,7 @@ module.exports = function(s,config,lang,getSnapshot){
                         let videoName = null
                         const eventBasedRecording = await getEventBasedRecordingUponCompletion({
                             ke: d.ke,
-                            mid: d.mid
+                            mid: d.mid || d.id
                         })
                         if(eventBasedRecording.filePath){
                             videoPath = eventBasedRecording.filePath

@@ -19,8 +19,14 @@ module.exports = (s,config,lang) => {
         splitForFFMPEG
     } = require('../ffmpeg/utils.js')(s,config,lang)
     const {
-        moveCameraPtzToMatrix
+        moveCameraPtzToMatrix,
+        moveToHomePositionTimeout,
     } = require('../control/ptz.js')(s,config,lang)
+    const {
+        getOnvifDevice,
+        getPresets,
+        goToPreset,
+    } = require('../onvifDeviceManager/utils.js')(s,config,lang)
     const {
         cutVideoLength,
         reEncodeVideoAndBinOriginalAddToQueue
@@ -34,6 +40,7 @@ module.exports = (s,config,lang) => {
     const {
         isEven,
         fetchTimeout,
+        copyFile,
     } = require('../basic/utils.js')(process.cwd(),config)
     const glyphs = require('../../definitions/glyphs.js')
     async function saveImageFromEvent(options,frameBuffer){
@@ -477,29 +484,66 @@ module.exports = (s,config,lang) => {
             })
         }
 
+        moveAssociatedMonitorPtzTargets(groupKey, monitorId)
+
         for (var i = 0; i < s.onEventTriggerExtensions.length; i++) {
             const extender = s.onEventTriggerExtensions[i]
-            await extender(d,filter)
+            await extender(d,filter,eventTime)
         }
     }
-    const getEventBasedRecordingUponCompletion = function(options){
+    const saveEventBaseRecordingClip = async function({
+        groupKey,
+        monitorId,
+        filename,
+        filePath,
+        details = {}
+    }){
+        const response = { ok: true }
+        try{
+            const fileBinFilePath = s.getFileBinDirectory({ ke: groupKey, mid: monitorId }) + filename;
+            const copyResponse = await copyFile(filePath,fileBinFilePath)
+            const fileSize = (await fs.stat(fileBinFilePath)).size
+            // s.file('delete',filePath)
+            const fileBinInsertQuery = {
+                ke: groupKey,
+                mid: monitorId,
+                name: filename,
+                size: fileSize,
+                details: JSON.stringify(details),
+                status: 1,
+                time: new Date(),
+            }
+            await s.insertFileBinEntry(fileBinInsertQuery)
+            response.fileBinInsertQuery = fileBinInsertQuery
+            response.fileBinPath = fileBinFilePath
+        }catch(err){
+            response.ok = false;
+            console.log(err)
+            response.err = err.toString();
+        }
+        return response;
+    }
+    const getEventBasedRecordingUponCompletion = function(options, getNonCut){
         const response = {ok: true}
-        return new Promise((resolve,reject) => {
+        return new Promise(async (resolve,reject) => {
             const groupKey = options.ke
             const monitorId = options.mid
             const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
-            if(activeMonitor && activeMonitor.eventBasedRecording && activeMonitor.eventBasedRecording.process){
-                const eventBasedRecording = activeMonitor.eventBasedRecording
+            if(!activeMonitor || !activeMonitor.eventBasedRecording){
+                return resolve(response)
+            }
+            const fileTime = options.fileTime || activeMonitor.eventBasedRecordingLastFileTime;
+            if(activeMonitor.eventBasedRecording[fileTime] && activeMonitor.eventBasedRecording[fileTime].process){
+                const eventBasedRecording = activeMonitor.eventBasedRecording[fileTime]
                 const monitorConfig = s.group[groupKey].rawMonitorConfigurations[monitorId]
                 const videoLength = parseInt(monitorConfig.details.detector_send_video_length) || 10
                 const recordingDirectory = s.getVideoDirectory(monitorConfig)
-                const fileTime = eventBasedRecording.lastFileTime
                 const filename = `${fileTime}.mp4`
                 response.filename = `${filename}`
                 response.filePath = `${recordingDirectory}${filename}`
-                eventBasedRecording.process.on('exit',function(){
+                eventBasedRecording.process.on('exit', async function(){
                     setTimeout(async () => {
-                        if(!isNaN(videoLength)){
+                        if(!getNonCut && !isNaN(videoLength)){
                             const cutResponse = await cutVideoLength({
                                 ke: groupKey,
                                 mid: monitorId,
@@ -507,8 +551,21 @@ module.exports = (s,config,lang) => {
                                 cutLength: videoLength,
                             })
                             if(cutResponse.ok){
+                                const { ok, fileBinPath, fileBinInsertQuery } = await saveEventBaseRecordingClip({
+                                    groupKey,
+                                    monitorId,
+                                    filename: cutResponse.filename,
+                                    filePath: cutResponse.filePath,
+                                    details: {
+                                        source: `${response.filePath}`
+                                    }
+                                });
                                 response.filename = cutResponse.filename
                                 response.filePath = cutResponse.filePath
+                                if(ok){
+                                    response.fileBinPath = fileBinPath;
+                                    response.fileBinInsertQuery = fileBinInsertQuery;
+                                }
                             }else{
                                 s.debugLog('cutResponse',cutResponse)
                             }
@@ -523,6 +580,36 @@ module.exports = (s,config,lang) => {
             }else{
                 resolve(response)
             }
+        })
+    }
+    const getEventBasedRecordingsUponCompletion = function(groupKey, monitorIds, withPath = false, asObject = true, getNonCut){
+        return new Promise((resolve) => {
+            const response = asObject ? {} : [];
+            const total = monitorIds.length;
+            let currentCount = 0;
+            monitorIds.forEach((monitorId) => {
+                getEventBasedRecordingUponCompletion({
+                    ke: groupKey,
+                    mid: monitorId
+                }, getNonCut).then(({ filename, filePath }) => {
+                    if(filename && filePath){
+                        if(asObject){
+                            response[monitorId] = filename;
+                        }else{
+                            const foundData = {
+                                mid: monitorId,
+                                filename,
+                            }
+                            if(withPath)foundData.filePath = filePath;
+                            response.push(foundData)
+                        }
+                    }
+                    ++currentCount;
+                    if(currentCount === total){
+                        resolve(response)
+                    }
+                });
+            })
         })
     }
     const createEventBasedRecording = function(d,fileTime){
@@ -569,6 +656,9 @@ module.exports = (s,config,lang) => {
                 let outputMap = `-map 0:0 `
                 const analyzeDuration = parseInt(monitorDetails.event_record_aduration) || 1000
                 const probeSize = parseInt(monitorDetails.event_record_probesize) || 32
+                const audioCodec = monitorDetails.detector_buffer_acodec;
+                const noAudio = audioCodec === 'no';
+                const autoAudio = !audioCodec || audioCodec === 'auto';
                 s.userLog(d,{
                     type: logTitleText,
                     msg: lang["Started"]
@@ -579,31 +669,37 @@ module.exports = (s,config,lang) => {
                 }
                 //-t 00:'+s.timeObject(new Date(detector_timeout * 1000 * 60)).format('mm:ss')+'
                 if(
-                    monitorDetails.detector_buffer_acodec &&
-                    monitorDetails.detector_buffer_acodec !== 'no' &&
-                    monitorDetails.detector_buffer_acodec !== 'auto'
+                    audioCodec &&
+                    audioCodec !== 'no' &&
+                    audioCodec !== 'auto'
                 ){
                     outputMap += `-map 0:1? `
                 }
                 const secondsBefore = parseInt(monitorDetails.detector_buffer_seconds_before) || 5
                 let LiveStartIndex = parseInt(secondsBefore / 2 + 1)
-                const ffmpegCommand = `-loglevel warning -live_start_index -${LiveStartIndex} -analyzeduration ${analyzeDuration} -probesize ${probeSize} -re -i "${s.dir.streams+groupKey+'/'+monitorId}/detectorStream.m3u8" ${outputMap}-movflags faststart -fflags +igndts -c:v copy -c:a aac -strict -2 -strftime 1 -y "${s.getVideoDirectory(monitorConfig) + filename}"`
+                const ffmpegCommand = `-loglevel warning -live_start_index -${LiveStartIndex} -analyzeduration ${analyzeDuration} -probesize ${probeSize} -re -i "${s.dir.streams+groupKey+'/'+monitorId}/detectorStream.m3u8" ${outputMap}-movflags faststart -fflags +igndts -c:v copy ${noAudio ? '-an' : autoAudio ? '' : `-c:a aac`} -strict -2 -strftime 1 -y "${s.getVideoDirectory(monitorConfig) + filename}"`
                 s.debugLog(ffmpegCommand)
                 activeMonitor.eventBasedRecording[fileTime].process = spawn(
                     config.ffmpegDir,
                     splitForFFMPEG(ffmpegCommand)
                 )
+                activeMonitor.eventBasedRecording[fileTime].process.stdout.on('data',function(data){
+                    s.userLog(d,{
+                        type: `${logTitleText} : STDOUT`,
+                        msg: data.toString()
+                    })
+                })
                 activeMonitor.eventBasedRecording[fileTime].process.stderr.on('data',function(data){
                     s.userLog(d,{
-                        type: logTitleText,
+                        type: `${logTitleText} : STDERR`,
                         msg: data.toString()
                     })
                 })
                 activeMonitor.eventBasedRecording[fileTime].process.on('close',function(){
                     if(!activeMonitor.eventBasedRecording[fileTime].allowEnd){
                         s.userLog(d,{
-                            type: logTitleText,
-                            msg: lang["Detector Recording Process Exited Prematurely. Restarting."]
+                            type: `${logTitleText} : ${lang["Detector Recording Process Exited Prematurely. Restarting."]}`,
+                            msg: ffmpegCommand
                         })
                         runRecord()
                         return
@@ -827,6 +923,7 @@ module.exports = (s,config,lang) => {
             f: 'detector_trigger',
             id: d.id,
             ke: d.ke,
+            time: eventTime,
             details: eventDetails,
             doObjectDetection: d.doObjectDetection
         },`DETECTOR_${monitorConfig.ke}${monitorConfig.mid}`);
@@ -874,7 +971,33 @@ module.exports = (s,config,lang) => {
         const tags = getObjectTagsFromMatrices(d)
         return `${tags.join(', ')} ${lang.detected} in ${monitorName}`
     }
+    function getAssociatedMonitorPtzTargets(groupKey, monitorId){
+        const monitorDetails = s.group[groupKey].rawMonitorConfigurations[monitorId].details;
+        const detectorEventPtz = monitorDetails.detectorEventPtz === '1';
+        if(detectorEventPtz){
+            const triggerMonitorsPtzTargets = monitorDetails.triggerMonitorsPtzTargets || {}
+            return triggerMonitorsPtzTargets;
+        }else{
+            return {}
+        }
+    }
+    async function moveAssociatedMonitorPtzTargets(groupKey, monitorId){
+        const response = { ok: true, responseFromDevices: {} };
+        const triggerMonitorsPtzTargets = getAssociatedMonitorPtzTargets(groupKey, monitorId);
+        for(targetMonitorId in triggerMonitorsPtzTargets){
+            const presetToken = triggerMonitorsPtzTargets[targetMonitorId]
+            const onvifEnabled = s.group[groupKey].rawMonitorConfigurations[targetMonitorId].details.is_onvif === '1';
+            if(onvifEnabled){
+                var onvifDevice = await getOnvifDevice(groupKey, targetMonitorId);
+                response.responseFromDevices[targetMonitorId] = await goToPreset(onvifDevice, presetToken);
+                moveToHomePositionTimeout({ id: targetMonitorId, ke: groupKey }, 30000)
+            }
+        }
+        return response
+    }
     return {
+        getAssociatedMonitorPtzTargets,
+        moveAssociatedMonitorPtzTargets,
         getObjectTagNotifyText,
         getObjectTagsFromMatrices,
         countObjects: countObjects,
@@ -896,5 +1019,6 @@ module.exports = (s,config,lang) => {
         triggerEvent: triggerEvent,
         addEventDetailsToString: addEventDetailsToString,
         getEventBasedRecordingUponCompletion: getEventBasedRecordingUponCompletion,
+        getEventBasedRecordingsUponCompletion,
     }
 }

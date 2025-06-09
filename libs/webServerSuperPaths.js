@@ -12,7 +12,7 @@ module.exports = function(s,config,lang,app){
      } = require('./system/utils.js')(config)
      const {
          checkSubscription
-     } = require('./basic/utils.js')(process.cwd(),config)
+     } = require('./checker/actCheck.js')(s,config)
     /**
     * API : Superuser : Get Logs
     */

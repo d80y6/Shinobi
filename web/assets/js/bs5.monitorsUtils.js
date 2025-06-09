@@ -158,22 +158,61 @@ function getVideoSnapshot(videoElement,cb){
     cb(base64,image_data,c.width,c.height)
 }
 
-function runPtzCommand(monitorId,switchChosen){
-    switch(switchChosen){
-        case'setHome':
-            $.getJSON(getApiPrefix(`control`) + '/' + monitorId + '/setHome',function(data){
-                console.log(data)
-            })
-        break;
-        default:
-            mainSocket.f({
-                f: 'control',
-                direction: switchChosen,
-                id: monitorId,
-                ke: $user.ke
-            })
-        break;
-    }
+function runPtzCommand(monitorId,switchChosen,options = {}){
+    return new Promise((resolve) => {
+        switch(switchChosen){
+            case'setHome':
+                $.getJSON(getApiPrefix(`control`) + '/' + monitorId + '/setHome',function(data){
+                    resolve(data)
+                })
+            break;
+            case'getPresets':
+                $.get(getApiPrefix(`onvifPresets`) + '/' + monitorId,function(data){
+                    resolve(data.presets || [])
+                })
+            break;
+            case'setPreset':
+                // presetToken
+                // presetName
+                $.post(getApiPrefix(`onvifSetPreset`) + '/' + monitorId,options,function(data){
+                    resolve(data)
+                })
+            break;
+            case'goToPreset':
+                // presetToken
+                $.post(getApiPrefix(`onvifGoToPreset`) + '/' + monitorId,options,function(data){
+                    resolve(data)
+                })
+            break;
+            case'removePreset':
+                // presetToken
+                $.post(getApiPrefix(`onvifRemovePreset`) + '/' + monitorId,options,function(data){
+                    resolve(data)
+                })
+            break;
+            case'startPatrol':
+                // startingPresetToken
+                // patrolIndexTimeout
+                $.post(getApiPrefix(`onvifStartPatrol`) + '/' + monitorId,options,function(data){
+                    resolve(data)
+                })
+            break;
+            case'stopPatrol':
+                $.get(getApiPrefix(`onvifStopPatrol`) + '/' + monitorId,function(data){
+                    resolve(data)
+                })
+            break;
+            default:
+                mainSocket.f({
+                    f: 'control',
+                    direction: switchChosen,
+                    id: monitorId,
+                    ke: $user.ke
+                })
+                resolve()
+            break;
+        }
+    })
 }
 function runPtzMove(monitorId,switchChosen,doMove){
     mainSocket.f({
@@ -1155,6 +1194,33 @@ function getRunningMonitors(asArray){
 }
 function buildFileBinUrl(data){
     return apiBaseUrl + '/fileBin/' + data.ke + '/' + data.mid + '/' + data.name
+}
+async function configureMonitor(monitorConfig){
+    const _this = this;
+    return new Promise((resolve) => {
+        const monitorId = monitorConfig.mid;
+        mainSocket.f({
+            f: 'addOrEditMonitor',
+            mid: monitorId,
+            form: monitorConfig,
+        },function(response){
+            resolve(response)
+        });
+    })
+}
+function incrementString(strNum) {
+    const originalLength = strNum.length;
+    let numericValue = parseInt(strNum, 10);
+    numericValue += 1;
+    let incrementedStr = numericValue.toString();
+    while (incrementedStr.length < originalLength) {
+        incrementedStr = '0' + incrementedStr;
+    }
+    return incrementedStr;
+}
+function padToThreeDigits(input) {
+  const numericValue = parseInt(input, 10);
+  return numericValue.toString().padStart(3, '0');
 }
 $(document).ready(function(){
     $('body')

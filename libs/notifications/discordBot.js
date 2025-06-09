@@ -93,7 +93,7 @@ module.exports = function(s,config,lang,getSnapshot){
                         let videoName = null
                         const eventBasedRecording = await getEventBasedRecordingUponCompletion({
                             ke: d.ke,
-                            mid: d.mid
+                            mid: d.mid || d.id
                         })
                         if(eventBasedRecording.filePath){
                             videoPath = eventBasedRecording.filePath
@@ -129,11 +129,11 @@ module.exports = function(s,config,lang,getSnapshot){
                 if(r.details.factor_discord === '1'){
                     sendMessage({
                         author: {
-                          name: r.lang['2-Factor Authentication'],
+                          name: lang['2-Factor Authentication'],
                           icon_url: config.iconURL
                         },
-                        title: r.lang['Enter this code to proceed'],
-                        description: '**'+s.factorAuth[r.ke][r.uid].key+'** '+r.lang.FactorAuthText1,
+                        title: lang['Enter this code to proceed'],
+                        description: '**'+s.factorAuth[r.ke][r.uid].key+'** '+lang.FactorAuthText1,
                         fields: [],
                         timestamp: new Date(),
                         footer: messageFooter

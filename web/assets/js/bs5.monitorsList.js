@@ -74,7 +74,6 @@ $(document).ready(function(){
         $.getJSON(getApiPrefix(`api`) + '/list',function(d){
             var html = ''
             $.each(d.keys || [],function(n,key){
-                console.log(key)
                 html += createOptionHtml({
                     value: key.code,
                     label: key.code,

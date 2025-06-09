@@ -5,6 +5,7 @@ const https = require('https');
 const express = require('express');
 const app = express()
 module.exports = function(s,config,lang,io){
+    require('./monitor/websocket.js')(s,config,lang,io);
     app.disable('x-powered-by');
     //get page URL
     if(!config.baseURL){
@@ -66,6 +67,7 @@ module.exports = function(s,config,lang,io){
             'home/videoPlayer',
             'home/monitorsList',
             'home/subAccountManager',
+            'home/permissionSets',
             'home/accountSettings',
             'home/apiKeys',
             'home/monitorSettings',

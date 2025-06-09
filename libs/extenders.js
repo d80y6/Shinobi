@@ -59,6 +59,7 @@ module.exports = function(s,config){
     createExtension(`onEventTrigger`)
     createExtension(`onEventTriggerBeforeFilter`)
     createExtension(`onFilterEvent`)
+    createExtension(`onOnvifEventTrigger`)
     ////// MONITOR //////
     createExtension(`onMonitorInit`)
     createExtension(`onMonitorStart`)

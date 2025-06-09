@@ -136,71 +136,6 @@ module.exports = (processCwd,config) => {
         }
         return theRequester(requestUrl,requestOptions)
     }
-    const checkSubscription = (subscriptionId,callback,suppressCheckNotice = false) => {
-        function subscriptionFailed(){
-            console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-            console.error('This Install of Shinobi is NOT Activated')
-            console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-            console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-            s.systemLog('This Install of Shinobi is NOT Activated')
-            console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-            console.log('https://licenses.shinobi.video/subscribe')
-        }
-        if(subscriptionId && subscriptionId !== 'sub_XXXXXXXXXXXX' && !config.disableOnlineSubscriptionCheck){
-            var url = 'https://licenses.shinobi.video/subscribe/check?subscriptionId=' + subscriptionId
-            var hasSubcribed = false
-            fetchTimeout(url,30000,{
-                method: 'GET',
-            })
-            .then(response => response.text())
-            .then(function(body){
-                var json = s.parseJSON(body)
-                hasSubcribed = json && !!json.ok
-                var i;
-                for (i = 0; i < s.onSubscriptionCheckExtensions.length; i++) {
-                    const extender = s.onSubscriptionCheckExtensions[i]
-                    hasSubcribed = extender(hasSubcribed,json,subscriptionId)
-                }
-                callback(hasSubcribed)
-                if(hasSubcribed){
-                    if(!suppressCheckNotice){
-                        s.systemLog('This Install of Shinobi is Activated')
-                        if(!json.expired && json.timeExpires){
-                            s.systemLog(`This License expires on ${json.timeExpires}`)
-                        }
-                    }
-                }else{
-                    subscriptionFailed()
-                }
-            }).catch((err) => {
-                if(err)console.log(err)
-                subscriptionFailed()
-                callback(false)
-            })
-        }else{
-            var i;
-            for (i = 0; i < s.onSubscriptionCheckExtensions.length; i++) {
-                const extender = s.onSubscriptionCheckExtensions[i]
-                hasSubcribed = extender(false,{},subscriptionId)
-            }
-            if(hasSubcribed === false){
-                subscriptionFailed()
-            }
-            callback(hasSubcribed)
-        }
-    }
-    function checkAgainSubscription(){
-        let checkCount = 1
-        return setInterval(function(){
-            if(checkCount === 28){
-                checkSubscription(config.subscriptionId || config.peerConnectKey || config.p2pApiKey, function(hasSubcribed){
-                    config.userHasSubscribed = hasSubcribed
-                }, true);
-                checkCount = 1;
-            }
-            ++checkCount;
-        }, 1000 * 60 * 60 * 24);
-    }
     function isEven(value) {
         if (value%2 == 0)
             return true;
@@ -273,6 +208,86 @@ module.exports = (processCwd,config) => {
             console.error(`Error deleting files: ${error.message}`);
         }
     }
+    function setTimeoutPromise(theTime){
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve()
+            },theTime)
+        })
+    }
+    function cleanStringsInObject(obj, isWithinDetectorFilters = false) {
+      for (let key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          // Check if we're entering the detector_filters structure
+          const enteringDetectorFilters = !isWithinDetectorFilters &&
+                                       (key === 'detector_filters' ||
+                                       (key === 'details' &&
+                                        typeof obj[key] === 'object' &&
+                                        obj[key].hasOwnProperty('detector_filters')));
+
+          // Determine if we're currently within detector_filters
+          let currentIsWithinDetectorFilters = isWithinDetectorFilters || enteringDetectorFilters;
+
+          // Special handling for stringified detector_filters
+          if ((key === 'detector_filters' || (key === 'details' && obj[key].hasOwnProperty('detector_filters')))) {
+            const detectorFiltersTarget = key === 'details' ? obj[key] : obj;
+            const detectorFiltersKey = key === 'details' ? 'detector_filters' : key;
+
+            if (typeof detectorFiltersTarget[detectorFiltersKey] === 'string') {
+              try {
+                const parsed = JSON.parse(detectorFiltersTarget[detectorFiltersKey]);
+                detectorFiltersTarget[detectorFiltersKey] = cleanStringsInObject(parsed, true);
+                continue; // Skip further processing as we've replaced and cleaned it
+              } catch (e) {
+                currentIsWithinDetectorFilters = true;
+              }
+            }
+          }
+
+          if (typeof obj[key] === 'string') {
+            try {
+              const parsed = JSON.parse(obj[key]);
+              obj[key] = cleanStringsInObject(parsed, currentIsWithinDetectorFilters);
+            } catch (e) {
+              if (currentIsWithinDetectorFilters) {
+                // Special handling for detector_filters - allow comparison operators
+                obj[key] = obj[key].replace(/[^\w\s.\-=+()\[\]*$@!`^%#:?\/&,><=!]/gi, '');
+              } else {
+                // Normal string cleaning
+                obj[key] = obj[key].replace(/[^\w\s.\-=+()\[\]*$@!`^%#:?\/&,]/gi, '');
+              }
+            }
+          }
+          else if (typeof obj[key] === 'object' && obj[key] !== null) {
+            if (enteringDetectorFilters && key === 'details') {
+              cleanStringsInObject(obj[key].detector_filters, true);
+              cleanStringsInObject(obj[key], false);
+            } else {
+              cleanStringsInObject(obj[key], currentIsWithinDetectorFilters);
+            }
+          }
+          else if (Array.isArray(obj[key])) {
+            obj[key].forEach((item, index) => {
+              if (typeof item === 'string') {
+                try {
+                  const parsed = JSON.parse(item);
+                  obj[key][index] = cleanStringsInObject(parsed, currentIsWithinDetectorFilters);
+                } catch (e) {
+                  if (currentIsWithinDetectorFilters) {
+                    obj[key][index] = item.replace(/[^\w\s.\-=+()\[\]*$@!`^%#:?\/&,><=!]/gi, '');
+                  } else {
+                    obj[key][index] = item.replace(/[^\w\s.\-=+()\[\]*$@!`^%#:?\/&,]/gi, '');
+                  }
+                }
+              } else if (typeof item === 'object' && item !== null) {
+                cleanStringsInObject(item, currentIsWithinDetectorFilters);
+              }
+            });
+          }
+        }
+      }
+      return obj;
+    }
     return {
         parseJSON: parseJSON,
         stringJSON: stringJSON,
@@ -285,8 +300,6 @@ module.exports = (processCwd,config) => {
         utcToLocal: utcToLocal,
         localToUtc: localToUtc,
         formattedTime: formattedTime,
-        checkSubscription: checkSubscription,
-        checkAgainSubscription,
         isEven: isEven,
         fetchTimeout: fetchTimeout,
         fetchDownloadAndWrite: fetchDownloadAndWrite,
@@ -297,5 +310,7 @@ module.exports = (processCwd,config) => {
         setDefaultIfUndefined,
         deleteFilesInFolder,
         moveFile,
+        setTimeoutPromise,
+        cleanStringsInObject,
     }
 }

@@ -249,7 +249,7 @@ module.exports = function(s,config,lang,app,io){
     app.get(config.webPaths.apiPrefix+':auth/fileBin/:ke/:id/:file', async (req,res) => {
         s.auth(req.params,function(user){
             var failed = function(){
-                res.end(user.lang['File Not Found'])
+                res.end(lang['File Not Found'])
             }
             const groupKey = req.params.ke
             const monitorId = req.params.id
@@ -356,11 +356,11 @@ module.exports = function(s,config,lang,app,io){
                             await deleteFileBinEntry(file)
                         break;
                         default:
-                            response.msg = user.lang.modifyVideoText1;
+                            response.msg = lang.modifyVideoText1;
                         break;
                     }
                 }else{
-                    response.msg = user.lang['No such file'];
+                    response.msg = lang['No such file'];
                 }
                 s.closeJsonResponse(res,response);
             })

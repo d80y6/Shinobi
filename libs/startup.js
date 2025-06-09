@@ -11,7 +11,7 @@ module.exports = function(s,config,lang,io){
     const {
         checkSubscription,
         checkAgainSubscription,
-    } = require('./basic/utils.js')(process.cwd(),config)
+    } = require('./checker/actCheck.js')(s,config)
     const {
         checkForStaticUsers
     } = require('./user/startup.js')(s,config,lang,io)
@@ -60,7 +60,10 @@ module.exports = function(s,config,lang,io){
                 columns: "*",
                 table: "Monitors",
             },function(err,monitors) {
-                foundMonitors = monitors
+                foundMonitors = monitors.map(item => {
+                    item.details = JSON.parse(item.details)
+                    return item
+                })
                 if(err){s.systemLog('Startup Error', err.toString())}
                 if(monitors && monitors[0]){
                     var didNotLoad = 0
@@ -69,7 +72,7 @@ module.exports = function(s,config,lang,io){
                     var loadMonitor = function(monitor){
                         const checkAnother = function(){
                             ++loadCompleted
-                            if(monitors[loadCompleted]){
+                            if(loadCompleted <= s.cameraCount && monitors[loadCompleted]){
                                 loadMonitor(monitors[loadCompleted])
                             }else{
                                 if(didNotLoad > 0)console.log(`${didNotLoad} Monitor${didNotLoad === 1 ? '' : 's'} not loaded because Admin user does not exist for them. It may have been deleted.`);
@@ -402,7 +405,6 @@ module.exports = function(s,config,lang,io){
                 }
             })
         }
-        config.userHasSubscribed = false
         //check disk space every 20 minutes
         if(config.autoDropCache===true){
             setInterval(function(){
@@ -422,8 +424,7 @@ module.exports = function(s,config,lang,io){
                 setTimeout(async () => {
                     await checkForStaticUsers()
                     //check for subscription
-                    checkSubscription(config.subscriptionId || config.peerConnectKey || config.p2pApiKey, function(hasSubcribed){
-                        config.userHasSubscribed = hasSubcribed
+                    checkSubscription(config.subscriptionId || config.peerConnectKey || config.p2pApiKey, function(){
                         //check terminal commander
                         checkForTerminalCommands(function(){
                             //load administrators (groups)

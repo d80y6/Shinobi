@@ -44,7 +44,7 @@
     var urlPrefix = `<%- urlPrefix %>`;
     var $user = <%- JSON.stringify($user) %>;
     var definitions = <%- JSON.stringify(define) %>;
-    var lang = $user.lang;
+    var lang = <%- JSON.stringify(lang) %>;
     var hasGUI = <%- hasGUI || false %>;
     var streamWidth = <%- streamWidth %>;
     var streamHeight = <%- streamHeight %>;

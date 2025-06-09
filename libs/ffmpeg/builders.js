@@ -636,7 +636,7 @@ module.exports = (s,config,lang) => {
         const baseDimensionsFlag = `-s ${baseWidth}x${baseHeight}`
         const baseFps = e.details.detector_fps ? e.details.detector_fps : '2'
         const baseFpsFilter = 'fps=' + baseFps
-        const objectDetectorDimensionsFlag = `-s ${e.details.detector_scale_x_object ? e.details.detector_scale_x_object : baseWidth}x${e.details.detector_scale_y_object ? e.details.detector_scale_y_object : baseHeight}`
+        const objectDetectorDimensionsFlag = `-s ${e.details.detector_scale_x_object ? e.details.detector_scale_x_object : 1280}x${e.details.detector_scale_y_object ? e.details.detector_scale_y_object : 720}`
         const objectDetectorFpsFilter = 'fps=' + (e.details.detector_fps_object ? e.details.detector_fps_object : baseFps)
         const cudaVideoFilters = 'hwdownload,format=nv12'
         const videoFilters = []

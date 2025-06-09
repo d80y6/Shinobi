@@ -132,7 +132,7 @@ module.exports = function(s,config,lang,app,io){
                                 uid: 'System',
                                 details: {},
                                 permissions: {},
-                                lang: lang
+                                lang
                             },function(endData){
                                 // console.log(endData)
                             })
@@ -248,7 +248,7 @@ module.exports = function(s,config,lang,app,io){
                     var form = s.getPostData(req)
                     s.checkDetails(form)
                     if(!form || !form.details){
-                        endData.msg = user.lang['Form Data Not Found']
+                        endData.msg = lang['Form Data Not Found']
                         s.closeJsonResponse(res,endData)
                         return
                     }
@@ -317,7 +317,7 @@ module.exports = function(s,config,lang,app,io){
                 case'delete':
                     s.findSchedule(req.params.ke,req.params.name,function(notFound,schedule){
                         if(notFound === true){
-                            endData.msg = user.lang['Schedule Configuration Not Found']
+                            endData.msg = lang['Schedule Configuration Not Found']
                             s.closeJsonResponse(res,endData)
                         }else{
                             s.knexQuery({

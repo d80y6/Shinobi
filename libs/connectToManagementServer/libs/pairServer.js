@@ -3,7 +3,7 @@ const express = require('express');
 const app = express();
 var cors = require('cors');
 var bodyParser = require('body-parser');
-module.exports = (s,config) => {
+module.exports = (s,config,lang) => {
     const { modifyConfiguration, getConfiguration } = require('../../system/utils.js')(config)
     const pairPort = config.pairPort || 8091
     const bindIp = config.bindip
@@ -16,33 +16,25 @@ module.exports = (s,config) => {
         console.log('Management Pair Server Listening on '+pairPort);
     });
 
+    const {
+        addManagementServer,
+        removeManagementServer,
+        connectToManagementServer,
+        connectAllManagementServers,
+    } = require('../utils.js')(s,config,lang)
+
     /**
     * API : Superuser : Save Management Server Settings
     */
     app.post('/mgmt/connect', async function (req,res){
-        // form.managementServer
-        // Example of Shinobi and MGMT on same server
         // ws://127.0.0.1:8663
-        const response = {ok: true};
-        if(!config.managementServer){
-            const managementServer = s.getPostData(req,'managementServer');
-            const peerConnectKey = s.getPostData(req,'peerConnectKey');
+        let response = {ok: true};
+        const managementServer = req.body.managementServer;
+        if(!config.mgmtServers[managementServer]){
+            const peerConnectKey = req.body.peerConnectKey;
             if(peerConnectKey){
-                config = Object.assign(config, { managementServer, peerConnectKey })
-                const currentConfig = await getConfiguration()
-                if(peerConnectKey){
-                    currentConfig.peerConnectKey = peerConnectKey
-                }
-                // else if(!currentConfig.peerConnectKey){
-                //     currentConfig.peerConnectKey = `bihan${s.gid(20)}`
-                // }
-                const configError = await modifyConfiguration(Object.assign(currentConfig, { managementServer }))
-                if(configError)s.systemLog(configError)
-                try{
-                    s.centralManagementWorker.terminate()
-                }catch(err){
-                    s.debugLog(err)
-                }
+                response = await addManagementServer(managementServer, peerConnectKey)
+                await connectToManagementServer(managementServer, peerConnectKey)
             }else{
                 response.ok = false;
                 response.msg = 'No P2P API Key Provided';

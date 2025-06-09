@@ -108,7 +108,7 @@ module.exports = (s,config,lang,app) => {
     app.get(config.webPaths.apiPrefix+':auth/loginTokenAddGoogle/:ke', function (req,res){
         s.auth(req.params,(user) => {
             s.renderPage(req,res,config.renderPaths.loginTokenAddGoogle,{
-                lang: lang,
+                lang,
                 config: s.getConfigWithBranding(req.hostname),
                 $user: user
             })

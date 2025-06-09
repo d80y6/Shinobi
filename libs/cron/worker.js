@@ -117,6 +117,26 @@ function beginProcessing(){
     const setDiskUsedForGroup = (groupKey,size,target,videoRow) => {
         postMessage({f:'s.setDiskUsedForGroup', ke: groupKey, size: size, target: target, videoRow: videoRow})
     }
+    const getCloudVideoMaxDays = (user, storageType) => {
+        return new Promise((resolve) => {
+            const groupKey = user.ke;
+            const requestId = generateRandomId();
+            pendingCallbacks[requestId] = (value) => {
+                resolve(value)
+            }
+            postMessage({f:'getCloudVideoMaxDays', ke: groupKey, rid: requestId, type: storageType })
+        })
+    }
+    const getAllCloudVideoMaxDays = (user) => {
+        return new Promise((resolve) => {
+            const groupKey = user.ke;
+            const requestId = generateRandomId();
+            pendingCallbacks[requestId] = (value) => {
+                resolve(value)
+            }
+            postMessage({f:'getAllCloudVideoMaxDays', ke: groupKey, rid: requestId })
+        })
+    }
     const knexQuery = (...args) => {
         const requestId = generateRandomId();
         const callback = args.pop();
@@ -440,7 +460,7 @@ function beginProcessing(){
                     const dir = getTimelapseFrameDirectory(row)
                     const filename = row.filename
                     const theDate = filename.split('T')[0]
-                    const enclosingFolder = `${dir}/${theDate}/`
+                    const enclosingFolder = `${dir}${theDate}/`
                     try{
                         const fileSizeMB = row.size / 1048576;
                         setDiskUsedForGroup(groupKey,-fileSizeMB,null,row)
@@ -493,6 +513,30 @@ function beginProcessing(){
                     where: [
                         ['ke','=',v.ke],
                         ['archive','!=',`1`],
+                        ['time','<', sqlDate(daysOldForDeletion + ' DAY')],
+                    ]
+                },(err,rrr) => {
+                    resolve()
+                    if(err)return errorLog(err);
+                    if(rrr && rrr > 0 || config.debugLog === true){
+                        postMessage({f:'deleteEvents',msg:rrr + ' SQL rows older than ' + daysOldForDeletion + ' days deleted',ke:v.ke,time:'moment()'})
+                    }
+                })
+            }else{
+                resolve()
+            }
+        })
+    }
+    //events - alarms
+    const deleteOldAlarms = function(v){
+        return new Promise((resolve,reject) => {
+            const daysOldForDeletion = v.d.event_days && !isNaN(v.d.event_days) ? parseFloat(v.d.event_days) : 10
+            if(config.cron.deleteEvents === true && daysOldForDeletion !== 0){
+                knexQuery({
+                    action: "delete",
+                    table: "Alarms",
+                    where: [
+                        ['ke','=',v.ke],
                         ['time','<', sqlDate(daysOldForDeletion + ' DAY')],
                     ]
                 },(err,rrr) => {
@@ -568,6 +612,57 @@ function beginProcessing(){
             }
         })
     }
+    //cloud video max days
+    const deleteCloudVideosByDays = async function(user){
+        const cloudDiskUse = await getAllCloudVideoMaxDays(user);
+        const groupKey = user.ke;
+        let affectedRows = 0;
+        for(storageType in cloudDiskUse){
+            var maxDays = cloudDiskUse[storageType].maxDays
+            if(maxDays){
+                const { err, rows: videos } = await s.knexQueryPromise({
+                    action: "select",
+                    columns: "*",
+                    table: "Cloud Videos",
+                    where: [
+                        ['type','=', storageType],
+                        ['ke','=', groupKey],
+                        ['archive','!=', `1`],
+                        ['time','<', sqlDate(maxDays+' DAY')],
+                    ]
+                });
+                if(videos.length > 0){
+                    affectedRows += videos.length;
+                    for(video of videos){
+                        s.setCloudDiskUsedForGroup(groupKey,{
+                            amount : -(video.size/1048576),
+                            storageType : storageType
+                        })
+                        s.deleteVideoFromCloudExtensionsRunner({ke: groupKey},storageType,video)
+                    }
+                }
+            }
+        }
+        return {
+            ok: !err,
+            err,
+            affectedRows,
+        }
+    }
+    const deleteOldCloudVideos = async (v) => {
+        // v = group, admin user
+        if(config.cron.deleteOld === true){
+            const { affectedRows } = await deleteCloudVideosByDays(v,cloudDiskUse)
+            if(affectedRows > 0 || config.debugLog === true){
+                postMessage({
+                    f: 'deleteOldCloudVideos',
+                    msg: `${affectedRows} Cloud Videos deleted`,
+                    ke: v.ke,
+                    time: 'moment()',
+                })
+            }
+        }
+    }
     //user processing function
     const processUser = async (v) => {
         if(!v){
@@ -594,6 +689,8 @@ function beginProcessing(){
                 debugLog('--- deleteOldFileBins Complete')
                 await deleteOldEvents(v)
                 debugLog('--- deleteOldEvents Complete')
+                await deleteOldAlarms(v)
+                debugLog('--- deleteOldAlarms Complete')
                 await deleteOldEventCounts(v)
                 debugLog('--- deleteOldEventCounts Complete')
                 await checkFilterRules(v)

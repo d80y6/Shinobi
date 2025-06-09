@@ -80,7 +80,7 @@ module.exports = function(s,config,lang){
                 ext: k.ext || e.ext,
                 status: 1,
                 details: s.s(k.details),
-                objects: k.objects || '',
+                objects: (k.objects || '').substring(0,509),
                 size: k.filesize,
                 end: k.endTime,
             }
@@ -148,7 +148,7 @@ module.exports = function(s,config,lang){
                     ext: k.ext,
                     size: k.filesize,
                     filesize: k.filesize,
-                    objects: k.objects.substring(0, 510),
+                    objects: k.objects.substring(0, 509),
                     time: s.timeObject(k.startTime).format('YYYY-MM-DD HH:mm:ss'),
                     end: s.timeObject(k.endTime).format('YYYY-MM-DD HH:mm:ss')
                 }

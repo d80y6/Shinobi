@@ -55,6 +55,27 @@ module.exports = (s,config,lang) => {
                 case's.onCronGroupProcessedAwaited':
                     s.runExtensionsForArrayAwaited('onCronGroupProcessedAwaited', null, data.args)
                 break;
+                case'getCloudVideoMaxDays':
+                    var maxDays = null;
+                    try{
+                        maxDays = s.group[data.ke].cloudDiskUse[data.type].maxDays
+                    }catch(err){
+                        s.debugLog('Failed to get Max Days for Cloud Disk Use', data.ke, data.type)
+                    }
+                    workerProcess.postMessage({
+                        f: 'callback',
+                        rid: data.rid,
+                        args: [maxDays],
+                    })
+                break;
+                case'getAllCloudVideoMaxDays':
+                    var cloudDiskUse = s.group[data.ke].cloudDiskUse;
+                    workerProcess.postMessage({
+                        f: 'callback',
+                        rid: data.rid,
+                        args: [cloudDiskUse],
+                    })
+                break;
                 case's.setDiskUsedForGroup':
                    function doOnMain(){
                        s.setDiskUsedForGroup(data.ke,data.size,data.target || undefined)

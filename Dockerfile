@@ -18,8 +18,7 @@ ENV DB_USER=majesticflame \
     SSL_LOCATION='Vancouver' \
     SSL_ORGANIZATION='Shinobi Systems' \
     SSL_ORGANIZATION_UNIT='IT Department' \
-    SSL_COMMON_NAME='nvr.ninja' \
-    DB_DISABLE_INCLUDED=$EXCLUDE_DB
+    SSL_COMMON_NAME='nvr.ninja'
 
 WORKDIR /home/Shinobi
 COPY . ./

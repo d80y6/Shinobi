@@ -31,6 +31,6 @@ module.exports = function(s,config,lang,app,io){
         if(config.brandingConfig && config.brandingConfig[domain]){
             return Object.assign(configCopy,config.brandingConfig[domain])
         }
-        return config
+        return configCopy
     }
 }

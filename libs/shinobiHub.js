@@ -118,7 +118,7 @@ module.exports = function(s,config,lang,app,io){
             }else{
                 s.closeJsonResponse(res,{
                     ok: false,
-                    msg: user.lang['No API Key']
+                    msg: lang['No API Key']
                 })
             }
         },res,req)
@@ -159,7 +159,7 @@ module.exports = function(s,config,lang,app,io){
             }else{
                 s.closeJsonResponse(res,{
                     ok: false,
-                    msg: user.lang['No API Key']
+                    msg: lang['No API Key']
                 })
             }
         },res,req)

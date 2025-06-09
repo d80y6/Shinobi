@@ -102,11 +102,11 @@ module.exports = function (s, config, lang, getSnapshot) {
             // r = user
             if (r.details.factor_emailClient === '1') {
                 sendMessage({
-                    subject: r.lang['2-Factor Authentication'],
+                    subject: lang['2-Factor Authentication'],
                     html: template.createFramework({
-                        title: r.lang['2-Factor Authentication'],
-                        subtitle: r.lang['Enter this code to proceed'],
-                        body: '<b style="font-size: 20pt;">'+s.factorAuth[r.ke][r.uid].key+'</b><br><br>'+r.lang.FactorAuthText1,
+                        title: lang['2-Factor Authentication'],
+                        subtitle: lang['Enter this code to proceed'],
+                        body: '<b style="font-size: 20pt;">'+s.factorAuth[r.ke][r.uid].key+'</b><br><br>'+lang.FactorAuthText1,
                     }),
                 },[],r.ke);
             }
@@ -165,7 +165,7 @@ module.exports = function (s, config, lang, getSnapshot) {
                     let videoName = null
                     const eventBasedRecording = await getEventBasedRecordingUponCompletion({
                         ke: d.ke,
-                        mid: d.mid
+                        mid: d.mid || d.id
                     })
                     if(eventBasedRecording.filePath){
                         videoPath = eventBasedRecording.filePath

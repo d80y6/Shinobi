@@ -90,7 +90,7 @@ docker run -d --name='Shinobi' --memory=2g -p '8080:8080/tcp' -p '21:21/tcp' -v 
 
  > You must add (to the docker container) `/config/ssl/server.key` and `/config/ssl/server.cert`. The `/config` folder is mapped to `$HOME/Shinobi/config` on the host by default with the quick run methods. Place `key` and `cert` in `$HOME/Shinobi/config/ssl`. If `SSL_ENABLED=true` and these files don't exist they will be generated with `openssl`.
 
-> For those using `DB_DISABLE_INCLUDED=true` please remember to create a user in your databse first. The Docker image will create the `DB_DATABASE` under the specified connection information.
+> The Docker image will create the `DB_DATABASE` under the specified connection information.
 
 ### Power Video Viewer Blank or Not working
 

@@ -152,8 +152,6 @@ module.exports = function(s,config,lang){
     function twoFactorVerification(params){
         const response = { ok: false }
         const factorAuthKey = (params.factorAuthKey || '00').trim()
-        console.log(params)
-        console.log(s.factorAuth[params.ke][params.id])
         if(
             s.factorAuth[params.ke] &&
             s.factorAuth[params.ke][params.id] &&
@@ -182,8 +180,7 @@ module.exports = function(s,config,lang){
                 }
             }
             const pageTarget = factorAuthObject.function
-            factorAuthObject.info.lang = s.getLanguageFile(userDetails.lang)
-            response.info = Object.assign(factorAuthObject.info,{})
+            response.info = Object.assign({},factorAuthObject.info)
             clearTimeout(factorAuthObject.expireAuth)
             s.deleteFactorAuth({
                 ke: params.ke,

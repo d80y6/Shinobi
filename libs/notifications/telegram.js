@@ -132,7 +132,7 @@ module.exports = function(s,config,lang,getSnapshot){
                         let videoName = null
                         const eventBasedRecording = await getEventBasedRecordingUponCompletion({
                             ke: d.ke,
-                            mid: d.mid
+                            mid: d.mid || d.id
                         })
                         if(eventBasedRecording.filePath){
                             videoPath = eventBasedRecording.filePath
@@ -166,8 +166,8 @@ module.exports = function(s,config,lang,getSnapshot){
                 // r = user
                 if(r.details.factor_telegram === '1'){
                     sendMessage({
-                        title: r.lang['Enter this code to proceed'],
-                        description: '**'+s.factorAuth[r.ke][r.uid].key+'** '+r.lang.FactorAuthText1,
+                        title: lang['Enter this code to proceed'],
+                        description: '**'+s.factorAuth[r.ke][r.uid].key+'** '+lang.FactorAuthText1,
                     },[],r.ke)
                 }
             }

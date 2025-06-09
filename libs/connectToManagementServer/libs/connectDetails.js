@@ -1,6 +1,23 @@
 const fs = require("fs").promises
-module.exports = (s,config) => {
-    const configPath = config.thisIsDocker ? "/config/super.json" : s.location.super;
+module.exports = (s,config,lang) => {
+    const { getNewApiKey } = require('../../user/apiKeys.js')(s,config,lang)
+    const configPath = s.location.super;
+    const requiredApiKeyPermissions = {
+        "auth_socket": "1",
+        "create_api_keys": "1",
+        "edit_user": "1",
+        "edit_permissions": "1",
+        "get_monitors": "1",
+        "edit_monitors": "1",
+        "control_monitors": "1",
+        "get_logs": "1",
+        "watch_stream": "1",
+        "watch_snapshot": "1",
+        "watch_videos": "1",
+        "delete_videos": "1",
+        "get_alarms": "1",
+        "edit_alarms": "1",
+    };
     async function generateSuperUserJson(){
         const baseConfig = [
            {
@@ -55,13 +72,20 @@ module.exports = (s,config) => {
             table: "API",
             where: { ke: groupKey, uid: userId }
         });
+        var requiredPermissions = Object.keys(requiredApiKeyPermissions);
         let suitableKey = null;
         for(row of rows){
-            row.details = JSON.parse(row.details)
-            const detailValues = Object.values(row.details);
-            const theFiltered = detailValues.filter(item => item != 1);
-            if(theFiltered.length === 0){
-                suitableKey = row.code
+            var details = JSON.parse(row.details)
+            var cantUse = details.permissionSet || details.treatAsSub === '1' || details.monitorsRestricted === '1';
+            if(!cantUse){
+                var canUse = true;
+                for(permission of requiredPermissions){
+                    if(details[permission] !== '1')canUse = false;
+                }
+                if(canUse){
+                    suitableKey = row.code
+                    break;
+                }
             }
         };
         if(!suitableKey){
@@ -70,26 +94,16 @@ module.exports = (s,config) => {
         return suitableKey;
     }
     async function createApiKey(groupKey, userId){
-        const newApiKey = s.gid(30);
+        const newApiKey = await getNewApiKey(groupKey);
         await s.knexQueryPromise({
             action: "insert",
             table: "API",
             insert: {
-                ke : groupKey,
-                uid : userId,
-                code : newApiKey,
-                ip : '0.0.0.0',
-                details : s.stringJSON({
-                    "auth_socket": "1",
-                    "get_monitors": "1",
-                    "edit_monitors": "1",
-                    "control_monitors": "1",
-                    "get_logs": "1",
-                    "watch_stream": "1",
-                    "watch_snapshot": "1",
-                    "watch_videos": "1",
-                    "delete_videos": "1"
-                })
+                ke: groupKey,
+                uid: userId,
+                code: newApiKey,
+                ip: '0.0.0.0',
+                details: s.stringJSON(requiredApiKeyPermissions)
             }
         });
         return newApiKey

@@ -96,12 +96,12 @@ module.exports = function (s, config, lang, getSnapshot) {
                 if (r.details.factor_pushover === '1') {
                     sendMessage(
                         {
-                            title: r.lang['Enter this code to proceed'],
+                            title: lang['Enter this code to proceed'],
                             description:
                                 '**' +
                                 s.factorAuth[r.ke][r.uid].key +
                                 '** ' +
-                                r.lang.FactorAuthText1,
+                                lang.FactorAuthText1,
                         },
                         [],
                         r.ke

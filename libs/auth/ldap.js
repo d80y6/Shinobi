@@ -159,7 +159,7 @@ module.exports = (s,config,lang,app) => {
     app.get(config.webPaths.apiPrefix+':auth/loginTokenAddLDAP/:ke', function (req,res){
         s.auth(req.params,(user) => {
             s.renderPage(req,res,config.renderPaths.loginTokenAddLDAP,{
-                lang: lang,
+                lang,
                 define: s.getDefinitonFile(user.details.lang),
                 config: s.getConfigWithBranding(req.hostname),
                 $user: user

@@ -118,9 +118,11 @@ module.exports = function(s,config,lang,getSnapshot){
                     //
                     const groupKey = d.ke
                     await getSnapshot(d,monitorConfig)
-                    sendToMqttConnections(groupKey,'onEventTrigger',[Object.assign({},d,{
-                        screenshotBuffer: d.screenshotBuffer.toString('base64')
-                    }),filter],true)
+                    if(d.screenshotBuffer){
+                        sendToMqttConnections(groupKey,'onEventTrigger',[Object.assign({},d,{
+                            screenshotBuffer: d.screenshotBuffer.toString('base64')
+                        }),filter],true)
+                    }
                 }
             }
             const onMonitorSave = (monitorConfig) => {
@@ -141,7 +143,7 @@ module.exports = function(s,config,lang,getSnapshot){
             }
             const onEventBasedRecordingComplete = (response,monitorConfig) => {
                 const groupKey = monitorConfig.ke
-                sendToMqttConnections(groupKey,'onEventBasedRecordingComplete',[monitorConfig],true)
+                sendToMqttConnections(groupKey,'onEventBasedRecordingComplete',[response,monitorConfig],true)
             }
             const insertCompletedVideoExtender = (activeMonitor,temp,insertQuery,response) => {
                 const groupKey = insertQuery.ke

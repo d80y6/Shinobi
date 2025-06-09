@@ -1,4 +1,5 @@
 var fs = require('fs')
+var path = require('path')
 var exec = require('child_process').exec
 module.exports = function(s,config,lang,app,io){
     const base64Prefix = '=?UTF-8?B?';
@@ -56,7 +57,7 @@ module.exports = function(s,config,lang,app,io){
                 var snapPath = s.dir.streams + ke + '/' + mid + '/s.jpg'
                 fs.rm(snapPath,async function(err){
                     await copyFileAsync(filePath, snapPath)
-                    triggerEvent({
+                    const eventData = {
                         id: mid,
                         ke: ke,
                         details: {
@@ -64,8 +65,14 @@ module.exports = function(s,config,lang,app,io){
                             name: filename,
                             plug: "dropInEvent",
                             reason: "ftpServer"
-                        },
-                    },config.dropInEventForceSaveEvent)
+                        }
+                    }
+                    try{
+                        eventData.frame = await fs.promises.readFile(filePath);
+                    }catch(err){
+
+                    }
+                    triggerEvent(eventData,config.dropInEventForceSaveEvent)
                 })
             }else{
                 var reason = "ftpServer"
@@ -79,7 +86,7 @@ module.exports = function(s,config,lang,app,io){
                         var writeStream = fs.createWriteStream(recordingPath)
                         fs.createReadStream(filePath).pipe(writeStream)
                         writeStream.on('finish', () => {
-                            s.insertCompletedVideo(s.group[monitorConfig.ke].rawMonitorConfigurations[monitorConfig.mid],{
+                            s.insertCompletedVideo(monitorConfig,{
                                 file: shinobiFilename,
                                 events: [
                                     {
@@ -126,42 +133,52 @@ module.exports = function(s,config,lang,app,io){
 
             }
         }
-        var onFileOrFolderFound = function(filePath,deletionKey,monitorConfig){
-          fs.stat(filePath,function(err,stats){
-              if(!err){
-                    if(stats.isDirectory()){
-                        fs.readdir(filePath,function(err,files){
-                            if(files){
-                                files.forEach(function(filename){
-                                    onFileOrFolderFound(clipPathEnding(filePath) + '/' + filename,deletionKey,monitorConfig)
-                                })
-                            }else if(err){
-                                console.log(err)
-                            }
+        function deleteFile(filePath, numberOfMinutes = 5){
+            // console.log(`QUEUE deleteFile in ${numberOfMinutes} minutes : `, filePath)
+            clearTimeout(fileQueue[filePath])
+            fileQueue[filePath] = setTimeout(async function(){
+                try{
+                    await fs.promises.rm(filePath, { recursive: true });
+                    // console.log('DONE deleteFile : ', filePath)
+                }catch(err){
+                    // console.log('ERROR deleteFile : ', filePath, err)
+                }
+                delete(fileQueue[filePath])
+            },1000 * 60 * numberOfMinutes)
+        }
+        async function onFileOrFolderFound(filePath, monitorConfig){
+            try{
+                const stats = await fs.promises.stat(filePath)
+                const isDirectory = stats.isDirectory();
+                if(isDirectory){
+                    const files = await fs.promises.readdir(filePath)
+                    if(files){
+                        files.forEach(function(filename){
+                            const fileInDirectory = path.join(filePath, filename);
+                            // console.log('File Found in FTP Directory : ', fileInDirectory)
+                            onFileOrFolderFound(fileInDirectory, monitorConfig)
                         })
-                    }else{
-                        if(!fileQueue[filePath]){
-                            processFile(filePath,monitorConfig)
-                            if(config.dropInEventDeleteFileAfterTrigger){
-                                clearTimeout(fileQueue[filePath])
-                                fileQueue[filePath] = setTimeout(function(){
-                                    fs.rm(filePath, { recursive: true },(err) => {
-                                        delete(fileQueue[filePath])
-                                    })
-                                },1000 * 60 * 5)
+                    }
+                    deleteFile(filePath, 6)
+                }else{
+                    if(!fileQueue[filePath]){
+                        // console.log('Processing File in FTP : ', filePath)
+                        processFile(filePath, monitorConfig)
+                        if(config.dropInEventDeleteFileAfterTrigger){
+                            const aboveFolder = path.dirname(filePath);
+                            const monitorDirectory = path.join(s.dir.dropInEvents, monitorConfig.ke, monitorConfig.mid);
+                            if(aboveFolder !== monitorDirectory){
+                                // console.log('Delete aboveFolder', aboveFolder)
+                                deleteFile(aboveFolder)
+                            }else{
+                                deleteFile(filePath)
                             }
                         }
                     }
-                    if(config.dropInEventDeleteFileAfterTrigger){
-                        clearTimeout(fileQueueForDeletion[deletionKey])
-                        fileQueueForDeletion[deletionKey] = setTimeout(function(){
-                            fs.rm(filePath, { recursive: true },(err) => {
-                                delete(fileQueueForDeletion[deletionKey])
-                            })
-                        },1000 * 60 * 5)
-                    }
-               }
-           })
+                }
+            }catch(err){
+                console.log(err)
+            }
         }
         var createDropInEventsDirectory = function(){
             try{
@@ -243,21 +260,35 @@ module.exports = function(s,config,lang,app,io){
                 ftpServer.on('login', ({connection, username, password}, resolve, reject) => {
                     s.basicOrApiAuthentication(username,password,function(err,user){
                         if(user){
+                            // console.log('FTP : login',username, password)
                             connection.on('STOR', (error, fileName) => {
+                                // console.log('FTP : STOR',fileName,error)
                                 if(!fileName)return;
-                                var pathPieces = fileName.replace(s.dir.dropInEvents,'').split('/')
-                                var ke = pathPieces[0]
-                                var mid = pathPieces[1]
-                                var firstDroppedPart = pathPieces[2]
-                                var monitorEventDropDir = s.dir.dropInEvents + ke + '/' + mid + '/'
-                                var deleteKey = monitorEventDropDir + firstDroppedPart
-                                fs.mkdir(pathPieces.join('/'), { recursive: true }, (err) => {
-                                    onFileOrFolderFound(monitorEventDropDir + firstDroppedPart,deleteKey,Object.assign({},s.group[ke].rawMonitorConfigurations[mid]))
-                                })
+                                try{
+                                    const pathPieces = fileName.replace(s.dir.dropInEvents,'').split('/')
+                                    const ke = user.ke
+                                    const mid = pathPieces[1]
+                                    const monitorConfig = s.group[ke].rawMonitorConfigurations[mid];
+                                    const monitorDirectory = path.join(s.dir.dropInEvents, user.ke, mid);
+                                    if(monitorConfig){
+                                        onFileOrFolderFound(fileName, monitorConfig)
+                                    }else{
+                                        deleteFile(monitorDirectory, 0.1)
+                                        s.userLog({ ke, mid: '$USER' }, {
+                                            type: 'FTP Upload Error',
+                                            msg: lang.FTPMonitorIdNotFound
+                                        });
+                                        // console.log('Monitor ID Not Found or Not Active')
+                                    }
+                                }catch(err){
+                                    deleteFile(fileName, 0.1)
+                                    console.log('FTP Failed Processing')
+                                }
                             })
                             resolve({root: s.dir.dropInEvents + user.ke})
                         }else{
-                            // reject(new Error('Failed Authorization'))
+                            // console.log('FTP : AUTH FAIL')
+                            reject(new Error('Failed Authorization'))
                         }
                     })
                 })

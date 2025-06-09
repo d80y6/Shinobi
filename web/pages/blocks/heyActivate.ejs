@@ -42,16 +42,16 @@
                     noticeTitle = lang.Activated
                     noticeText = lang.activatedText
                     noticeType = 'success'
-                    heyActivateCard.find('[name="subscriptionId"]').val('')
-                }else{
-                    heyActivateCardSubmit.html(lang.Save)
+                    // heyActivateCard.find('[name="subscriptionId"]').val('')
                 }
+                heyActivateCardSubmit.html(lang.Save)
                 heyActivateCard.find('.card-header').html(noticeTitle)
                 new PNotify({
                     title: noticeTitle,
                     text: noticeText,
                     type: noticeType
                 })
+                drawSystemInfo()
             })
             return false
         })

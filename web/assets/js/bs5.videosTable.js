@@ -50,7 +50,7 @@ $(document).ready(function(e){
     }
     loadDateRangePicker(dateSelector,{
         onChange: function(start, end, label) {
-	    videosTableDrawArea.bootstrapTable('destroy');
+            videosTableDrawArea.bootstrapTable('destroy');
             drawVideosTableViewElements()
         }
     })
@@ -72,13 +72,6 @@ $(document).ready(function(e){
             videosTableDrawArea.bootstrapTable('destroy');
             drawVideosTableViewElements();
         }, 300));
-    });
-
-    // Event listener for the Refresh link styled as a button
-    $('.refresh-data').click(function(e) {
-        e.preventDefault();
-        videosTableDrawArea.bootstrapTable('destroy');
-        drawVideosTableViewElements();
     });
 
     async function drawVideosTableViewElements(pageNumber, pageSize, usePreloadedData) {
@@ -119,7 +112,7 @@ $(document).ready(function(e){
         totalRows: result.total, // Reflect total number of videos
         onPostBody: loadFramesForVideosInView,
         onPageChange: (newPageNumber, newPageSize) => {
-            drawVideosTableViewElements(newPageNumber, newPageSize);
+            // drawVideosTableViewElements(newPageNumber, newPageSize);
             setTimeout(() => {
                 loadFramesForVideosInView();
             }, 500);
@@ -350,6 +343,7 @@ $(document).ready(function(e){
     })
     .on('click','.refresh-data',function(e){
         e.preventDefault()
+        videosTableDrawArea.bootstrapTable('destroy');
         drawVideosTableViewElements()
         return false;
     })

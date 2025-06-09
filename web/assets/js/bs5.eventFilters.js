@@ -77,15 +77,19 @@ $(document).ready(function(e){
     var closeFiltersToMonitorEditor = function(dFilters){
         var monitorId = getCurrentlySelectedMonitorId()
         var monitorConfig = Object.assign({},loadedMonitors[monitorId])
-        monitorConfig.details.detector_filters = JSON.stringify(loadedFilters)
+        monitorConfig.details.detector_filters = loadedFilters
         monitorConfig.details = JSON.stringify(monitorConfig.details)
-        $.post(getApiPrefix(`configureMonitor`)+ '/' + monitorId,{
-            data: JSON.stringify(monitorConfig)
-        },function(d){
-            debugLog(d)
-            if(d.ok){
-
+        setSubmitButton(detectorFiltersForm, lang[`Please Wait...`], `spinner fa-pulse`, true)
+        configureMonitor(monitorConfig).then((d) => {
+            if(d.ok === false){
+                new PNotify({
+                    title: lang['Action Failed'],
+                    text: d.msg,
+                    type: 'danger'
+                })
             }
+            debugLog(d)
+            setSubmitButton(detectorFiltersForm, lang.Save, `check`, false)
         })
     }
     var drawDetectorFilterFieldsRow = function(d){

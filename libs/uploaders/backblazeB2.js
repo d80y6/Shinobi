@@ -11,6 +11,7 @@ module.exports = function(s,config,lang){
     }
     var cloudDiskUseStartupForBackblazeB2 = function(group,userDetails){
         group.cloudDiskUse[serviceProvider].name = 'Backblaze B2'
+        group.cloudDiskUse[serviceProvider].maxDays = parseInt(userDetails.bb_b2_max_days);
         group.cloudDiskUse[serviceProvider].sizeLimitCheck = (userDetails.use_bb_b2_size_limit === '1')
         if(!userDetails.bb_b2_size_limit || userDetails.bb_b2_size_limit === ''){
             group.cloudDiskUse[serviceProvider].sizeLimit = 10000
@@ -305,14 +306,25 @@ module.exports = function(s,config,lang){
           },
           {
               "hidden": true,
-             "name": "detail=bb_b2_size_limit",
-             "field": lang['Max Storage Amount'],
+             "attribute": `size-adjust='[detail=bb_b2_size_limit]'`,
              "form-group-class":"autosave_bb_b2_input autosave_bb_b2_1",
              "form-group-class-pre-layer":"h_b2sld_input h_b2sld_1",
-             "description": "",
+             "field": lang["Max Storage Amount"],
+             "default": "10 GB",
+          },
+          {
+              "hidden": true,
+             "name": "detail=bb_b2_size_limit",
+             "field": lang['Max Storage Amount'],
              "default": "10000",
-             "example": "",
-             "possible": ""
+          },
+          {
+              "hidden": true,
+             "name": "detail=bb_b2_max_days",
+             "field": lang['Number of Days to keep'],
+             "form-group-class":"autosave_bb_b2_input autosave_bb_b2_1",
+             "form-group-class-pre-layer":"h_b2sld_input h_b2sld_1",
+             "example": "30",
           },
           {
               "hidden": true,

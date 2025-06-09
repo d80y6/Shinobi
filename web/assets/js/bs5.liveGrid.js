@@ -8,6 +8,7 @@ var liveGridOpenCountElements = $('.liveGridOpenCount')
 var liveGridOpenCount = 0
 var liveGridPauseScrollTimeout = null;
 var liveGridPlayingNow = {};
+var currentPtzPresetPosition = {};
 //
 var onLiveStreamInitiateExtensions = []
 function onLiveStreamInitiate(callback){
@@ -212,34 +213,71 @@ function buildLiveGridBlock(monitor){
     </div>`
     return replaceMonitorInfoInHtml(baseHtml,monitor)
 }
-function drawPtzControlsOnLiveGridBlock(monitorId){
+async function drawPtzControlsOnLiveGridBlock(monitorId){
     var monitorItem = $('#monitor_live_' + monitorId)
     var ptzControls = monitorItem.find('.PTZ_controls');
     var loadedMonitor = loadedMonitors[monitorId]
     var stopCommandOnRelease = loadedMonitor.details.control_stop === '2'
+    var isOnvif = loadedMonitor.details.is_onvif === '1';
     if(ptzControls.length>0){
         ptzControls.remove()
     }else{
-        var html = `<div class="PTZ_controls">
-            <div class="pad">
-                <div class="control top run-live-grid-monitor-ptz${stopCommandOnRelease ? `-move` : '' }" data-ptz-control="up"></div>
-                <div class="control left run-live-grid-monitor-ptz${stopCommandOnRelease ? `-move` : '' }" data-ptz-control="left"></div>
-                <div class="control right run-live-grid-monitor-ptz${stopCommandOnRelease ? `-move` : '' }" data-ptz-control="right"></div>
-                <div class="control bottom run-live-grid-monitor-ptz${stopCommandOnRelease ? `-move` : '' }" data-ptz-control="down"></div>
-                <div class="control middle run-live-grid-monitor-ptz" data-ptz-control="center"></div>
+        if(isOnvif){
+            var onvifPresets = await runPtzCommand(monitorId, 'getPresets')
+        }
+        var html = `<div class="PTZ_controls text-center">
+            <div class="p-2">
+                <div class="pad d-inline-block">
+                    <div class="control top run-live-grid-monitor-ptz${stopCommandOnRelease ? `-move` : '' }" data-ptz-control="up"></div>
+                    <div class="control left run-live-grid-monitor-ptz${stopCommandOnRelease ? `-move` : '' }" data-ptz-control="left"></div>
+                    <div class="control right run-live-grid-monitor-ptz${stopCommandOnRelease ? `-move` : '' }" data-ptz-control="right"></div>
+                    <div class="control bottom run-live-grid-monitor-ptz${stopCommandOnRelease ? `-move` : '' }" data-ptz-control="down"></div>
+                    <div class="control middle run-live-grid-monitor-ptz" data-ptz-control="center"></div>
+                </div>
+                <div class="btn-group btn-group-sm btn-group-justified">
+                    <a title="${lang['Zoom In']}" class="zoom_in btn btn-default run-live-grid-monitor-ptz" data-ptz-control="zoom_in"><i class="fa fa-search-plus"></i></a>
+                    <a title="${lang['Zoom Out']}" class="zoom_out btn btn-default run-live-grid-monitor-ptz" data-ptz-control="zoom_out"><i class="fa fa-search-minus"></i></a>
+                </div>
+                <div class="btn-group btn-group-sm btn-group-justified">
+                    <a title="${lang['Enable Nightvision']}" class="nv_enable btn btn-default run-live-grid-monitor-ptz" data-ptz-control="enable_nv"><i class="fa fa-moon-o"></i></a>
+                    <a title="${lang['Disable Nightvision']}" class="nv_disable btn btn-default run-live-grid-monitor-ptz" data-ptz-control="disable_nv"><i class="fa fa-sun-o"></i></a>
+                </div>
+                ${isOnvif ? `
+                <div class="btn-group btn-group-sm btn-group-justified">
+                    <a title="${lang['Start Patrol']}" class="btn btn-success run-live-grid-monitor-onvif-startPatrol"><i class="fa fa-retweet"></i></a>
+                    <a title="${lang['Stop Patrol']}" class="btn btn-danger run-live-grid-monitor-onvif-stopPatrol"><i class="fa fa-times"></i></a>
+                </div>
+                <div class="dropdown btn-group btn-group-sm btn-group-justified">
+                    <button class="btn btn-sm btn-primary dropdown-toggle" type="button" id="goToPtzPreset_${monitorId}" data-bs-toggle="dropdown" aria-expanded="false">
+                        ${lang['PTZ Presets']}
+                    </button>
+                    <ul class="dropdown-menu shadow-lg dropdown-menu-dark bg-dark text-white" aria-labelledby="goToPtzPreset_${monitorId}" style="overflow:auto;max-height:350px;">
+                        <li><a class="dropdown-item cursor-pointer run-live-grid-monitor-ptz" data-ptz-control="center"><i class="fa fa-h-square"></i> ${lang['Home']}</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        ${onvifPresets.map(item => `<li><a class="dropdown-item cursor-pointer run-live-grid-monitor-onvif-goToPreset" data-preset="${item.token}">${item.name}</a></li>`).join('')}
+                    </ul>
+                </div>
+                <div class="dropdown btn-group btn-group-sm btn-group-justified">
+                    <button class="btn btn-sm btn-primary dropdown-toggle" type="button" id="savePtzPreset_${monitorId}" data-bs-toggle="dropdown" aria-expanded="false">
+                        ${lang['Save PTZ Preset']}
+                    </button>
+                    <ul class="dropdown-menu shadow-lg dropdown-menu-dark bg-dark text-white" aria-labelledby="savePtzPreset_${monitorId}" style="overflow:auto;max-height:350px;">
+                        <li><a class="dropdown-item cursor-pointer run-live-grid-monitor-ptz" data-ptz-control="setHome"><i class="fa fa-h-square"></i> ${lang['Set Home']}</a></li>
+                        <li><a class="dropdown-item cursor-pointer run-live-grid-monitor-onvif-addPreset"><i class="fa fa-h-plus"></i> ${lang['Add Preset']}</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        ${onvifPresets.map(item => `<li>
+                            <div class="d-flex dropdown-item">
+                                <div class="flex-grow-1">
+                                    <a class="cursor-pointer text-white run-live-grid-monitor-onvif-setPreset" data-preset="${item.token}">${item.name}</a>
+                                </div>
+                                <div>
+                                    <span class="btn btn-sm btn-danger run-live-grid-monitor-onvif-removePreset" data-preset="${item.token}"><i class="fa fa-trash-o"></i></span>
+                                </div>
+                            </div>
+                        </li>`).join('')}
+                    </ul>
+                </div>` : ''}
             </div>
-            <div class="btn-group btn-group-sm btn-group-justified">
-                <a title="${lang['Zoom In']}" class="zoom_in btn btn-default run-live-grid-monitor-ptz" data-ptz-control="zoom_in"><i class="fa fa-search-plus"></i></a>
-                <a title="${lang['Zoom Out']}" class="zoom_out btn btn-default run-live-grid-monitor-ptz" data-ptz-control="zoom_out"><i class="fa fa-search-minus"></i></a>
-            </div>
-            <div class="btn-group btn-group-sm btn-group-justified">
-                <a title="${lang['Enable Nightvision']}" class="nv_enable btn btn-default run-live-grid-monitor-ptz" data-ptz-control="enable_nv"><i class="fa fa-moon-o"></i></a>
-                <a title="${lang['Disable Nightvision']}" class="nv_disable btn btn-default run-live-grid-monitor-ptz" data-ptz-control="disable_nv"><i class="fa fa-sun-o"></i></a>
-            </div>
-            ${safeJsonParse(loadedMonitors[monitorId].details,{}).is_onvif === '1' ? `
-            <div class="btn-group btn-group-sm btn-group-justified">
-                <a title="${lang['Set Home Position (ONVIF-only)']}" class="btn btn-default run-live-grid-monitor-ptz" data-ptz-control="setHome"><i class="fa fa-h-square"></i> ${lang['Set Home']}</a>
-            </div>` : ``}
         </div>`
         monitorItem.append(html)
     }
@@ -1152,6 +1190,66 @@ $(document).ready(function(e){
         var switchChosen = el.attr('data-ptz-control')
         runPtzMove(monitorId,switchChosen,false)
     })
+    .on('click','.run-live-grid-monitor-onvif-goToPreset',function(){
+        var monitorId = $(this).parents('[data-mid]').attr('data-mid')
+        var presetToken = $(this).attr('data-preset')
+        runPtzCommand(monitorId, 'goToPreset', { presetToken: padToThreeDigits(presetToken) })
+    })
+    .on('click','.run-live-grid-monitor-onvif-setPreset',function(){
+        var monitorId = $(this).parents('[data-mid]').attr('data-mid')
+        var presetToken = $(this).attr('data-preset')
+        var presetName = $(this).text()
+        var monitor = loadedMonitors[monitorId]
+        var nonStandardOnvif = monitor.details.onvif_non_standard === '1'
+        runPtzCommand(monitorId, 'setPreset', { presetToken: padToThreeDigits(presetToken), presetName: nonStandardOnvif ? undefined : presetName })
+    })
+    .on('click','.run-live-grid-monitor-onvif-startPatrol',function(){
+        var monitorId = $(this).parents('[data-mid]').attr('data-mid')
+        var startingPresetToken = currentPtzPresetPosition[monitorId]
+        runPtzCommand(monitorId, 'startPatrol', { startingPresetToken })
+    })
+    .on('click','.run-live-grid-monitor-onvif-stopPatrol',function(){
+        var monitorId = $(this).parents('[data-mid]').attr('data-mid')
+        var presetToken = currentPtzPresetPosition[monitorId]
+        runPtzCommand(monitorId, 'stopPatrol')
+    })
+    .on('click','.run-live-grid-monitor-onvif-addPreset',function(){
+        var monitorId = $(this).parents('[data-mid]').attr('data-mid')
+        $.confirm.create({
+            title: lang["Save PTZ Preset"],
+            body: `<input class="form-control form-control-sm" id="ptz-preset-save-name">`,
+            clickOptions: {
+                title: '<i class="fa fa-check"></i> ' + lang.Save,
+                class: 'btn-success btn-sm'
+            },
+            clickCallback: async function(){
+                var presetName = $('#ptz-preset-save-name').val();
+                var onvifPresets = await runPtzCommand(monitorId, 'getPresets');
+                var nextToken = incrementString(onvifPresets[onvifPresets.length - 1].token);
+                await runPtzCommand(monitorId, 'setPreset', { presetToken: padToThreeDigits(nextToken), presetName });
+                await drawPtzControlsOnLiveGridBlock(monitorId)
+                await drawPtzControlsOnLiveGridBlock(monitorId)
+            }
+        });
+    })
+    .on('click','.run-live-grid-monitor-onvif-removePreset',function(){
+        var el = $(this);
+        var monitorId = el.parents('[data-mid]').attr('data-mid')
+        var presetToken = el.attr('data-preset')
+        $.confirm.create({
+            title: lang["Delete PTZ Preset"],
+            body: lang.DeleteThisMsg,
+            clickOptions: {
+                title: '<i class="fa fa-trash-o"></i> ' + lang.Delete,
+                class: 'btn-danger btn-sm'
+            },
+            clickCallback: async function(){
+                await runPtzCommand(monitorId, 'removePreset', { presetToken });
+                await drawPtzControlsOnLiveGridBlock(monitorId)
+                await drawPtzControlsOnLiveGridBlock(monitorId)
+            }
+        });
+    })
     .on('click','.run-monitor-detection-trigger-test',function(){
         var el = $(this)
         var monitorId = el.parents('[data-mid]').attr('data-mid')
@@ -1256,6 +1354,9 @@ $(document).ready(function(e){
     })
     onWebSocketEvent(function (d){
         switch(d.f){
+            case'control_ptz_preset_changed':
+                currentPtzPresetPosition[d.mid] = d.profileToken;
+            break;
             case'video_build_success':
                 d.status = 1
                 d.mid = d.id || d.mid

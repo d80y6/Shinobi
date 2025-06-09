@@ -462,6 +462,12 @@ function getVideoSearchRequestQueries(options){
         eventEndTime = formattedTimeForFilename(options.endDate,false)
         requestQueries.push(`end=${eventEndTime}`)
     }
+    if(options.endOperator){
+        requestQueries.push(`endOperator=${options.endOperator}`)
+    }
+    if(options.startOperator){
+        requestQueries.push(`startOperator=${options.startOperator}`)
+    }
     if(searchQuery){
         requestQueries.push(`search=${searchQuery}`)
     }

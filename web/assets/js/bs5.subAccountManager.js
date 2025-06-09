@@ -1,13 +1,15 @@
 $(document).ready(function(){
     var apiPrefix = getFullOrigin(true) + getAdminApiPrefix()
     var theWindow = $('#subAccountManager');
-    var accountTable = $('#subAccountsList tbody');
+    var accountTable = $('#subAccountsList');
     var theWindowForm = $('#monSectionAccountInformation');
     var permissionsSection = $('#monSectionAccountPrivileges');
     var permissionsMonitorSection = $('#sub_accounts_permissions');
     var currentlyActiveUsersList = $('#currently-active-users');
     var submitButtons = theWindow.find('.submit-form')
+    var permissionSetField = theWindow.find(`[detail="permissionSet"]`)
     var loadedSubAccounts = {}
+    var loadedPermissions = {}
     var clearTable = function(){
         accountTable.empty()
         loadedSubAccounts = {}
@@ -16,6 +18,7 @@ $(document).ready(function(){
         $.get(`${apiPrefix}accounts/${$user.ke}`,function(data){
             clearTable()
             $.each(data.accounts,function(n,account){
+                account.details = safeJsonParse(account.details)
                 loadedSubAccounts[account.uid] = account;
                 drawSubAccountRow(account)
             })
@@ -66,8 +69,7 @@ $(document).ready(function(){
                 notifyTitle = lang.accountActionFailed
                 notifyText = data.msg
                 notifyColor = 'warning'
-            }
-            if(data.user){
+            }else if(data.user){
                 notifyTitle = lang.accountAdded
                 notifyText = lang.accountAddedText + '\n' + data.user.mail
                 notifyColor = 'success'
@@ -150,23 +152,47 @@ $(document).ready(function(){
             label: lang['Can Delete Videos and Events'],
         },
     ];
-    var drawSelectableForPermissionForm = function(){
-        var html = ''
+    var drawSelectableForPermissionForm = function(account){
+        var html = `
+        <thead class="text-center">
+            <tr>
+                <td></td>
+                <td></td>
+                ${permissionTypeNames.map(permissionType => `<td><a class="btn btn-sm btn-primary" toggle-checkbox="${permissionType.name}">${permissionType.label}</a></td>`).join('')}
+            </tr>
+        </thead>
+        <tbody class="text-center">`
         $.each(getLoadedMonitorsAlphabetically(),function(n,monitor){
-            html += `<div class="form-group permission-view">`
-                html += `<div><label class="mb-2">${monitor.name} (${monitor.mid})</label></div>`
-                html += `<div><select class="form-control" multiple monitor="${monitor.mid}">`
-                    $.each(permissionTypeNames,function(n,permission){
-                        html += `<option value="${permission.name}">${permission.label}</option>`
-                    })
-                html += `</select></div>`
-            html += `</div>`
+            html += `<tr class="search-row permission-view" style="vertical-align: baseline;">`
+                html += `<td class="text-start">${monitor.name} (${monitor.mid})</td>`
+                html += `<td>${(monitor.tags || '').split(',').map(item => `<span class="label label-primary">${item}</span>`)}</td>`
+                $.each(permissionTypeNames,function(n,permissionType){
+                    const isChecked = account && (account.details[permissionType.name] || []).indexOf(monitor.mid) > -1;
+                    html += `<td><input class="form-check-input" type="checkbox" data-monitor="${monitor.mid}" value="${permissionType.name}" ${isChecked ? 'checked' : ''}></td>`
+                })
+            html += `</tr>`
         })
+        html += '</tbody>'
         permissionsMonitorSection.html(html)
     }
-    var setPermissionSelectionsToFields = function(uid){
+    async function loadPermissions(){
+        var html = ''
+        const list = await listPermissions()
+        loadedPermissions = {}
+        $.each(list,function(n,item){
+            const name = item.name;
+            loadedPermissions[name] = item;
+            html += createOptionHtml({
+                value: name,
+                label: name
+            })
+        })
+        permissionSetField.find('optgroup').html(html)
+    }
+    var setPermissionSelectionsToFields = async function(uid){
         var account = loadedSubAccounts[uid]
-        var details = safeJsonParse(account.details)
+        var details = account.details
+        await loadPermissions()
         // load values to Account Information : email, password, etc.
         $.each(account,function(n,v){
             theWindowForm.find('[name="'+n+'"]').val(v)
@@ -178,20 +204,11 @@ $(document).ready(function(){
             var defaultValue = el.attr('data-default')
             el.val(details[key] || defaultValue)
         })
-        permissionsSection.find('[detail="allmonitors"]').change()
-        // load montior specific privileges
-        $.each(loadedMonitors,function(m,monitor){
-            $.each(permissionTypeNames,function(m,permission){
-                if((details[permission.name] || []).indexOf(monitor.mid) > -1){
-                    permissionsSection.find(`[monitor="${monitor.mid}"] option[value="${permission.name}"]`).attr("selected", "selected")
-                }
-            })
-        })
     }
-    var openSubAccountEditor = function(uid){
+    var openSubAccountEditor = async function(uid){
         var account = loadedSubAccounts[uid]
-        drawSelectableForPermissionForm()
-        setPermissionSelectionsToFields(uid)
+        drawSelectableForPermissionForm(account)
+        await setPermissionSelectionsToFields(uid)
         theWindowForm.find('[name="pass"],[name="password_again"]').val('')
         permissionsSection.show()
     }
@@ -199,28 +216,25 @@ $(document).ready(function(){
         var foundSelected = {}
         var detailsElement = theWindowForm.find('[name="details"]')
         var details = safeJsonParse(detailsElement.val())
-        details = details ? details : {sub: 1, allmonitors: "1"}
+        details = details ? details : {sub: 1, allmonitors: "1"};
+        details = Object.assign(details,{
+            'monitors': [],
+            'monitor_edit': [],
+            'video_view': [],
+            'video_delete': [],
+        });
         // base privileges
         permissionsSection.find('[detail]').each(function(n,v){
             var el = $(v)
             details[el.attr('detail')] = el.val()
         })
         // monitor specific privileges
-        permissionsSection.find('.permission-view select').each(function(n,v){
+        permissionsMonitorSection.find('.permission-view input:checked').each(function(n,v){
             var el = $(v)
-            var monitorId = el.attr('monitor')
-            var value = el.val() // permissions selected
-            $.each(value,function(n,permissionNameSelected){
-                if(!foundSelected[permissionNameSelected])foundSelected[permissionNameSelected] = []
-                foundSelected[permissionNameSelected].push(monitorId)
-            })
+            var monitorId = el.attr('data-monitor')
+            var permissionType = el.val()
+            details[permissionType].push(monitorId)
         })
-        details = Object.assign(details,{
-            'monitors': [],
-            'monitor_edit': [],
-            'video_view': [],
-            'video_delete': [],
-        },foundSelected)
         detailsElement.val(JSON.stringify(details))
     }
     var getCompleteForm = function(){
@@ -251,7 +265,8 @@ $(document).ready(function(){
         </div>`
         currentlyActiveUsersList.html(html)
     }
-    function resetAccountForm(){
+    async function resetAccountForm(){
+        await loadPermissions()
         permissionsSection.find('[detail]').each(function(n,v){
             var el = $(v)
             var key = el.attr('detail')
@@ -285,13 +300,13 @@ $(document).ready(function(){
     });
     //sub simple lister
     theWindow.on('click','.delete',function(e){
-        var el = $(this).parents('.card')
+        var el = $(this).parents('[uid]')
         var subAccountEmail = el.find('.mail').text()
         var subAccountUid = el.attr('uid')
         deleteSubAccount(subAccountEmail,subAccountUid)
     })
     theWindow.on('click','.permission',function(e){
-        var el = $(this).parents('.card')
+        var el = $(this).parents('[uid]')
         var uid = el.attr('uid')
         openSubAccountEditor(uid)
         setSubmitButtonState(lang['Save Changes'],'check')
@@ -301,45 +316,15 @@ $(document).ready(function(){
     permissionsSection.on('click','[check]',function(e){
         $(this).parents('.form-group-group').find('select').val($(this).attr('check')).first().change()
     })
-    // permissionsSection.on('change','[monitor]',function(e){
-    //     writePermissionsFromFieldsToString()
-    // });
-
-    permissionsSection.on('change','[detail="allmonitors"]',function(e){
-        var value = $(this).val()
-        var el = $('.permission-view')
-        if(value === '1'){
-            el.hide();
-        }else{
-            el.show()
-        }
+    permissionsMonitorSection.on('click', '[toggle-checkbox]',function(){
+        var el = $(this);
+        var target = el.attr('toggle-checkbox')
+        var checkBoxes = permissionsMonitorSection.find(`.permission-view [value="${target}"]:visible`);
+        var isChecked = checkBoxes.first().prop('checked')
+        checkBoxes.prop('checked', !isChecked)
     })
     addOnTabOpen('subAccountManager', function () {
         resetAccountForm()
-    })
-    onWebSocketEvent(function(d){
-        switch(d.f){
-            case'users_online':
-                console.log(d)
-                // $.ccio.pm('user-row',d.users);
-                $.each(d.user,function(n,user){
-                    drawUserToActiveList(user)
-                })
-            break;
-            case'user_status_change':
-                console.log(d)
-                var user = d.user
-                if(d.status === 1){
-                    drawUserToActiveList(user)
-                }else{
-                    $(`#active-user-${user.uid}-${user.cnid}`).remove()
-                }
-            break;
-            case'delete_sub_account':
-                var user = d.user
-                accountTable.find(`[uid="${user.uid}"]`).remove()
-            break;
-        }
     })
     initiateSubAccountPage()
     drawSubMenuItems('subAccountManager',definitions['Sub-Account Manager'])

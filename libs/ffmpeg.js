@@ -89,11 +89,15 @@ module.exports = async (s,config,lang,onFinish) => {
                         ]
                         const cameraProcess = spawn('node',cameraCommandParams,{detached: true,stdio: stdioPipes})
                         if(config.debugLog === true && config.debugLogMonitors === true){
+                            cameraProcess.stderr.on('close',(data) => {
+                                delete(s.dataPortTokens[dataPortToken])
+                            })
                             cameraProcess.stderr.on('data',(data) => {
                                 const string = data.toString()
                                 var checkLog = function(x){return string.indexOf(x)>-1}
                                 switch(true){
                                     case checkLog('pkt->duration = 0'):
+                                    case checkLog('bad cseq'):
                                     case checkLog('[hls @'):
                                     case checkLog('Past duration'):
                                     case checkLog('Last message repeated'):

@@ -59,6 +59,7 @@ module.exports = (s,config,lang,app,io) => {
     }
     var cloudDiskUseStartupForGoogleDrive = function(group,userDetails){
         group.cloudDiskUse['googd'].name = 'Google Drive Storage'
+        group.cloudDiskUse['googd'].maxDays = parseInt(userDetails.googd_max_days);
         group.cloudDiskUse['googd'].sizeLimitCheck = (userDetails.use_googd_size_limit === '1')
         if(!userDetails.googd_size_limit || userDetails.googd_size_limit === ''){
             group.cloudDiskUse['googd'].sizeLimit = 10000
@@ -397,14 +398,25 @@ module.exports = (s,config,lang,app,io) => {
          },
          {
              "hidden": true,
-            "name": "detail=googd_size_limit",
-            "field": lang['Max Storage Amount'],
+            "attribute": `size-adjust='[detail=googd_size_limit]'`,
             "form-group-class":"autosave_googd_input autosave_googd_1",
             "form-group-class-pre-layer":"h_googdsld_input h_googdsld_1",
-            "description": "",
+            "field": lang["Max Storage Amount"],
+            "default": "10 GB",
+         },
+         {
+             "hidden": true,
+            "name": "detail=googd_size_limit",
+            "field": lang['Max Storage Amount'],
             "default": "10000",
-            "example": "",
-            "possible": ""
+         },
+         {
+             "hidden": true,
+            "name": "detail=googd_max_days",
+            "field": lang['Number of Days to keep'],
+            "form-group-class":"autosave_googd_input autosave_googd_1",
+            "form-group-class-pre-layer":"h_googdsld_input h_googdsld_1",
+            "example": "30",
          },
          {
              "hidden": true,

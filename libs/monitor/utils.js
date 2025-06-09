@@ -81,7 +81,9 @@ module.exports = (s,config,lang) => {
                     treekill(processPID)
                 });
                 if(proc && proc.stdin) {
-                    proc.stdin.write("q\r\n");
+                    try{
+                        proc.stdin.write("q\r\n");
+                    }catch(err){}
                 }
                 let killTimer = setTimeout(() => {
                     if(proc && proc.kill){
@@ -677,10 +679,9 @@ module.exports = (s,config,lang) => {
                 type: lang.monitorDeleted,
                 msg: `${lang.byUser} : ${userId}`
             });
-            s.camera('stop', {
+            await s.camera('stop', {
                 ke: groupKey,
                 mid: monitorId,
-                delete: 1,
             });
             s.tx({
                 f: 'monitor_delete',
@@ -1422,6 +1423,7 @@ module.exports = (s,config,lang) => {
                 break;
                 case checkLog(d,'pkt->duration = 0'):
                 case checkLog(d,'[hls @'):
+                case checkLog(d,'bad cseq'):
                 case checkLog(d,'Past duration'):
                 case checkLog(d,'Last message repeated'):
                 case checkLog(d,'Non-monotonous DTS'):
@@ -1631,7 +1633,7 @@ module.exports = (s,config,lang) => {
                                     }
                                 }
                                 s.onMonitorStartExtensions.forEach(function(extender){
-                                    extender(Object.assign(theGroup.rawMonitorConfigurations[monitorId],{}),e)
+                                    extender(Object.assign({},theGroup.rawMonitorConfigurations[monitorId]),e)
                                 })
                                 resolve()
                             })
@@ -1738,12 +1740,13 @@ module.exports = (s,config,lang) => {
     async function monitorStart(e){
         const groupKey = e.ke
         const monitorId = e.mid || e.id
-        const monitorConfig = getMonitorConfiguration(groupKey,monitorId);
+        let monitorConfig = getMonitorConfiguration(groupKey,monitorId);
         monitorConfigurationMigrator(e)
         s.initiateMonitorObject({ke:groupKey,mid:monitorId})
         const activeMonitor = getActiveMonitor(groupKey,monitorId)
         if(!monitorConfig){
-            s.group[groupKey].rawMonitorConfigurations[monitorId] = s.cleanMonitorObject(e)
+            monitorConfig = s.cleanMonitorObject(e)
+            s.group[groupKey].rawMonitorConfigurations[monitorId] = monitorConfig
         }
         if(activeMonitor.isStarted === true){
             s.debugLog('Monitor Already Started!')
@@ -1803,7 +1806,7 @@ module.exports = (s,config,lang) => {
         const monitorId = e.mid || e.id
         const activeMonitor = getActiveMonitor(groupKey,monitorId);
         //parse Objects
-        (['detector_cascades','cords','detector_filters','input_map_choices']).forEach(function(v){
+        (['cords','detector_filters','input_map_choices']).forEach(function(v){
             if(e.details && e.details[v]){
                 try{
                     if(!e.details[v] || e.details[v] === '')e.details[v] = '{}'
@@ -1838,8 +1841,8 @@ module.exports = (s,config,lang) => {
         (['stream_channels','input_maps']).forEach(function(v){
             if(e.details&&e.details[v]&&(e.details[v] instanceof Array)===false){
                 try{
-                    e.details[v]=JSON.parse(e.details[v]);
-                    if(!e.details[v])e.details[v]=[];
+                    e.details[v] = s.parseJSON(e.details[v]);
+                    if(!e.details[v])e.details[v] = [];
                 }catch(err){
                     e.details[v]=[];
                 }
@@ -1887,10 +1890,117 @@ module.exports = (s,config,lang) => {
         monitorConfig.details.stream_channels = ''
         monitorConfig.details.input_maps = ''
         delete(monitorConfig.details.input_map_choices)
-        delete(monitorConfig.details.substream)
+        if(monitorConfig.details.substream && monitorConfig.details.substream.fulladdress)delete(monitorConfig.details.substream.fulladdress);
         return monitorConfig
     }
+    function getMonitors(groupKey, monitorId, authKey, isRestricted, monitorPermissions, monitorRestrictions, cannotSeeImportantSettings, search){
+        return new Promise((resolve) => {
+            const whereQuery = [
+                ['ke','=',groupKey],
+                monitorRestrictions
+            ];
+            if(!!search){
+                const searchQuery = search.split(',');
+                const whereQuerySearch = []
+                for(item of searchQuery){
+                    if(item){
+                        whereQuerySearch.push(
+                            whereQuerySearch.length === 0 ? ['name','LIKE',`%${item.trim()}%`] : ['or', 'name','LIKE',`%${item}%`],
+                            ['or','mid','LIKE',`%${item.trim()}%`]
+                        );
+                    }
+                }
+                whereQuery.push(whereQuerySearch)
+            }
+            s.knexQuery({
+                action: "select",
+                columns: "*",
+                table: "Monitors",
+                where: whereQuery
+            },(err,r) => {
+                if(err){
+                    return []
+                }
+                r.forEach(function(v,n){
+                    const monitorId = v.mid;
+                    v.details = JSON.parse(v.details)
+                    var details = v.details;
+                    if(isRestricted && !monitorPermissions[`${monitorId}_monitor_edit`] || cannotSeeImportantSettings){
+                        r[n] = removeSenstiveInfoFromMonitorConfig(v);
+                    }
+                    if(s.group[v.ke] && s.group[v.ke].activeMonitors[v.mid]){
+                        const activeMonitor = s.group[v.ke].activeMonitors[v.mid]
+                        r[n].currentlyWatching = Object.keys(activeMonitor.watch).length
+                        r[n].currentCpuUsage = activeMonitor.currentCpuUsage
+                        r[n].status = activeMonitor.monitorStatus
+                        r[n].code = activeMonitor.monitorStatusCode
+                        r[n].subStreamChannel = activeMonitor.subStreamChannel
+                        r[n].subStreamActive = !!activeMonitor.subStreamProcess
+                    }
+                    function getStreamUrl(type,channelNumber){
+                        var streamURL
+                        if(channelNumber){channelNumber = '/'+channelNumber}else{channelNumber=''}
+                        switch(type){
+                            case'mjpeg':
+                                streamURL='/'+authKey+'/mjpeg/'+v.ke+'/'+v.mid+channelNumber
+                            break;
+                            case'hls':
+                                streamURL='/'+authKey+'/hls/'+v.ke+'/'+v.mid+channelNumber+'/s.m3u8'
+                            break;
+                            case'h264':
+                                streamURL='/'+authKey+'/h264/'+v.ke+'/'+v.mid+channelNumber
+                            break;
+                            case'flv':
+                                streamURL='/'+authKey+'/flv/'+v.ke+'/'+v.mid+channelNumber+'/s.flv'
+                            break;
+                            case'mp4':
+                                streamURL='/'+authKey+'/mp4/'+v.ke+'/'+v.mid+channelNumber+'/s.mp4'
+                            break;
+                            case'useSubstream':
+                                try{
+                                    const monitorConfig = s.group[v.ke].rawMonitorConfigurations[v.mid]
+                                    const monitorDetails = monitorConfig.details
+                                    const subStreamChannelNumber = 1 + (monitorDetails.stream_channels || []).length
+                                    const subStreamType = monitorConfig.details.substream.output.stream_type
+                                    streamURL = getStreamUrl(subStreamType,subStreamChannelNumber)
+                                }catch(err){
+                                    s.debugLog(err)
+                                }
+                            break;
+                        }
+                        return streamURL
+                    }
+                    var buildStreamURL = function(type,channelNumber){
+                        var streamURL = getStreamUrl(type,channelNumber)
+                        if(streamURL){
+                            if(!r[n].streamsSortedByType[type]){
+                                r[n].streamsSortedByType[type]=[]
+                            }
+                            r[n].streamsSortedByType[type].push(streamURL)
+                            r[n].streams.push(streamURL)
+                        }
+                        return streamURL
+                    }
+                    if(!details.tv_channel_id||details.tv_channel_id==='')details.tv_channel_id = 'temp_'+s.gid(5)
+                    if(details.snap==='1'){
+                        r[n].snapshot = '/'+authKey+'/jpeg/'+v.ke+'/'+v.mid+'/s.jpg'
+                    }
+                    r[n].streams=[]
+                    r[n].streamsSortedByType={}
+                    buildStreamURL(details.stream_type)
+                    if(details.stream_channels&&details.stream_channels!==''){
+                        details.stream_channels=s.parseJSON(details.stream_channels)
+                        details.stream_channels.forEach(function(b,m){
+                            buildStreamURL(b.stream_type,m.toString())
+                        })
+                    }
+                })
+                resolve(r);
+            })
+        })
+    }
     return {
+        getMonitors,
         monitorStop,
         monitorIdle,
         monitorStart,
