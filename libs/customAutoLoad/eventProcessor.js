@@ -25,7 +25,7 @@ module.exports = async function (s, config, lang, app, io) {
             fullEvent: d
         };
 
-        console.log('📤 Sending webhook payload for eventType:', payload.eventType);
+        console.log('📤 Sending webhook payload');
 
         if (config.enableMgmtConnect && webhookUrl) {
             axios.post(webhookUrl, payload).then((res) => {
@@ -39,5 +39,5 @@ module.exports = async function (s, config, lang, app, io) {
     };
 
     s.onEventTrigger(sendEventToWebhook);
-    console.log('✅ Loaded customAutoLoad module with one-time mgmt URL transformation');
+    console.log('✅ Loaded customAutoLoad module');
 };
