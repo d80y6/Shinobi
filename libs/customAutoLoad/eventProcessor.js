@@ -13,7 +13,7 @@ module.exports = function (s, config, lang, app, io) {
 
         const payload = {
             monitorId: d.id,
-            serverId: conf.serverId,
+            serverId: conf.subscriptionId,
             eventType: d.reason,
             timestamp: d.currentTimestamp,
             fullEvent: d
@@ -21,7 +21,7 @@ module.exports = function (s, config, lang, app, io) {
 
         console.log('📤 Sending webhook payload for eventType:', payload.eventType);
 
-        if (conf.enableManagementConnect) {
+        if (conf.enableMgmtConnect) {
             axios.post(webhookUrl, payload).then((res) => {
                 console.log(`✅ Webhook sent to ${webhookUrl} (status ${res.status})`);
             }).catch((err) => {
