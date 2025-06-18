@@ -19,13 +19,17 @@ module.exports = function (s, config, lang, app, io) {
             fullEvent: d
         };
 
-        console.log('📤 Sending webhook payload:', JSON.stringify(payload, null, 2));
+        console.log('📤 Sending webhook payload for eventType:', payload.eventType);
 
-        axios.post(webhookUrl, payload).then((res) => {
-            console.log(`✅ Webhook sent to ${webhookUrl} (status ${res.status})`);
-        }).catch((err) => {
-            console.error(`❌ Webhook failed:`, err.message);
-        });
+        if (conf.enableManagementConnect) {
+            axios.post(webhookUrl, payload).then((res) => {
+                console.log(`✅ Webhook sent to ${webhookUrl} (status ${res.status})`);
+            }).catch((err) => {
+                console.error(`❌ Webhook failed:`, err.message);
+            });
+        }else {
+            console.warn('⚠️ Management Server Connection is disabled, not sending webhook');
+        }
     };
 
     s.onEventTrigger(sendEventToWebhook);
