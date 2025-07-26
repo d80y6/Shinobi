@@ -5,6 +5,7 @@ module.exports = function(s,config,lang){
         { name: lang['Can Edit Monitors'], value: 'edit_monitors' },
         { name: lang['Can Control Monitors'], value: 'control_monitors' },
         { name: lang['Can Get Logs'], value: 'get_logs' },
+        { name: lang['Can Hear Audio'], value: 'hear_audio' },
         { name: lang['Can View Streams'], value: 'watch_stream' },
         { name: lang['Can View Snapshots'], value: 'watch_snapshot' },
         { name: lang['Can View Videos'], value: 'watch_videos' },

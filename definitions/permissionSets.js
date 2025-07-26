@@ -85,6 +85,13 @@ module.exports = (s,config,lang) => {
                     "possible": yesNoPossibility
                  },
                  {
+                    "name": "detail=hear_audio",
+                    "field": lang['Can Hear Audio'],
+                    "default": "1",
+                    "fieldType": "select",
+                    "possible": yesNoPossibility
+                 },
+                 {
                     "name": "detail=edit_permissions",
                     "field": lang['Can Edit Permissions'],
                     "default": "0",

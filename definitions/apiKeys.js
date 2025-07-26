@@ -106,6 +106,10 @@ module.exports = (s,config,lang) => {
                               value: 'get_logs',
                           },
                           {
+                              name: lang['Can Hear Audio'],
+                              value: 'hear_audio',
+                          },
+                          {
                               name: lang['Can View Streams'],
                               value: 'watch_stream',
                           },

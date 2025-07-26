@@ -865,6 +865,7 @@ module.exports = function(s,config,lang){
             'edit_monitors',
             'control_monitors',
             'get_logs',
+            'hear_audio',
             'watch_stream',
             'watch_snapshot',
             'watch_videos',
@@ -885,6 +886,7 @@ module.exports = function(s,config,lang){
             'monitor_create',
             'user_change',
             'view_logs',
+            'hear_audio',
             'edit_permissions',
         ].forEach((key) => {
             response.userPermissions[key] = details[key] === '1' || !details[key];

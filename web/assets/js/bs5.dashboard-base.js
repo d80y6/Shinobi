@@ -788,6 +788,36 @@ function permissionCheck(toCheck,monitorId){
     }
     return false
 }
+function checkPermissionForUser(user) => {
+    // provide "user" object given from "s.auth"
+    const isSubAccount = !!user.details.sub
+    const response = {
+        isSubAccount,
+        hasAllPermissions: isSubAccount && user.details.allmonitors === '1',
+        isRestricted: isSubAccount && user.details.allmonitors !== '1',
+        isRestrictedApiKey: false,
+        userPermissions: {},
+    }
+    const permissions = user.permissions || {}
+    const details = user.details;
+    // Base Level Permissions
+        // allmonitors : All Monitors and Privileges
+        // monitor_create : Can Create and Delete Monitors
+        // user_change : Can Change User Settings
+        // view_logs : Can View Logs
+    [
+        'allmonitors',
+        'monitor_create',
+        'user_change',
+        'view_logs',
+        'hear_audio',
+        'edit_permissions',
+    ].forEach((key) => {
+        response.userPermissions[key] = details[key] === '1' || !details[key];
+        response.userPermissions[`${key}_disallowed`] = details[key] === '0';
+    });
+    return response
+}
 function getLoadedMonitorsAlphabetically(){
     return Object.values(loadedMonitors).sort(function( a, b ) {
         const aName = a.name.toLowerCase()
