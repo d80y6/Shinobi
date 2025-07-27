@@ -1025,14 +1025,7 @@ function setPauseStatusForMonitorItems(){
         var isVisible = isScrolledIntoView(el)
         console.log(monitorId,isVisible)
         if(isVisible){
-            if(!liveGridPlayingNow[monitorId]){
-                resumeMonitorItem(monitorId);
-            }else{
-                signalCheckLiveStream({
-                    mid: monitorId,
-                    checkSpeed: 3000,
-                })
-            }
+            if(!liveGridPlayingNow[monitorId])resumeMonitorItem(monitorId);
         }else{
             pauseMonitorItem(monitorId)
         }
