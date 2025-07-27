@@ -144,7 +144,8 @@ function resetMonitorCanvas(monitorId,initiateAfter,subStreamChannel){
     resetLiveGridDimensionsInMemory(monitorId)
 }
 function replaceMonitorInfoInHtml(htmlString,monitor){
-    var monitorMutes = dashboardOptions().monitorMutes || {}
+    const canHearAudio = checkPermissionForUser($user, 'hear_audio').ok;
+    const monitorMutes = canHearAudio ? dashboardOptions().monitorMutes || {} : {}
     return htmlString
         .replaceAll('$GROUP_KEY',monitor.ke)
         .replaceAll('$MONITOR_ID',monitor.mid)
@@ -565,12 +566,12 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
                         }else{
                             var video = containerElement.find('.stream-element')[0]
                             if (isAppleDevice) {
+                                $(video).on('loadedmetadata', function(){
+                                    setTimeout(function(){
+                                      video.play();
+                                    },3000)
+                                });
                                 video.src = url;
-                                video.addEventListener('loadedmetadata', function() {
-                                  setTimeout(function(){
-                                    video.play();
-                                  },3000)
-                                }, false);
                             }else{
                                 var hlsOptions = safeJsonParse(dashboardOptions().hlsOptions) || {}
                                 if(hlsOptions instanceof String){
@@ -621,8 +622,9 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
     $.each(onLiveStreamInitiateExtensions,function(n,extender){
         extender(streamType,monitor,loadedPlayer,subStreamChannel)
     })
-    var monitorMutes = dashboardOptions().monitorMutes || {}
-    if(dashboardOptions().switches.monitorMuteAudio === 1){
+    const canHearAudio = checkPermissionForUser($user, 'hear_audio').ok;
+    const monitorMutes = canHearAudio ? dashboardOptions().monitorMutes || {} : {}
+    if(!canHearAudio || dashboardOptions().switches.monitorMuteAudio === 1){
         containerElement.find('video').each(function(n,el){
             el.muted = "muted"
         })
@@ -631,7 +633,7 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
         $.each(loadedMonitors,function(frontId,monitor){
             setTimeout(() => {
                 var monitorId = monitor.mid
-                var muted = monitorMutes[monitorId]
+                var muted = !canHearAudio ? true : monitorMutes[monitorId]
                 try{
                     var vidEl = $('.monitor_item[mid="' + monitorId + '"] video')[0]
                     if(vidEl.length === 0)return;
@@ -1562,6 +1564,8 @@ $(document).ready(function(e){
         }
     }
     dashboardSwitchCallbacks.monitorMuteAudio = function(toggleState){
+        const canHearAudio = checkPermissionForUser($user, 'hear_audio').ok;
+        if(!canHearAudio)return;
         var monitorMutes = dashboardOptions().monitorMutes || {}
         $('.monitor_item video').each(function(n,vidEl){
             var el = $(this)

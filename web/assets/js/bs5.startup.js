@@ -10,6 +10,7 @@ var diskIndicatorBar = diskIndicator.find('.progress-bar')
 var diskIndicatorBarUsed = diskIndicator.find('.value')
 var diskIndicatorPercentText = diskIndicator.find('.indicator-percent')
 var loadedIndicators = {}
+var videoElementControlsListOptions = []
 function loadHiddenSectionsInForms(){
     window.boxWrappersHidden = dashboardOptions().boxWrappersHidden || {}
     $.each(boxWrappersHidden,function(boxId,hide){
@@ -120,9 +121,25 @@ function showLoginNotices(){
         }
     })
 }
+
+function setVideoElementAudio(){
+    // videoElementControlsListOptions.push('')
+    const canHearAudio = checkPermissionForUser($user, 'hear_audio').ok;
+    if(!canHearAudio){
+        $('body')
+            .on('volumechange', 'video', function(){
+                this.volume = 0.0;
+                this.muted = 'muted';
+            })
+    }
+}
+
 $('body')
 .one('click',function(){
     window.hadFocus = true
+})
+.on('loadedmetadata', 'video', function(){
+    if(videoElementControlsListOptions.length > 0)$(this).attr('controlsList', videoElementControlsListOptions.join(' '))
 })
 .on('change','[localStorage]',function(){
     var el = $(this)
@@ -235,6 +252,7 @@ $(document).ready(function(){
     loadBoxWrappers()
     drawAddStorageIndicators()
     showLoginNotices()
+    setVideoElementAudio()
     // set onFullScreenChange
     document.addEventListener("fullscreenchange", onFullScreenChange, false);
     document.addEventListener("webkitfullscreenchange", onFullScreenChange, false);

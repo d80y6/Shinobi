@@ -2432,7 +2432,8 @@ module.exports = function(s,config,lang){
                   "label": lang['Mute Audio'],
                   "attr": `system="monitorMuteAudioSingle" mid="$MONITOR_ID"`,
                   "class": "primary",
-                  "icon": '$MONITOR_MUTE_ICON'
+                  "icon": '$MONITOR_MUTE_ICON',
+                  eval: `!isSubAccount || isSubAccount && checkPermissionForUser($user, 'hear_audio').ok`,
               },
               "Snapshot": {
                  "label": lang['Snapshot'],

@@ -788,7 +788,7 @@ function permissionCheck(toCheck,monitorId){
     }
     return false
 }
-function checkPermissionForUser(user){
+function checkPermissionForUser(user, permissionKey){
     // provide "user" object given from "s.auth"
     const isSubAccount = !!user.details.sub
     const response = {
@@ -816,7 +816,7 @@ function checkPermissionForUser(user){
         response.userPermissions[key] = details[key] === '1' || !details[key];
         response.userPermissions[`${key}_disallowed`] = details[key] === '0';
     });
-    return response
+    return { ok: !response.userPermissions[`${permissionKey}_disallowed`], response }
 }
 function getLoadedMonitorsAlphabetically(){
     return Object.values(loadedMonitors).sort(function( a, b ) {
