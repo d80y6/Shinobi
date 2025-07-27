@@ -2569,6 +2569,7 @@ module.exports = function(s,config,lang){
                                   class: 'cursor-pointer',
                                   attributes: 'shinobi-switch="monitorMuteAudio" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
                                   color: 'grey',
+                                  eval: `$user.details.sub && $user.details.hear_audio != 0`,
                               },
                               // {
                               //     label: lang['JPEG Mode'],

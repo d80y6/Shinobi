@@ -53,10 +53,12 @@
                                         <% if(item.addUl){ %>
                                             <ul class="btn-default rounded btn-toggle-nav list-unstyled fw-normal ml-3 mt-2 px-2 pb-2 pt-1 <%- item.ulClass ? item.ulClass : '' %>" style="<%- item.ulStyle ? item.ulStyle : '' %>">
                                                 <% if(item.ulItems){
-                                                    item.ulItems.forEach((listItem) => { %>
-                                                        <li><a class="<%- define.Theme.isDark ? 'text-white' : 'text-dark' %> <%- listItem.class ? listItem.class : '' %>" <%- listItem.attributes ? listItem.attributes : '' %>><span class="dot dot-<%- listItem.color ? listItem.color : 'blue' %> shadow mr-2"></span><%- listItem.label ? listItem.label : 'Need Label' %></a></li>
-                                                <%  })
-                                                   } %>
+                                                    item.ulItems.forEach((listItem) => {
+                                                        if(!listItem.eval || eval(listItem.eval)){ %>
+                                                            <li><a class="<%- define.Theme.isDark ? 'text-white' : 'text-dark' %> <%- listItem.class ? listItem.class : '' %>" <%- listItem.attributes ? listItem.attributes : '' %>><span class="dot dot-<%- listItem.color ? listItem.color : 'blue' %> shadow mr-2"></span><%- listItem.label ? listItem.label : 'Need Label' %></a></li>
+                                                    <%  }
+                                                    })
+                                                 } %>
                                             </ul>
                                         <% } %>
                                     </li>

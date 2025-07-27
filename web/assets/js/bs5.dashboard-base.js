@@ -788,7 +788,7 @@ function permissionCheck(toCheck,monitorId){
     }
     return false
 }
-function checkPermissionForUser(user) => {
+function checkPermissionForUser(user){
     // provide "user" object given from "s.auth"
     const isSubAccount = !!user.details.sub
     const response = {
