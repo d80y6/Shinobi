@@ -1,5 +1,15 @@
 function createVideoPlayerTab(video){
     // not real one, dummy for wallvideoview.
+    // if(checkPermissionForUser($user,'dl_videos').ok){
+    //     return true
+    // }else{
+    //     new PNotify({
+    //         title: lang['Not Authorized'],
+    //         description: lang.notPermitted1,
+    //         type: 'danger'
+    //     });
+    //     return false
+    // }
     var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
     $.confirm.create({
         title: lang["Download"],

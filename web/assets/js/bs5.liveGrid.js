@@ -508,6 +508,7 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
                         console.error(err)
                     }
                 }
+                applyVideoElementGlobalAttributes(stream[0])
             break;
             case'flv':
                 if (flvjs.isSupported()) {
@@ -543,8 +544,10 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
                             url: getApiPrefix(`flv`)+'/'+monitor.mid + (subStreamChannel ? `/${subStreamChannel}` : '')+'/s.flv'
                         }
                     }
+                    var video = containerElement.find('.stream-element')[0]
+                    applyVideoElementGlobalAttributes(video)
                     loadedPlayer.flv = flvjs.createPlayer(options);
-                    loadedPlayer.flv.attachMediaElement(containerElement.find('.stream-element')[0]);
+                    loadedPlayer.flv.attachMediaElement(video);
                     loadedPlayer.flv.on('error',function(err){
                         console.log(err)
                     });
@@ -567,6 +570,7 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
                             var video = containerElement.find('.stream-element')[0]
                             if (isAppleDevice) {
                                 $(video).on('loadedmetadata', function(){
+                                    applyVideoElementGlobalAttributes(video)
                                     setTimeout(function(){
                                       video.play();
                                     },3000)
@@ -590,6 +594,7 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
                                 loadedPlayer.hls.loadSource(url)
                                 loadedPlayer.hls.attachMedia(video)
                                 loadedPlayer.hls.on(Hls.Events.MANIFEST_PARSED,function() {
+                                    applyVideoElementGlobalAttributes(video)
                                     if (video.paused) {
                                         video.play();
                                     }
@@ -1020,7 +1025,14 @@ function setPauseStatusForMonitorItems(){
         var isVisible = isScrolledIntoView(el)
         console.log(monitorId,isVisible)
         if(isVisible){
-            if(!liveGridPlayingNow[monitorId])resumeMonitorItem(monitorId);
+            if(!liveGridPlayingNow[monitorId]){
+                resumeMonitorItem(monitorId);
+            }else{
+                signalCheckLiveStream({
+                    mid: monitorId,
+                    checkSpeed: 3000,
+                })
+            }
         }else{
             pauseMonitorItem(monitorId)
         }

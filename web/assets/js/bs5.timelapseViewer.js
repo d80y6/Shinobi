@@ -215,6 +215,18 @@ $(document).ready(function(e){
             checkBoxes.prop('checked',false)
         }
     }
+    function canDownload(){
+        if(checkPermissionForUser($user,'dl_videos').ok){
+            return true
+        }else{
+            new PNotify({
+                title: lang['Not Authorized'],
+                description: lang.notPermitted1,
+                type: 'danger'
+            });
+            return false
+        }
+    }
     timelapseWindow.on('click','.frame',function(){
         pauseTimelapse()
         var selectedFrame = $(this).attr('data-filename')
@@ -255,6 +267,7 @@ $(document).ready(function(e){
     })
     .on('click','.zip-selected-frames',function(e){
         e.preventDefault()
+        if(!canDownload())return;
         var frames = getSelectedRows(true)
         zipVideosAndDownloadWithConfirm(frames)
         return false;
@@ -270,6 +283,7 @@ $(document).ready(function(e){
         toggleSelectOnAllFrames()
     });
     downloadButton.click(function(){
+        if(!canDownload())return;
         var fps = fpsSelector.val()
         var dateRange = getSelectedTime(dateSelector)
         var startDate = dateRange.startDate

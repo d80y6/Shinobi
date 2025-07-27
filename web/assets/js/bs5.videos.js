@@ -3,6 +3,7 @@ var loadedEventsInMemory = {}
 var loadedFramesMemory = {}
 var loadedFramesMemoryTimeout = {}
 var loadedFramesLock = {}
+var videoElementControlsListOptions = []
 function getLocalTimelapseImageLink(imageUrl){
     if(loadedFramesLock[imageUrl]){
         return null;
@@ -715,7 +716,7 @@ function buildDefaultVideoMenuItems(file,options){
     var href = file.href + `${!isLocalVideo ? `?type=${file.type}` : ''}`
     options = options ? options : {play: true}
     return `
-    <li><a class="dropdown-item" href="${href}" download>${lang.Download}</a></li>
+    ${checkPermissionForUser($user,'dl_videos').ok ? `<li><a class="dropdown-item" href="${href}" download>${lang.Download}</a></li>` : ``}
     ${options.play ? `<li><a class="dropdown-item open-video" href="${href}">${lang.Play}</a></li>` : ``}
     <li><hr class="dropdown-divider"></li>
     ${isLocalVideo && permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item open-video-studio" href="${href}">${lang.Slice}</a></li>` : ``}
@@ -763,4 +764,64 @@ function getDisplayDimensions(videoElement) {
     videoWidth: displayWidth,
     videoHeight: displayHeight,
   };
+}
+
+function setVideoElementAudio(videoElement){
+    const canHearAudio = checkPermissionForUser($user, 'hear_audio').ok;
+    if(!canHearAudio){
+        // videoElementControlsListOptions.push('')
+        videoElement.volume = 0.0;
+        videoElement.muted = 'muted';
+        $(videoElement).off('volumechange')
+        videoElement.addEventListener('volumechange', () => {
+            videoElement.volume = 0.0;
+            videoElement.muted = 'muted';
+        })
+    }
+}
+
+function shouldSetVideoElementGlobalAttributes(){
+    const { userPermissions } = checkPermissionForUser($user);
+    if(
+        isSubAccount && (
+            videoElementControlsListOptions.length > 0 ||
+            usersPermissions.hear_audio
+        )
+    ){
+        return true
+    }
+    return false
+}
+
+function doSetVideoElementGlobalAttributes(vidEl){
+    if(vidEl.readyState >= 1){
+        applyVideoElementGlobalAttributes(vidEl)
+    }else{
+        vidEl.addEventListener('loadedmetadata', () => {
+            applyVideoElementGlobalAttributes(vidEl)
+        });
+    }
+}
+
+function applyVideoElementGlobalAttributes(videoElement){
+    if(videoElementControlsListOptions.length > 0)$(videoElement).attr('controlsList', videoElementControlsListOptions.join(' '));
+    setVideoElementAudio(videoElement)
+}
+
+function setVideoDownloadButtonElements(){
+    const canHearAudio = checkPermissionForUser($user, 'dl_videos').ok;
+    if(!canHearAudio){
+        videoElementControlsListOptions.push('nodownload')
+        const elementTags = [
+            '[timeline-action="downloadAll"]',
+            '[download]',
+            '.download_mp4',
+            '.download-selected-videos',
+            '.merge-selected-videos',
+            '.zip-selected-videos',
+        ];
+        for(selector of elementTags){
+            $(selector).remove()
+        }
+    }
 }

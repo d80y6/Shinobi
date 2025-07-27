@@ -122,6 +122,9 @@ $(document).ready(function(){
         viewingCanvas.html(html)
         var videoElement = theEnclosure.find('video')
         loadedVideoElement = videoElement[0]
+        if(shouldSetVideoElementGlobalAttributes()){
+            doSetVideoElementGlobalAttributes(loadedVideoElement)
+        }
     }
     function updateSeekTickPosition(){
         const percentMoved = loadedVideoElement.currentTime / loadedVideoElement.duration * 100
@@ -204,7 +207,7 @@ $(document).ready(function(){
                     </div>
                     <div>
                         <a class="btn btn-sm btn-primary open-fileBin-video" href="${videoEndpoint}" title="${lang.Play}"><i class="fa fa-play"></i></a>
-                        <a class="btn btn-sm btn-success" href="${videoEndpoint}" title="${lang.Download}" download><i class="fa fa-download"></i></a>
+                        ${checkPermissionForUser($user,'dl_videos').ok ? `<a class="btn btn-sm btn-success" href="${videoEndpoint}" title="${lang.Download}" download><i class="fa fa-download"></i></a>` : ``}
                     </div>
                 </div>
             </div>

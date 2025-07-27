@@ -208,6 +208,10 @@ $(document).ready(function(e){
     }
     function drawPreviewVideo(href){
         videosTablePreviewArea.html(`<video class="video_video" style="width:100%" autoplay controls preload loop src="${href}"></video>`)
+        if(shouldSetVideoElementGlobalAttributes()){
+            var videoElement = videosTablePreviewArea.find('video')[0];
+            doSetVideoElementGlobalAttributes(videoElement)
+        }
     }
     function getSelectedRows(getLoadedRows){
         var rowsSelected = []
@@ -304,6 +308,18 @@ $(document).ready(function(e){
             }
         });
     }
+    function canDownload(){
+        if(checkPermissionForUser($user,'dl_videos').ok){
+            return true
+        }else{
+            new PNotify({
+                title: lang['Not Authorized'],
+                description: lang.notPermitted1,
+                type: 'danger'
+            });
+            return false
+        }
+    }
     $('body')
     .on('click','.open-videosTable',function(e){
         e.preventDefault()
@@ -333,12 +349,14 @@ $(document).ready(function(e){
     })
     .on('click','.zip-selected-videos',function(e){
         e.preventDefault()
+        if(!canDownload())return;
         var videos = getSelectedRows(true)
         zipVideosAndDownloadWithConfirm(videos)
         return false;
     })
     .on('click','.merge-selected-videos',function(e){
         e.preventDefault()
+        if(!canDownload())return;
         mergeSelectedVideos();
         return false;
     })

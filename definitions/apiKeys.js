@@ -122,6 +122,10 @@ module.exports = (s,config,lang) => {
                               value: 'watch_videos',
                           },
                           {
+                              name: lang['Can Download Videos'],
+                              value: 'dl_videos',
+                          },
+                          {
                               name: lang['Can Delete Videos'],
                               value: 'delete_videos',
                           },

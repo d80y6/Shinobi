@@ -73,7 +73,7 @@ function fileBinTableMap(files,writeOptions){
             size: convertKbToHumanSize(file.size),
             buttons: `
                 <div class="row-info" data-mid="${file.mid}" data-ke="${file.ke}" data-time="${file.time}" data-name="${file.name}">
-                    <a class="btn btn-sm btn-primary" href="${href}" download title="${lang.Download}"><i class="fa fa-download"></i></a>
+                    ${checkPermissionForUser($user,'dl_videos').ok ? `<a class="btn btn-sm btn-primary" href="${href}" download title="${lang.Download}"><i class="fa fa-download"></i></a>` : ``}
                     ${isVideo ? `<a class="btn btn-sm btn-primary preview-video" href="${href}" title="${lang.Play}"><i class="fa fa-play"></i></a>` : ``}
                     ${permissionCheck('video_delete',file.mid) ? `<a class="btn btn-sm btn-${file.archive === 1 ? `success status-archived` : `default`} archive-file" title="${lang.Archive}"><i class="fa fa-${file.archive === 1 ? `lock` : `unlock-alt`}"></i></a>` : ''}
                     ${permissionCheck('video_delete',file.mid) ? `<a class="btn btn-sm btn-danger delete-file" title="${lang.Delete}"><i class="fa fa-trash-o"></i></a>` : ''}
@@ -113,6 +113,10 @@ $(document).ready(function(e){
     }
     function drawPreviewVideo(href){
         fileBinPreviewArea.html(`<video class="video_video" style="width:100%" autoplay controls preload loop src="${href}"></video>`)
+        if(shouldSetVideoElementGlobalAttributes()){
+            var videoElement = fileBinPreviewArea.find('video')[0];
+            doSetVideoElementGlobalAttributes(videoElement)
+        }
     }
     function archiveFile(video,unarchive){
         return archiveVideo(video,unarchive,true)
@@ -175,6 +179,18 @@ $(document).ready(function(e){
             if(file)rowsSelected.push(file)
         })
         return rowsSelected
+    }
+    function canDownload(){
+        if(checkPermissionForUser($user,'dl_videos').ok){
+            return true
+        }else{
+            new PNotify({
+                title: lang['Not Authorized'],
+                description: lang.notPermitted1,
+                type: 'danger'
+            });
+            return false
+        }
     }
     $('body')
     .on('click','.open-fileBin-video',function(e){
@@ -239,6 +255,7 @@ $(document).ready(function(e){
     })
     .on('click','.zip-selected-videos',function(e){
         e.preventDefault()
+        if(!canDownload())return;
         var videos = getSelectedRows(true)
         zipVideosAndDownloadWithConfirm(videos)
         return false;
@@ -273,6 +290,7 @@ $(document).ready(function(e){
     })
     .on('click','.download-selected-videos',function(e){
         e.preventDefault()
+        if(!canDownload())return;
         var videos = getSelectedRows()
         if(videos.length === 0)return;
         $.confirm.create({

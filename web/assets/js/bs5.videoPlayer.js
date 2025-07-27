@@ -62,7 +62,7 @@ $(document).ready(function(){
                               </div>
                               <div class="d-block pt-4">
                                   <div class="btn-group btn-group-justified">
-                                        <a class="btn btn-sm btn-success" download href="${videoUrl}"><i class="fa fa-download"></i> ${lang.Download}</a>
+                                        ${checkPermissionForUser($user,'dl_videos').ok ? `<a class="btn btn-sm btn-success" download href="${videoUrl}"><i class="fa fa-download"></i> ${lang.Download}</a>` : ''}
                                         ${permissionCheck('video_delete',video.mid) ? `<a class="btn btn-sm btn-danger delete-video"><i class="fa fa-trash-o"></i> ${lang.Delete}</a>` : ''}
                                         ${permissionCheck('video_delete',video.mid) ? `<a class="btn btn-sm btn-${video.archive === 1 ? `success status-archived` : `default`} archive-video" title="${lang.Archive}"><i class="fa fa-${video.archive === 1 ? `lock` : `unlock-alt`}"></i> ${lang.Archive}</a>` : ''}
                                         <div class="dropdown d-inline-block">
@@ -104,6 +104,9 @@ $(document).ready(function(){
                 }else{
                     videoObjectContainer.find('.stream-detected-object').remove()
                 }
+            }
+            if(shouldSetVideoElementGlobalAttributes()){
+                doSetVideoElementGlobalAttributes(videoElement)
             }
         }
     }

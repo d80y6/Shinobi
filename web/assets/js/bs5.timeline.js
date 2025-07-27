@@ -482,6 +482,9 @@ $(document).ready(function(){
         timeStripPreBuffersEls[monitorId] = getVideoContainerPreBufferEl(newVideo)
         queueNextVideo(newVideo)
         timeStripAutoGridResize()
+        if(shouldSetVideoElementGlobalAttributes()){
+            doSetVideoElementGlobalAttributes(vidEl)
+        }
     }
     function setTimeOfCanvasVideos(newTime){
         $.each(loadedVideosOnCanvas,function(n,video){

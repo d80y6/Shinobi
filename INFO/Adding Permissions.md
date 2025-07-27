@@ -12,6 +12,7 @@
 
 *For Central :*
 
+- languages/en_CA.js
 - pageLayouts/apiKeys.js
 - pageLayouts/permissionSets.js
 - pageLayouts/subAccountManager.js

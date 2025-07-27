@@ -869,6 +869,7 @@ module.exports = function(s,config,lang){
             'watch_stream',
             'watch_snapshot',
             'watch_videos',
+            'dl_videos',
             'delete_videos',
         ].forEach((key) => {
             const permissionOff = !isSessionKey && isApiKey && permissions[key] !== '1';
@@ -887,6 +888,7 @@ module.exports = function(s,config,lang){
             'user_change',
             'view_logs',
             'hear_audio',
+            'dl_videos',
             'edit_permissions',
         ].forEach((key) => {
             response.userPermissions[key] = details[key] === '1' || !details[key];

@@ -92,6 +92,13 @@ module.exports = (s,config,lang) => {
                     "possible": yesNoPossibility
                  },
                  {
+                    "name": "detail=dl_videos",
+                    "field": lang['Can Download Videos'],
+                    "default": "1",
+                    "fieldType": "select",
+                    "possible": yesNoPossibility
+                 },
+                 {
                     "name": "detail=edit_permissions",
                     "field": lang['Can Edit Permissions'],
                     "default": "0",
