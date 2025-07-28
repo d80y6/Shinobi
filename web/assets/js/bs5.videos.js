@@ -769,7 +769,6 @@ function getDisplayDimensions(videoElement) {
 function setVideoElementAudio(videoElement){
     const canHearAudio = checkPermissionForUser($user, 'hear_audio').ok;
     if(!canHearAudio){
-        // videoElementControlsListOptions.push('')
         videoElement.volume = 0.0;
         videoElement.muted = 'muted';
         $(videoElement).off('volumechange')
@@ -804,13 +803,17 @@ function doSetVideoElementGlobalAttributes(vidEl){
 }
 
 function applyVideoElementGlobalAttributes(videoElement){
-    if(videoElementControlsListOptions.length > 0)$(videoElement).attr('controlsList', videoElementControlsListOptions.join(' '));
+    if(videoElementControlsListOptions.length > 0){
+        $(videoElement)
+            .attr('controlsList', videoElementControlsListOptions.join(' '))
+            // .prop('disablePictureInPicture', true);
+    }
     setVideoElementAudio(videoElement)
 }
 
 function setVideoDownloadButtonElements(){
-    const canHearAudio = checkPermissionForUser($user, 'dl_videos').ok;
-    if(!canHearAudio){
+    const canDownloadVideo = checkPermissionForUser($user, 'dl_videos').ok;
+    if(!canDownloadVideo){
         videoElementControlsListOptions.push('nodownload')
         const elementTags = [
             '[timeline-action="downloadAll"]',
@@ -823,5 +826,19 @@ function setVideoDownloadButtonElements(){
         for(selector of elementTags){
             $(selector).remove()
         }
+    }
+}
+
+function setVideoForcedMute(){
+    const canHearAudio = checkPermissionForUser($user, 'hear_audio').ok;
+    if(!canHearAudio){
+        $('body').append(`<style>
+            video::-webkit-media-controls-volume-slider {
+              display: none;
+            }
+            video::-webkit-media-controls-mute-button {
+              display: none;
+            }
+        </style>`)
     }
 }

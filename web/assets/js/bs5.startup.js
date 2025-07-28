@@ -241,6 +241,7 @@ $(document).ready(function(){
     drawAddStorageIndicators()
     showLoginNotices()
     setVideoDownloadButtonElements()
+    setVideoForcedMute()
     // set onFullScreenChange
     document.addEventListener("fullscreenchange", onFullScreenChange, false);
     document.addEventListener("webkitfullscreenchange", onFullScreenChange, false);
