@@ -53,6 +53,11 @@ module.exports = function(s,config){
     // [1] socketIoConnection : Socket.IO Connection Handler
     // [2] initiateData : Data that was used to initiate the socket authentication
     // [3] sendDataToClient : function to send data to authenticated connection
+    createExtension(`onUserLogin`)
+    // [0] userDatabaseRow : Object of User database row
+    // [1] groupKey : The ID of the group.
+    // [2] userId : The ID of the user.
+    // [3] clientIp : IP Address of the user logging out.
     createExtension(`onUserLog`)
     // [0] logEvent : the databse row being inserted
     createExtension(`loadGroupExtender`,`loadGroupExtensions`)
@@ -182,6 +187,17 @@ module.exports = function(s,config){
     createExtension(`onPluginDisconnected`)
     // [0] pluginName : The internal name of the plugin.
     // [1] newDetector : Detector information loaded into memory.
+    createExtension(`onTriggerNotificationSend`)
+    // [0] groupKey : Group Key to send to
+    // [1] data : Standardized Data for General Notification
+    // [2] files : Detector information loaded into memory.
+    createExtension(`onScheduleUpdated`)
+    // [0] groupKey : Group Key of Schedule
+    // [1] schedule : The new schedule item
+    // [2] changeType : Type of update : added or changed
+    createExtension(`onScheduleDeleted`)
+    // [0] groupKey : Group Key of Schedule
+    // [1] schedule : The deleted schedule item
 
     /////// CRON ////////
     createExtension(`onCronGroupProcessed`)

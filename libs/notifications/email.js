@@ -7,11 +7,16 @@ module.exports = function(s,config,lang,getSnapshot){
     const {
         getEventBasedRecordingUponCompletion,
     } = require('../events/utils.js')(s,config,lang)
+    const {
+        parseMessageOptions,
+    } = require('./utils.js')
     // mailing with nodemailer
     try{
+        let allowedSend = false
         if(config.mail){
             if(config.mail.from === undefined){config.mail.from = '"ShinobiCCTV" <no-reply@shinobi.video>'}
             s.nodemailer = require('nodemailer').createTransport(config.mail);
+            allowedSend = true;
         }
         const sendMessage = (...args) => {
             return s.nodemailer.sendMail(...args)
@@ -233,12 +238,39 @@ module.exports = function(s,config,lang,getSnapshot){
                 })
             }
         }
+        const generalMessage = (groupKey, data = {}, files = []) => {
+            if(allowedSend){
+                const {
+                    senderName,
+                    recipientAddress,
+                    title,
+                    text,
+                    footer,
+                    time,
+                } = parseMessageOptions(data);
+                if(recipientAddress)sendMessage({
+                    from: config.mail.from, // sender address
+                    to: checkEmail(recipientAddress), // list of receivers
+                    subject: title, // Subject line
+                    html: template.createFramework({
+                        title: title,
+                        subtitle: footer,
+                        body: text,
+                    })
+                }, (error, info) => {
+                    if (error) {
+                        s.systemLog('sendMail:generalMessage:error',error)
+                    }
+                })
+            }
+        }
         s.onTwoFactorAuthCodeNotification(onTwoFactorAuthCodeNotificationForEmail)
         s.onEventTriggerBeforeFilter(onEventTriggerBeforeFilterForEmail)
         s.onEventTrigger(onEventTriggerForEmail)
         s.onFilterEvent(onFilterEventForEmail)
         s.onDetectorNoTriggerTimeout(onDetectorNoTriggerTimeoutForEmail)
         s.onMonitorUnexpectedExit(onMonitorUnexpectedExitForEmail)
+        s.onTriggerNotificationSend(generalMessage)
         s.definitions['Account Settings'].blocks['2-Factor Authentication'].info.push(                   {
            "name": "detail=factor_mail",
            "field": `${lang.Email} (${lang['System Level']})`,

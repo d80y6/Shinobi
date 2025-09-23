@@ -1,6 +1,11 @@
 var fs = require("fs")
 module.exports = function(s,config,lang,getSnapshot){
+    const {
+        parseMessageOptions,
+    } = require('./utils.js')
     if(config.mqttClient === true){
+        const allowedSend = {}
+        const registeredEndpoints = {}
         console.log('Loading MQTT Outbound Connectivity...')
         const mqtt = require('mqtt')
         const {
@@ -175,6 +180,8 @@ module.exports = function(s,config,lang,getSnapshot){
                 if(!s.group[groupKey].mqttOutbounders)s.group[groupKey].mqttOutbounders = {};
                 const mqttSubs = s.group[groupKey].mqttOutbounders
                 if(userDetails.mqttout === '1' && Object.keys(mqttSubs).length === 0){
+                    allowedSend[groupKey] = true
+                    registeredEndpoints[groupKey] = []
                     const mqttClientList = userDetails.mqttout_list || []
                     mqttClientList.forEach(function(row,n){
                         try{
@@ -198,6 +205,7 @@ module.exports = function(s,config,lang,getSnapshot){
                                 subId: mqttSubId,
                                 to: row.pubKey,
                             }
+                            registeredEndpoints[groupKey].push(msgOptions)
                             const titleLegend = {
                                 onMonitorSave: lang['Monitor Edit'],
                                 onMonitorStart: lang['Monitor Start'],
@@ -315,6 +323,8 @@ module.exports = function(s,config,lang,getSnapshot){
                     s.group[groupKey].mqttOutbounderKeys = Object.keys(s.group[groupKey].mqttOutbounders)
                 }else{
                     s.group[groupKey].mqttOutbounderKeys = []
+                    allowedSend[groupKey] = false
+                    registeredEndpoints[groupKey] = []
                 }
             }
             const unloadMqttListBotForUser = function(user){
@@ -339,6 +349,29 @@ module.exports = function(s,config,lang,getSnapshot){
             const onBeforeAccountSave = function(data){
                 data.d.mqttout_list = []
             }
+            const generalMessage = (groupKey, data = {}, files = []) => {
+                if(allowedSend[groupKey]){
+                    const {
+                        senderName,
+                        title,
+                        text,
+                        footer,
+                        time,
+                    } = parseMessageOptions(data);
+                    for(let msgOptions of registeredEndpoints[groupKey]){
+                        sendMessage(msgOptions,{
+                            title: title,
+                            name: title,
+                            data: {
+                                title,
+                                text,
+                                footer,
+                            },
+                            time: time,
+                        })
+                    }
+                }
+            }
             s.loadGroupAppExtender(loadMqttListBotForUser)
             s.unloadGroupAppExtender(unloadMqttListBotForUser)
             s.beforeAccountSave(onBeforeAccountSave)
@@ -353,6 +386,7 @@ module.exports = function(s,config,lang,getSnapshot){
             s.insertCompletedVideoExtender(insertCompletedVideoExtender)
             s.onEventBasedRecordingComplete(onEventBasedRecordingComplete)
             s.onUserLog(onUserLog)
+            s.onTriggerNotificationSend(generalMessage)
             s.definitions["Monitor Settings"].blocks["Notifications"].info[0].info.push(
                 {
                    "name": "detail=notify_mqttout",

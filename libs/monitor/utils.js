@@ -74,12 +74,19 @@ module.exports = (s,config,lang) => {
             }
             try{
                 proc.removeAllListeners()
+                proc.on('error',(error) => {
+                    sendError(error.toString())
+                })
                 proc.on('exit',() => {
                     response.msg = 'proc.on.exit'
                     clearTimeout(killTimer)
                     doResolve(response)
                     treekill(processPID)
                 });
+                if(proc.killed || !proc.stdin || !proc.stdin.writable){
+                    doResolve(response)
+                    return
+                }
                 if(proc && proc.stdin) {
                     try{
                         proc.stdin.write("q\r\n");

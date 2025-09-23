@@ -228,6 +228,15 @@ module.exports = (s,config,lang) => {
         delete(configFromFile.peerConnectKey)
         modifyConfiguration(configFromFile)
     }
+    async function sendMessageToAllConnectedServers(data){
+        for(let serverIp in s.connectedMgmtServers){
+            try{
+                s.connectedMgmtServers[serverIp].worker.postMessage(data)
+            }catch(err){
+                s.debugLog(err.toString())
+            }
+        }
+    }
     if(config.autoRestartManagementConnectionInterval){
         setInterval(() => {
             resetAllManagementServers()
@@ -243,5 +252,6 @@ module.exports = (s,config,lang) => {
         resetAllManagementServers,
         connectAllManagementServers,
         migrateOldConfiguration,
+        sendMessageToAllConnectedServers,
     }
 }

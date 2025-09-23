@@ -74,11 +74,18 @@ class CentralConnection {
           data.connectDetails.peerConnectKey = this.peerConnectKey;
           _this.internalEvents.emit('connectDetails', data.connectDetails);
           break;
+        case 'onTriggerNotificationSend':
+          data.peerConnectKey = this.peerConnectKey;
+          _this.internalEvents.emit('onTriggerNotificationSend', data);
+          break;
         case 'exit':
           _this.logger.debugLog('Closing Central Connection...');
           process.exit(0);
           break;
       }
+    });
+    this.internalEvents.on('onTriggerNotificationSend', (data) => {
+        this.sendDataToTunnel({ f: 'onTriggerNotificationSend', data });
     });
   }
 

@@ -4,8 +4,12 @@ module.exports = function (s, config, lang, getSnapshot) {
         getObjectTagNotifyText,
         getEventBasedRecordingUponCompletion,
     } = require('../events/utils.js')(s,config,lang)
+    const {
+        parseMessageOptions,
+    } = require('./utils.js')
 
     if (config.pushover === true) {
+        const allowedSend = {};
         const Pushover = require('pushover-notifications');
         try {
             const sendMessage = async function (sendBody, files, groupKey) {
@@ -67,6 +71,7 @@ module.exports = function (s, config, lang, getSnapshot) {
 
             const loadPushoverForUser = function (user) {
                 const userDetails = s.parseJSON(user.details);
+                const groupKey = user.ke;
                 if (
                     !s.group[user.ke].pushover &&
                     config.pushover === true &&
@@ -74,10 +79,13 @@ module.exports = function (s, config, lang, getSnapshot) {
                     userDetails.pushover_token !== '' &&
                     userDetails.pushover_recipient_identifier !== ''
                 ) {
+                    allowedSend[groupKey] = true
                     s.group[user.ke].pushover = new Pushover({
                         user: userDetails.pushover_recipient_identifier,
                         token: userDetails.pushover_token,
                     });
+                }else{
+                    allowedSend[groupKey] = false
                 }
             };
 
@@ -221,7 +229,32 @@ module.exports = function (s, config, lang, getSnapshot) {
                     );
                 }
             };
-
+            const generalMessage = (groupKey, data = {}, files = []) => {
+                if(allowedSend[groupKey]){
+                    const {
+                        senderName,
+                        title,
+                        text,
+                        footer,
+                        time,
+                    } = parseMessageOptions(data);
+                    sendMessage(
+                        {
+                            title: title,
+                            description: text,
+                        },
+                        files.map((item) => {
+                            const isImage = item.name.endsWith('.jpg') || item.name.endsWith('.png') || item.name.endsWith('.jpeg')
+                            return {
+                                type: isImage ? 'photo' : 'video',
+                                attachment: item.attachment, //buffer
+                                name: item.name,
+                            }
+                        }),
+                        groupKey
+                    );
+                }
+            }
             s.loadGroupAppExtender(loadPushoverForUser);
             s.unloadGroupAppExtender(unloadPushoverForUser);
             s.onTwoFactorAuthCodeNotification(
@@ -231,6 +264,7 @@ module.exports = function (s, config, lang, getSnapshot) {
             s.onEventTriggerBeforeFilter(onEventTriggerBeforeFilterForPushover);
             s.onDetectorNoTriggerTimeout(onDetectorNoTriggerTimeoutForPushover);
             s.onMonitorUnexpectedExit(onMonitorUnexpectedExitForPushover);
+            s.onTriggerNotificationSend(generalMessage)
             s.definitions['Monitor Settings'].blocks[
                 'Notifications'
             ].info[0].info.push({

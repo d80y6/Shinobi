@@ -5,8 +5,12 @@ module.exports = async function(s,config,lang,getSnapshot){
         getObjectTagNotifyText,
         getEventBasedRecordingUponCompletion,
     } = require('../events/utils.js')(s,config,lang)
+    const {
+        parseMessageOptions,
+    } = require('./utils.js')
     //matrix bot
     if(config.matrixBot === true){
+        const allowedSend = {}
         const sdk = await import("matrix-js-sdk")
         try{
             function sendFile(file,groupKey){
@@ -99,9 +103,9 @@ module.exports = async function(s,config,lang,getSnapshot){
                                 name: d.screenshotName+'.jpg',
                                 type: 'm.image',
                                 opttype: 'image/jpeg',
-                                                info: {
-                                                    mimetype: 'image/jpeg',
-                                                },
+                                info: {
+                                    mimetype: 'image/jpeg',
+                                },
                             }
                         ],d.ke)
                     }
@@ -149,6 +153,7 @@ module.exports = async function(s,config,lang,getSnapshot){
             }
             const loadMatrixBotForUser = function(user){
                 const userDetails = s.parseJSON(user.details);
+                const groupKey = user.ke;
                 //matrixbot
                 if(!s.group[user.ke].matrixBot &&
                    config.matrixBot === true &&
@@ -158,6 +163,7 @@ module.exports = async function(s,config,lang,getSnapshot){
                    userDetails.matrixbot_userId &&
                    userDetails.matrixbot_roomId
                   ){
+                    allowedSend[groupKey] = true;
                     s.debugLog(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`)
                     s.debugLog(`Matrix Connecting... ${userDetails.matrixbot_baseUrl}`)
                     const client = sdk.createClient({
@@ -177,6 +183,8 @@ module.exports = async function(s,config,lang,getSnapshot){
                             msg: lang.Ready
                         })
                     });
+                }else{
+                    allowedSend[groupKey] = false;
                 }
             }
             const unloadMatrixBotForUser = function(user){
@@ -211,6 +219,36 @@ module.exports = async function(s,config,lang,getSnapshot){
                     },[],monitorConfig.ke)
                 }
             }
+            const generalMessage = (groupKey, data = {}, files = []) => {
+                if(allowedSend[groupKey]){
+                    const {
+                        senderName,
+                        recipientAddress,
+                        title,
+                        text,
+                        footer,
+                        time,
+                    } = parseMessageOptions(data);
+                    sendMessage(
+                        {
+                            text: `${title}\n\n${text}${footer ? `\n\n*${footer}*` : ``}\n\n${time}`,
+                        },
+                        files.map((item) => {
+                            const isImage = item.name.endsWith('.jpg') || item.name.endsWith('.png') || item.name.endsWith('.jpeg')
+                            return {
+                                buffer: item.attachment, //buffer
+                                name: item.name,
+                                type: isImage ? 'm.image' : 'm.video',
+                                opttype: isImage ? 'image/jpeg' : 'video/mp4',
+                                info: {
+                                    mimetype:  isImage ? 'image/jpeg' : 'video/mp4',
+                                }
+                            }
+                        }),
+                        groupKey
+                    )
+                }
+            }
             s.loadGroupAppExtender(loadMatrixBotForUser)
             s.unloadGroupAppExtender(unloadMatrixBotForUser)
             s.onTwoFactorAuthCodeNotification(onTwoFactorAuthCodeNotificationForMatrixBot)
@@ -218,6 +256,7 @@ module.exports = async function(s,config,lang,getSnapshot){
             s.onEventTriggerBeforeFilter(onEventTriggerBeforeFilterForMatrixBot)
             s.onDetectorNoTriggerTimeout(onDetectorNoTriggerTimeoutForMatrixBot)
             s.onMonitorUnexpectedExit(onMonitorUnexpectedExitForMatrixBot)
+            s.onTriggerNotificationSend(generalMessage)
             s.definitions["Monitor Settings"].blocks["Notifications"].info[0].info.push(
                 {
                    "name": "detail=notify_matrix",

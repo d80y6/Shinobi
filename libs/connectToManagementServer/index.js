@@ -12,6 +12,7 @@ module.exports = (s,config,lang,app) => {
         disconnectFromManagmentServer,
         connectAllManagementServers,
         migrateOldConfiguration,
+        sendMessageToAllConnectedServers,
     } = require('./utils.js')(s,config,lang)
     s.onLoadedUsersAtStartup(() => {
         connectAllManagementServers()
@@ -19,6 +20,9 @@ module.exports = (s,config,lang,app) => {
             console.log(`Migrating Old Central Configuration`)
             migrateOldConfiguration()
         }
+    })
+    s.onTriggerNotificationSend((groupKey, data, files) => {
+        sendMessageToAllConnectedServers({ f: 'onTriggerNotificationSend', groupKey, data, files })
     })
     /**
     * API : Superuser : Get Management Server Settings

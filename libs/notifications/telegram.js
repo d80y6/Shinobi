@@ -17,10 +17,14 @@ module.exports = function(s,config,lang,getSnapshot){
     const {
         ffprobe
     } = require('../ffmpeg/utils.js')(s,config,lang)
+    const {
+        parseMessageOptions,
+    } = require('./utils.js')
 
     //telegram bot
     if(config.telegramBot === true){
         try{
+            cons allowedSend = {};
             const TelegramBot = require('node-telegram-bot-api');
             console.error('WARNING : Telegram bot is enabled.')
 
@@ -173,13 +177,17 @@ module.exports = function(s,config,lang,getSnapshot){
             }
             const loadTelegramBotForUser = function(user){
                 const userDetails = s.parseJSON(user.details);
+                const groupKey = user.ke;
                 //telegrambot
                 if(!s.group[user.ke].telegramBot &&
                    config.telegramBot === true &&
                    userDetails.telegrambot === '1' &&
                    userDetails.telegrambot_token !== ''
-                  ){
+                ){
+                    allowedSend[groupKey] = true
                     s.group[user.ke].telegramBot = new TelegramBot(userDetails.telegrambot_token, {polling: false});
+                }else{
+                    allowedSend[groupKey] = false
                 }
             }
             const unloadTelegramBotForUser = function(user){
@@ -213,6 +221,32 @@ module.exports = function(s,config,lang,getSnapshot){
                     },[],monitorConfig.ke)
                 }
             }
+            const generalMessage = (groupKey, data = {}, files = []) => {
+                if(allowedSend[groupKey]){
+                    const {
+                        senderName,
+                        title,
+                        text,
+                        footer,
+                        time,
+                    } = parseMessageOptions(data);
+                    sendMessage(
+                        {
+                            title: title,
+                            description: text,
+                        },
+                        files.map((item) => {
+                            const isImage = item.name.endsWith('.jpg') || item.name.endsWith('.png') || item.name.endsWith('.jpeg')
+                            return {
+                                type: isImage ? 'photo' : 'video',
+                                attachment: item.attachment, //buffer
+                                name: item.name,
+                            }
+                        }),
+                        groupKey
+                    );
+                }
+            }
             s.loadGroupAppExtender(loadTelegramBotForUser)
             s.unloadGroupAppExtender(unloadTelegramBotForUser)
             s.onTwoFactorAuthCodeNotification(onTwoFactorAuthCodeNotificationForTelegram)
@@ -220,6 +254,7 @@ module.exports = function(s,config,lang,getSnapshot){
             s.onEventTriggerBeforeFilter(onEventTriggerBeforeFilterForTelegram)
             s.onDetectorNoTriggerTimeout(onDetectorNoTriggerTimeoutForTelegram)
             s.onMonitorUnexpectedExit(onMonitorUnexpectedExitForTelegram)
+            s.onTriggerNotificationSend(generalMessage)
             s.definitions["Monitor Settings"].blocks["Notifications"].info[0].info.push(
                 {
                    "name": "detail=notify_telegram",

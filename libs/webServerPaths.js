@@ -249,6 +249,13 @@ module.exports = function(s,config,lang,app,io){
                 clearTimeout(s.failedLoginAttempts[req.body.mail].timeout)
                 delete(s.failedLoginAttempts[req.body.mail])
             }
+            if(
+                focus !== config.renderPaths.index
+            ){
+                const isSuperUser = focus === config.renderPaths.super
+                const user = data.$user;
+                s.runExtensionsForArray('onUserLogin', null, isSuperUser ? [user, '$', user.mail, req.ip] : [user, user.ke, user.uid, req.ip])
+            }
             if(req.query.json=='true'){
                 delete(data.config);
                 delete(data.__dirname);

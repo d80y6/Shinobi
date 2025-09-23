@@ -5,9 +5,13 @@ module.exports = function(s,config,lang,getSnapshot){
         getObjectTagNotifyText,
         getEventBasedRecordingUponCompletion,
     } = require('../events/utils.js')(s,config,lang)
+    const {
+        parseMessageOptions,
+    } = require('./utils.js')
     //discord bot
     if(config.discordBot === true){
         try{
+            const allowedSend = {}
             const messageFooter = {
                 icon_url: config.iconURL,
                 text: config.notifyFooterText || "Shinobi Systems"
@@ -151,14 +155,15 @@ module.exports = function(s,config,lang,getSnapshot){
             }
             const loadDiscordBotForUser = function(user){
                 const userDetails = s.parseJSON(user.details);
+                const groupKey = user.ke;
                 //discordbot
                 if(!s.group[user.ke].discordBot &&
                    config.discordBot === true &&
                    userDetails.discordbot === '1' &&
                    userDetails.discordbot_token !== ''
                   ){
-                    const groupKey = user.ke;
                     const theGroup = s.group[groupKey];
+                    allowedSend[groupKey] = true
                     s.debugLog(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`)
                     s.debugLog(`Discord Connecting ${userDetails.discordbot_token}`)
                     const discordBot = new Discord.Client();
@@ -186,6 +191,8 @@ module.exports = function(s,config,lang,getSnapshot){
                     });
                     discordBot.login(userDetails.discordbot_token);
                     theGroup.discordBot = discordBot;
+                }else{
+                    allowedSend[groupKey] = false
                 }
             }
             const unloadDiscordBotForUser = function(user){
@@ -234,6 +241,32 @@ module.exports = function(s,config,lang,getSnapshot){
                     },[],monitorConfig.ke)
                 }
             }
+            const generalMessage = (groupKey, data = {}, files = []) => {
+                if(allowedSend[groupKey]){
+                    const {
+                        senderName,
+                        title,
+                        text,
+                        footer,
+                        time,
+                    } = parseMessageOptions(data);
+                    sendMessage(
+                        {
+                            author: {
+                              name: senderName,
+                              icon_url: config.iconURL
+                            },
+                            title: title,
+                            description: text,
+                            fields: [],
+                            timestamp: time,
+                            footer,
+                        },
+                        files,
+                        groupKey
+                    )
+                }
+            }
             s.loadGroupAppExtender(loadDiscordBotForUser)
             s.unloadGroupAppExtender(unloadDiscordBotForUser)
             s.onTwoFactorAuthCodeNotification(onTwoFactorAuthCodeNotificationForDiscord)
@@ -241,6 +274,7 @@ module.exports = function(s,config,lang,getSnapshot){
             s.onEventTriggerBeforeFilter(onEventTriggerBeforeFilterForDiscord)
             s.onDetectorNoTriggerTimeout(onDetectorNoTriggerTimeoutForDiscord)
             s.onMonitorUnexpectedExit(onMonitorUnexpectedExitForDiscord)
+            s.onTriggerNotificationSend(generalMessage)
             s.definitions["Monitor Settings"].blocks["Notifications"].info[0].info.push(
                 {
                    "name": "detail=notify_discord",

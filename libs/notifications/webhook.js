@@ -1,6 +1,7 @@
 const fetch = require('node-fetch');
 const FormData = require('form-data');
 module.exports = function(s,config,lang,getSnapshot){
+    const allowedSend = {}
     function replaceQueryStringValues(webhookEndpoint,data){
         let newString = webhookEndpoint
             .replace(/{{INNER_EVENT_TITLE}}/g,data.title)
@@ -8,8 +9,7 @@ module.exports = function(s,config,lang,getSnapshot){
         return newString;
     }
     const sendMessage = function(sendBody,files,groupKey){
-        let webhookEndpoint = s.group[groupKey].init.global_webhook_url;
-        if(!webhookEndpoint){
+        if(!allowedSend[groupKey]){
             s.userLog({
                 ke: groupKey,
                 mid: '$USER'
@@ -25,6 +25,7 @@ module.exports = function(s,config,lang,getSnapshot){
                 })
             })
         }
+        let webhookEndpoint = s.group[groupKey].init.global_webhook_url;
         const doPostMethod = s.group[groupKey].init.global_webhook_method === 'POST';
         // const includeSnapshot = s.group[groupKey].init.global_webhook_include_image === '1';
         const webhookInfoData = {
@@ -91,6 +92,17 @@ module.exports = function(s,config,lang,getSnapshot){
                     resolve(response)
                 })
         })
+    }
+    const loadWebhookForUser = function(user){
+        const userDetails = s.parseJSON(user.details);
+        const groupKey = user.ke;
+        //telegrambot
+        let webhookEndpoint = s.group[groupKey].init.global_webhook_url;
+        if(!webhookEndpoint){
+            allowedSend[groupKey] = true
+        }else{
+            allowedSend[groupKey] = false
+        }
     }
     const onEventTriggerBeforeFilterForGlobalWebhook = function(d,filter){
         filter.global_webhook = false
@@ -161,11 +173,44 @@ module.exports = function(s,config,lang,getSnapshot){
             },[],monitorConfig.ke)
         }
     }
+    const generalMessage = (groupKey, data = {}, files = []) => {
+        if(allowedSend[groupKey]){
+            const {
+                senderName,
+                title,
+                text,
+                footer,
+                time,
+                monitorId,
+                details = {}
+            } = parseMessageOptions(data);
+            sendMessage(
+                {
+                    title: title,
+                    description: text,
+                    ke: groupKey,
+                    mid: monitorId,
+                    eventDetails: details
+                },
+                files.map((item) => {
+                    const isImage = item.name.endsWith('.jpg') || item.name.endsWith('.png') || item.name.endsWith('.jpeg')
+                    return {
+                        type: isImage ? 'photo' : 'video',
+                        attachment: item.attachment, //buffer
+                        name: item.name,
+                    }
+                }),
+                groupKey
+            );
+        }
+    }
+    s.loadGroupAppExtender(loadWebhookForUser)
     s.onTwoFactorAuthCodeNotification(onTwoFactorAuthCodeNotificationForGlobalWebhook)
     s.onEventTrigger(onEventTriggerForGlobalWebhook)
     s.onEventTriggerBeforeFilter(onEventTriggerBeforeFilterForGlobalWebhook)
     // s.onDetectorNoTriggerTimeout(onDetectorNoTriggerTimeoutForGlobalWebhook)
     s.onMonitorUnexpectedExit(onMonitorUnexpectedExitForGlobalWebhook)
+    s.onTriggerNotificationSend(generalMessage)
     s.definitions["Monitor Settings"].blocks["Notifications"].info[0].info.push(
         {
            "name": "detail=notify_global_webhook",

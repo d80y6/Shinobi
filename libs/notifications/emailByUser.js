@@ -4,6 +4,7 @@ const {
     checkEmail,
 } = require("./emailUtils.js")
 module.exports = function (s, config, lang, getSnapshot) {
+    const allowedSend = {}
     const { getEventBasedRecordingUponCompletion } = require('../events/utils.js')(s, config, lang);
     const nodeMailer = require('nodemailer');
     try {
@@ -52,6 +53,7 @@ module.exports = function (s, config, lang, getSnapshot) {
         };
 
         const loadAppForUser = function (user) {
+            const groupKey = user.ke
             const userDetails = s.parseJSON(user.details);
             const optionsHost = userDetails.emailClient_host
             const optionsUser = userDetails.emailClient_user
@@ -63,6 +65,7 @@ module.exports = function (s, config, lang, getSnapshot) {
                 optionsUser &&
                 optionsSendTo
             ){
+                allowedSend[groupKey] = true
                 const optionsPass = userDetails.emailClient_pass || ''
                 const optionsSecure = userDetails.emailClient_secure === '1' ? true : false
                 const optionsUnauth = userDetails.emailClient_unauth === '1' ? false : true
@@ -84,6 +87,8 @@ module.exports = function (s, config, lang, getSnapshot) {
                     sendTo: optionsSendTo.split(',').map((text) => {return text.trim()}),
                 }
                 s.group[user.ke].emailClient = nodeMailer.createTransport(clientOptions)
+            }else{
+                allowedSend[groupKey] = false
             }
         };
 
@@ -242,6 +247,33 @@ module.exports = function (s, config, lang, getSnapshot) {
             }
         };
 
+        const generalMessage = (groupKey, data = {}, files = []) => {
+            if(allowedSend[groupKey]){
+                const {
+                    senderName,
+                    recipientAddress,
+                    title,
+                    text,
+                    footer,
+                    time,
+                } = parseMessageOptions(data);
+                if(recipientAddress)sendMessage({
+                    from: config.mail.from, // sender address
+                    to: checkEmail(recipientAddress), // list of receivers
+                    subject: title, // Subject line
+                    html: template.createFramework({
+                        title: title,
+                        subtitle: footer,
+                        body: text,
+                    })
+                }, (error, info) => {
+                    if (error) {
+                        s.systemLog('sendMailByUser:generalMessage:error',error)
+                    }
+                })
+            }
+        }
+
         s.loadGroupAppExtender(loadAppForUser);
         s.unloadGroupAppExtender(unloadAppForUser);
         s.onTwoFactorAuthCodeNotification(onTwoFactorAuthCodeNotificationForApp);
@@ -249,6 +281,7 @@ module.exports = function (s, config, lang, getSnapshot) {
         s.onEventTriggerBeforeFilter(onEventTriggerBeforeFilterForApp);
         s.onDetectorNoTriggerTimeout(onDetectorNoTriggerTimeoutForApp);
         s.onMonitorUnexpectedExit(onMonitorUnexpectedExitForApp);
+        s.onTriggerNotificationSend(generalMessage)
         s.definitions['Monitor Settings'].blocks['Notifications'].info[0].info.push({
             name: 'detail=notify_emailClient',
             field: lang.Email,

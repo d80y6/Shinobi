@@ -17,18 +17,22 @@ module.exports = function(s,config,lang,app,io){
     }
     //update schedule
     s.updateSchedule = function(row){
-        var schedule = Object.assign(row,{})
+        var schedule = Object.assign({},row)
         if(!s.schedules[schedule.ke])s.schedules[schedule.ke] = {}
         s.checkDetails(schedule)
         schedule.timezoneOffset = parseInt(schedule.details.timezone) || 0
         schedule.details.days.forEach(function(dayNumber,key){
             schedule.details.days[key] = parseInt(dayNumber)
         })
+        let changeType = ''
         if(!s.schedules[schedule.ke][schedule.name]){
             s.schedules[schedule.ke][schedule.name] = schedule
+            changeType = 'added'
         }else{
             s.schedules[schedule.ke][schedule.name] = Object.assign(s.schedules[schedule.ke][schedule.name],schedule)
+            changeType = 'changed'
         }
+        s.runExtensionsForArray('onScheduleUpdated', null, [schedule.ke, schedule, changeType])
     }
     //check time in schedule
     var checkTimeAgainstSchedule = function(schedule,callback){
@@ -332,6 +336,7 @@ module.exports = function(s,config,lang,app,io){
                                     endData.msg = lang["Deleted Schedule Configuration"]
                                     endData.ok = true
                                     if(s.schedules[schedule.ke])delete(s.schedules[schedule.ke][schedule.name])
+                                    s.runExtensionsForArray('onScheduleDeleted', null, [schedule.ke, schedule])
                                 }
                                 s.closeJsonResponse(res,endData)
                             })
