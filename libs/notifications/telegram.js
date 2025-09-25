@@ -24,7 +24,7 @@ module.exports = function(s,config,lang,getSnapshot){
     //telegram bot
     if(config.telegramBot === true){
         try{
-            cons allowedSend = {};
+            const allowedSend = {};
             const TelegramBot = require('node-telegram-bot-api');
             console.error('WARNING : Telegram bot is enabled.')
 
