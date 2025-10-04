@@ -270,7 +270,7 @@ module.exports = function(s,config,lang,getSnapshot){
         s.onFilterEvent(onFilterEventForEmail)
         s.onDetectorNoTriggerTimeout(onDetectorNoTriggerTimeoutForEmail)
         s.onMonitorUnexpectedExit(onMonitorUnexpectedExitForEmail)
-        s.onTriggerNotificationSend(generalMessage)
+        // s.onTriggerNotificationSend(generalMessage)
         s.definitions['Account Settings'].blocks['2-Factor Authentication'].info.push(                   {
            "name": "detail=factor_mail",
            "field": `${lang.Email} (${lang['System Level']})`,

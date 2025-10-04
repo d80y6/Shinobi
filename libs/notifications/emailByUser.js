@@ -4,6 +4,9 @@ const {
     checkEmail,
 } = require("./emailUtils.js")
 module.exports = function (s, config, lang, getSnapshot) {
+    const {
+        parseMessageOptions,
+    } = require('./utils.js')
     const allowedSend = {}
     const { getEventBasedRecordingUponCompletion } = require('../events/utils.js')(s, config, lang);
     const nodeMailer = require('nodemailer');
@@ -281,7 +284,7 @@ module.exports = function (s, config, lang, getSnapshot) {
         s.onEventTriggerBeforeFilter(onEventTriggerBeforeFilterForApp);
         s.onDetectorNoTriggerTimeout(onDetectorNoTriggerTimeoutForApp);
         s.onMonitorUnexpectedExit(onMonitorUnexpectedExitForApp);
-        s.onTriggerNotificationSend(generalMessage)
+        // s.onTriggerNotificationSend(generalMessage)
         s.definitions['Monitor Settings'].blocks['Notifications'].info[0].info.push({
             name: 'detail=notify_emailClient',
             field: lang.Email,
