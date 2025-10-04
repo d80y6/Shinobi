@@ -1,6 +1,9 @@
 const fetch = require('node-fetch');
 const FormData = require('form-data');
 module.exports = function(s,config,lang,getSnapshot){
+    const {
+        parseMessageOptions,
+    } = require('./utils.js')
     const allowedSend = {}
     function replaceQueryStringValues(webhookEndpoint,data){
         let newString = webhookEndpoint
