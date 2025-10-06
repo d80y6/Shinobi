@@ -9,7 +9,7 @@ module.exports = function(s,config,lang,getSnapshot){
     } = require('../events/utils.js')(s,config,lang)
     const {
         parseMessageOptions,
-    } = require('./utils.js')
+    } = require('./utils.js')(s,config)
     // mailing with nodemailer
     try{
         let allowedSend = false

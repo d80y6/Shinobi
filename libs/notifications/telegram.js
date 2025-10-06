@@ -19,7 +19,7 @@ module.exports = function(s,config,lang,getSnapshot){
     } = require('../ffmpeg/utils.js')(s,config,lang)
     const {
         parseMessageOptions,
-    } = require('./utils.js')
+    } = require('./utils.js')(s,config)
 
     //telegram bot
     if(config.telegramBot === true){
