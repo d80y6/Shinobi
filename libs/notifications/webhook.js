@@ -102,9 +102,9 @@ module.exports = function(s,config,lang,getSnapshot){
         //telegrambot
         let webhookEndpoint = s.group[groupKey].init.global_webhook_url;
         if(!webhookEndpoint){
-            allowedSend[groupKey] = true
-        }else{
             allowedSend[groupKey] = false
+        }else{
+            allowedSend[groupKey] = true
         }
     }
     const onEventTriggerBeforeFilterForGlobalWebhook = function(d,filter){
