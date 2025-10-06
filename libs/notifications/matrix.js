@@ -7,7 +7,7 @@ module.exports = async function(s,config,lang,getSnapshot){
     } = require('../events/utils.js')(s,config,lang)
     const {
         parseMessageOptions,
-    } = require('./utils.js')(s,config)
+    } = require('./utils.js')(s,config,lang)
     //matrix bot
     if(config.matrixBot === true){
         const allowedSend = {}

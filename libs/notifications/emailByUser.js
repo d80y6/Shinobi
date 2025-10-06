@@ -6,7 +6,7 @@ const {
 module.exports = function (s, config, lang, getSnapshot) {
     const {
         parseMessageOptions,
-    } = require('./utils.js')(s,config)
+    } = require('./utils.js')(s,config,lang)
     const allowedSend = {}
     const { getEventBasedRecordingUponCompletion } = require('../events/utils.js')(s, config, lang);
     const nodeMailer = require('nodemailer');

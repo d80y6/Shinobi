@@ -7,7 +7,7 @@ module.exports = function(s,config,lang,getSnapshot){
     } = require('../events/utils.js')(s,config,lang)
     const {
         parseMessageOptions,
-    } = require('./utils.js')(s,config)
+    } = require('./utils.js')(s,config,lang)
     //discord bot
     if(config.discordBot === true){
         try{

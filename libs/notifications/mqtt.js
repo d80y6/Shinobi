@@ -2,7 +2,7 @@ var fs = require("fs")
 module.exports = function(s,config,lang,getSnapshot){
     const {
         parseMessageOptions,
-    } = require('./utils.js')(s,config)
+    } = require('./utils.js')(s,config,lang)
     if(config.mqttClient === true){
         const allowedSend = {}
         const registeredEndpoints = {}

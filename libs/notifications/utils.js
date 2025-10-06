@@ -1,4 +1,4 @@
-module.exports = (s,config) => {
+module.exports = (s,config,lang) => {
     function parseMessageOptions(data){
         const senderName = data.senderName || config.applicationName || lang.applicationName || lang.Shinobi;
         const recipientAddress = data.recipientAddress;

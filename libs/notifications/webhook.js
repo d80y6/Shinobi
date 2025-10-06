@@ -3,7 +3,7 @@ const FormData = require('form-data');
 module.exports = function(s,config,lang,getSnapshot){
     const {
         parseMessageOptions,
-    } = require('./utils.js')(s,config)
+    } = require('./utils.js')(s,config,lang)
     const allowedSend = {}
     function replaceQueryStringValues(webhookEndpoint,data){
         let newString = webhookEndpoint
