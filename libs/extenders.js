@@ -78,6 +78,15 @@ module.exports = function(s,config){
     // [0] groupKey : The ID of the group.
     // [1] usedSpace : Currently used space (mb).
     // [2] sizeLimit : Maximum Usable Space (mb).
+    createExtension(`onDiskFull`)
+    // [0] groupKey : The ID of the group.
+    // [1] usedSpace : Currently used space (mb).
+    // [2] sizeLimit : Maximum Usable Space (mb).
+    createExtension(`onAddStorageDiskFull`)
+    // [0] groupKey : The ID of the group.
+    // [1] usedSpace : Currently used space (mb).
+    // [2] sizeLimit : Maximum Usable Space (mb).
+    // [3] storageName : addStorage Name.
     createExtension(`onLogout`)
     // [0] userDatabaseRow : Object of User database row.
     // [1] groupKey : The ID of the group.

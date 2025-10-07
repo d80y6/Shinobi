@@ -19,7 +19,18 @@ module.exports = function(s,config,lang){
         resetAllStorageCounters,
     } = require("./user/utils.js")(s,config,lang);
     require("./user/logger.js")(s,config,lang)
-    let purgeDiskGroup = () => {}
+    let purgeDiskGroup = () => {
+        const { usedSpace, sizeLimit, addStorageUse } = s.group[groupKey];
+        if(usedSpace >= sizeLimit * 0.8){
+            s.runExtensionsForArray('onDiskFull', null, [groupKey, usedSpace, sizeLimit])
+        }
+        for(let storageName in addStorageUse){
+            var storageItem = addStorageUse[storageName];
+            if(storageItem.usedSpace >= storageItem.sizeLimit * 0.8){
+                s.runExtensionsForArray('onAddStorageDiskFull', null, [groupKey, storageItem.usedSpace, storageItem.sizeLimit, storageName])
+            }
+        }
+    }
     const runQuery = async.queue(function(groupKey, callback) {
         purgeDiskGroup(groupKey,callback)
     }, 1);
