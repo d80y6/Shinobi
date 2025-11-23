@@ -14,6 +14,9 @@ module.exports = (s,config,lang) => {
         hmsToSeconds,
         moveFile,
     } = require('../basic/utils.js')(process.cwd(),config)
+    const {
+        convertAviToMp4,
+    } = require('./aviUtils.js')(s,config,lang)
     const chunkReadSize = 4096;
     // orphanedVideoCheck : new function
     const checkIfVideoIsOrphaned = (monitor,videosDirectory,filename) => {
@@ -1027,6 +1030,7 @@ module.exports = (s,config,lang) => {
         readChunkForMoov,
         checkMoovAtBeginning,
         checkMoovAtEnd,
-        hasMoovAtom
+        hasMoovAtom,
+        convertAviToMp4,
     }
 }
