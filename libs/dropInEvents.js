@@ -127,7 +127,7 @@ module.exports = function(s,config,lang,app,io){
                 var reason = "ftpServer"
                 if(search(filename.toLowerCase(),'.avi')){
                     try{
-                        await processAviFile({ filePath, ke, mid })
+                        await processAviFile({ filePath, monitorConfig })
                     }catch(err){
                         console.log('dropInEvents : processAviFile : error',err)
                         return;
