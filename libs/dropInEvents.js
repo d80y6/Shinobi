@@ -69,6 +69,8 @@ module.exports = function(s,config,lang,app,io){
         }
         const processMp4File = async function({ filePath, monitorConfig }){
             const stats = await fs.promises.stat(filePath)
+            const mid = monitorConfig.mid
+            const ke = monitorConfig.ke
             var startTime = stats.ctime
             var endTime = stats.mtime
             var shinobiFilename = s.formattedTime(startTime) + '.mp4'
