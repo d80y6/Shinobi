@@ -73,6 +73,7 @@ module.exports = function(s,config,lang,app,io){
             const ke = monitorConfig.ke
             var startTime = stats.ctime
             var endTime = stats.mtime
+            var filename = getFileNameFromPath(filePath)
             var shinobiFilename = s.formattedTime(startTime) + '.mp4'
             var recordingPath = s.getVideoDirectory(monitorConfig) + shinobiFilename
             var writeStream = fs.createWriteStream(recordingPath)
