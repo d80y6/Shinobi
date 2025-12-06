@@ -494,21 +494,43 @@ module.exports = (s,config,lang) => {
                     // WebRTC streaming via mediasoup - output RTP to localhost
                     const rtpPort = s.allocateRtpPort ? s.allocateRtpPort(e.ke, e.mid) : 50000;
                     const ssrc = s.generateSsrc ? s.generateSsrc(e.ke, e.mid) : 0x10000000;
+                    const webrtcCodec = e.details.webrtc_vcodec || 'copy';
+
                     // Remove any existing codec flags
                     for(let i = streamFlags.length - 1; i >= 0; i--){
                         if(streamFlags[i] && (streamFlags[i].includes('-c:v') || streamFlags[i].includes('-q:v'))){
                             streamFlags.splice(i, 1);
                         }
                     }
-                    // Use VP9 codec - better compression and error resilience
-                    streamFlags.push(`-c:v libvpx-vp9`);
-                    streamFlags.push(`-deadline realtime`);
-                    streamFlags.push(`-cpu-used 8`);  // Fastest encoding
-                    streamFlags.push(`-row-mt 1`);  // Enable row-based multithreading
-                    streamFlags.push(`-g 30`);  // Keyframe every 30 frames
-                    streamFlags.push(`-b:v 800k`);
-                    streamFlags.push(`-maxrate 800k`);
-                    streamFlags.push(`-bufsize 1600k`);
+
+                    let webrtcCodecName = 'H264';  // For mediasoup producer
+
+                    if(webrtcCodec === 'copy'){
+                        // H264 passthrough - no re-encoding (lowest CPU)
+                        streamFlags.push(`-c:v copy`);
+                        webrtcCodecName = 'H264';
+                    } else {
+                        // VP9 encoding
+                        streamFlags.push(`-c:v libvpx-vp9`);
+                        streamFlags.push(`-deadline realtime`);
+                        streamFlags.push(`-cpu-used 8`);  // Fastest encoding
+                        streamFlags.push(`-row-mt 1`);  // Enable row-based multithreading
+                        streamFlags.push(`-g 30`);  // Keyframe every 30 frames
+
+                        // Quality preset mapping
+                        const webrtcQualityPresets = {
+                            '1': { bitrate: '500k', buffer: '1000k' },   // Low
+                            '2': { bitrate: '1000k', buffer: '2000k' },  // Medium
+                            '3': { bitrate: '2000k', buffer: '4000k' },  // High
+                            '4': { bitrate: '4000k', buffer: '8000k' }   // Ultra
+                        };
+                        const webrtcPreset = webrtcQualityPresets[e.details.webrtc_quality] || webrtcQualityPresets['2'];
+                        streamFlags.push(`-b:v ${webrtcPreset.bitrate}`);
+                        streamFlags.push(`-maxrate ${webrtcPreset.bitrate}`);
+                        streamFlags.push(`-bufsize ${webrtcPreset.buffer}`);
+                        webrtcCodecName = 'VP9';
+                    }
+
                     // RTP output with fixed payload type and SSRC for mediasoup
                     streamFlags.push(`-an`);  // No audio for now
                     streamFlags.push(`-f rtp -payload_type 96 -ssrc ${ssrc} "rtp://127.0.0.1:${rtpPort}"`)
@@ -517,7 +539,7 @@ module.exports = (s,config,lang) => {
                     e.webrtcInfo.ssrc = ssrc;
                     e.webrtcInfo.rtpPort = rtpPort;
                     e.webrtcInfo.payloadType = 96;
-                    e.webrtcInfo.codec = 'VP9';  // Track which codec we're using
+                    e.webrtcInfo.codec = webrtcCodecName;
                 break;
             }
             s.onFfmpegBuildMainStreamExtensions.forEach(function(extender){

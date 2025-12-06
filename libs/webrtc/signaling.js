@@ -41,13 +41,13 @@ module.exports = (s, config, lang, io) => {
                 }
 
                 const router = await s.getOrCreateRouter(cn.ke);
-                callback({
+                if (typeof callback === 'function') callback({
                     rtpCapabilities: router.rtpCapabilities
                 });
                 s.debugLog('WebRTC Signaling', `Router capabilities sent to ${cn.id}`);
             } catch (error) {
                 s.debugLog('WebRTC Signaling', `getRouterCapabilities error: ${error.message}`);
-                callback({ error: error.message });
+                if (typeof callback === 'function') callback({ error: error.message });
             }
         });
 
@@ -58,7 +58,8 @@ module.exports = (s, config, lang, io) => {
         cn.on('webrtc:createTransport', async (data, callback) => {
             try {
                 if (!cn.ke) {
-                    return callback({ error: 'Not authenticated' });
+                    if (typeof callback === 'function') callback({ error: 'Not authenticated' });
+                    return;
                 }
 
                 const transport = await s.createWebRtcTransport(cn.ke);
@@ -67,7 +68,7 @@ module.exports = (s, config, lang, io) => {
                 if (!cn.webrtcTransports) cn.webrtcTransports = [];
                 cn.webrtcTransports.push(transport.id);
 
-                callback({
+                if (typeof callback === 'function') callback({
                     id: transport.id,
                     iceParameters: transport.iceParameters,
                     iceCandidates: transport.iceCandidates,
@@ -78,7 +79,7 @@ module.exports = (s, config, lang, io) => {
                 s.debugLog('WebRTC Signaling', `Transport ${transport.id} created for ${cn.id}`);
             } catch (error) {
                 s.debugLog('WebRTC Signaling', `createTransport error: ${error.message}`);
-                callback({ error: error.message });
+                if (typeof callback === 'function') callback({ error: error.message });
             }
         });
 
@@ -91,21 +92,23 @@ module.exports = (s, config, lang, io) => {
                 const { transportId, dtlsParameters } = data;
 
                 if (!transportId || !dtlsParameters) {
-                    return callback({ error: 'Missing transportId or dtlsParameters' });
+                    if (typeof callback === 'function') callback({ error: 'Missing transportId or dtlsParameters' });
+                    return;
                 }
 
                 const transport = s.webrtc.transports.get(transportId);
                 if (!transport) {
-                    return callback({ error: 'Transport not found' });
+                    if (typeof callback === 'function') callback({ error: 'Transport not found' });
+                    return;
                 }
 
                 await transport.connect({ dtlsParameters });
-                callback({ success: true });
+                if (typeof callback === 'function') callback({ success: true });
 
                 s.debugLog('WebRTC Signaling', `Transport ${transportId} connected`);
             } catch (error) {
                 s.debugLog('WebRTC Signaling', `connectTransport error: ${error.message}`);
-                callback({ error: error.message });
+                if (typeof callback === 'function') callback({ error: error.message });
             }
         });
 
@@ -115,7 +118,8 @@ module.exports = (s, config, lang, io) => {
         cn.on('webrtc:getProducers', async (data, callback) => {
             try {
                 if (!cn.ke) {
-                    return callback({ error: 'Not authenticated' });
+                    if (typeof callback === 'function') callback({ error: 'Not authenticated' });
+                    return;
                 }
 
                 const user = s.group[cn.ke]?.users?.[cn.auth];
@@ -137,11 +141,11 @@ module.exports = (s, config, lang, io) => {
                     }
                 }
 
-                callback({ producers });
+                if (typeof callback === 'function') callback({ producers });
                 s.debugLog('WebRTC Signaling', `Producer list sent to ${cn.id}: ${producers.length} producers`);
             } catch (error) {
                 s.debugLog('WebRTC Signaling', `getProducers error: ${error.message}`);
-                callback({ error: error.message });
+                if (typeof callback === 'function') callback({ error: error.message });
             }
         });
 
@@ -152,30 +156,35 @@ module.exports = (s, config, lang, io) => {
         cn.on('webrtc:consume', async (data, callback) => {
             try {
                 if (!cn.ke) {
-                    return callback({ error: 'Not authenticated' });
+                    if (typeof callback === 'function') callback({ error: 'Not authenticated' });
+                    return;
                 }
 
                 const { monitorId, transportId, rtpCapabilities } = data;
 
                 if (!monitorId || !transportId || !rtpCapabilities) {
-                    return callback({ error: 'Missing required parameters' });
+                    if (typeof callback === 'function') callback({ error: 'Missing required parameters' });
+                    return;
                 }
 
                 // Check permissions
                 const user = s.group[cn.ke]?.users?.[cn.auth];
                 if (!canViewMonitor(user, monitorId)) {
-                    return callback({ error: 'Not authorized to view this monitor' });
+                    if (typeof callback === 'function') callback({ error: 'Not authorized to view this monitor' });
+                    return;
                 }
 
                 // Get the transport
                 const transport = s.webrtc.transports.get(transportId);
                 if (!transport) {
-                    return callback({ error: 'Transport not found' });
+                    if (typeof callback === 'function') callback({ error: 'Transport not found' });
+                    return;
                 }
 
                 // Check if producer exists
                 if (!s.hasWebrtcProducer(cn.ke, monitorId)) {
-                    return callback({ error: 'No WebRTC stream available for this monitor' });
+                    if (typeof callback === 'function') callback({ error: 'No WebRTC stream available for this monitor' });
+                    return;
                 }
 
                 // Create consumer
@@ -190,7 +199,7 @@ module.exports = (s, config, lang, io) => {
                 if (!cn.webrtcConsumers) cn.webrtcConsumers = [];
                 cn.webrtcConsumers.push(consumer.id);
 
-                callback({
+                if (typeof callback === 'function') callback({
                     id: consumer.id,
                     producerId: consumer.producerId,
                     kind: consumer.kind,
@@ -202,7 +211,7 @@ module.exports = (s, config, lang, io) => {
                 s.debugLog('WebRTC Signaling', `Consumer ${consumer.id} created for monitor ${monitorId}`);
             } catch (error) {
                 s.debugLog('WebRTC Signaling', `consume error: ${error.message}`);
-                callback({ error: error.message });
+                if (typeof callback === 'function') callback({ error: error.message });
             }
         });
 
@@ -215,12 +224,14 @@ module.exports = (s, config, lang, io) => {
                 const { consumerId } = data;
 
                 if (!consumerId) {
-                    return callback({ error: 'Missing consumerId' });
+                    if (typeof callback === 'function') callback({ error: 'Missing consumerId' });
+                    return;
                 }
 
                 const consumer = s.webrtc.consumers.get(consumerId);
                 if (!consumer) {
-                    return callback({ error: 'Consumer not found' });
+                    if (typeof callback === 'function') callback({ error: 'Consumer not found' });
+                    return;
                 }
 
                 await consumer.resume();
@@ -232,12 +243,12 @@ module.exports = (s, config, lang, io) => {
                     // Keyframe request may fail if producer isn't ready yet
                 }
 
-                callback({ success: true });
+                if (typeof callback === 'function') callback({ success: true });
 
                 s.debugLog('WebRTC Signaling', `Consumer ${consumerId} resumed`);
             } catch (error) {
                 s.debugLog('WebRTC Signaling', `resumeConsumer error: ${error.message}`);
-                callback({ error: error.message });
+                if (typeof callback === 'function') callback({ error: error.message });
             }
         });
 
@@ -250,21 +261,23 @@ module.exports = (s, config, lang, io) => {
                 const { consumerId } = data;
 
                 if (!consumerId) {
-                    return callback({ error: 'Missing consumerId' });
+                    if (typeof callback === 'function') callback({ error: 'Missing consumerId' });
+                    return;
                 }
 
                 const consumer = s.webrtc.consumers.get(consumerId);
                 if (!consumer) {
-                    return callback({ error: 'Consumer not found' });
+                    if (typeof callback === 'function') callback({ error: 'Consumer not found' });
+                    return;
                 }
 
                 await consumer.pause();
-                callback({ success: true });
+                if (typeof callback === 'function') callback({ success: true });
 
                 s.debugLog('WebRTC Signaling', `Consumer ${consumerId} paused`);
             } catch (error) {
                 s.debugLog('WebRTC Signaling', `pauseConsumer error: ${error.message}`);
-                callback({ error: error.message });
+                if (typeof callback === 'function') callback({ error: error.message });
             }
         });
 
@@ -306,13 +319,14 @@ module.exports = (s, config, lang, io) => {
         cn.on('webrtc:getStats', async (data, callback) => {
             try {
                 if (!cn.ke) {
-                    return callback({ error: 'Not authenticated' });
+                    if (typeof callback === 'function') callback({ error: 'Not authenticated' });
+                    return;
                 }
 
                 const stats = s.getWebrtcStats();
-                callback({ stats });
+                if (typeof callback === 'function') callback({ stats });
             } catch (error) {
-                callback({ error: error.message });
+                if (typeof callback === 'function') callback({ error: error.message });
             }
         });
 

@@ -920,6 +920,33 @@ module.exports = (s,config,lang) => {
                    "form-group-class": "h_st_input h_st_hls",
                 },
                 {
+                   "name": "detail=webrtc_vcodec",
+                   "field": lang["WebRTC Video Codec"] || "WebRTC Video Codec",
+                   "description": lang["fieldTextWebrtcVcodec"] || "Copy passes through H264 without re-encoding (lowest CPU). VP9 re-encodes for better compression.",
+                   "default": "copy",
+                   "form-group-class": "h_st_input h_st_webrtc",
+                   "fieldType": "select",
+                   "selector": "h_webrtc_v",
+                   "possible": [
+                      { "name": lang["H264 Copy (Passthrough)"] || "H264 Copy (Passthrough)", "value": "copy" },
+                      { "name": "VP9", "value": "libvpx-vp9" }
+                   ]
+                },
+                {
+                   "name": "detail=webrtc_quality",
+                   "field": lang["WebRTC Quality"] || "WebRTC Quality",
+                   "description": lang["fieldTextWebrtcQuality"] || "Video quality preset. Higher quality uses more bandwidth.",
+                   "default": "2",
+                   "form-group-class": "h_st_input h_st_webrtc h_webrtc_v_input h_webrtc_v_libvpx-vp9",
+                   "fieldType": "select",
+                   "possible": [
+                      { "name": lang["Low (500 Kbps)"] || "Low (500 Kbps)", "value": "1" },
+                      { "name": lang["Medium (1 Mbps)"] || "Medium (1 Mbps)", "value": "2" },
+                      { "name": lang["High (2 Mbps)"] || "High (2 Mbps)", "value": "3" },
+                      { "name": lang["Ultra (4 Mbps)"] || "Ultra (4 Mbps)", "value": "4" }
+                   ]
+                },
+                {
                     isAdvanced: true,
                    "name": "detail=preset_stream",
                    "field": "HLS Preset",
