@@ -490,6 +490,35 @@ module.exports = (s,config,lang) => {
                 case'b64':case'':case undefined:case null://base64
                     streamFlags.push(`-an -c:v mjpeg -f image2pipe pipe:1`)
                 break;
+                case'webrtc':
+                    // WebRTC streaming via mediasoup - output RTP to localhost
+                    const rtpPort = s.allocateRtpPort ? s.allocateRtpPort(e.ke, e.mid) : 50000;
+                    const ssrc = s.generateSsrc ? s.generateSsrc(e.ke, e.mid) : 0x10000000;
+                    // Remove any existing codec flags
+                    for(let i = streamFlags.length - 1; i >= 0; i--){
+                        if(streamFlags[i] && (streamFlags[i].includes('-c:v') || streamFlags[i].includes('-q:v'))){
+                            streamFlags.splice(i, 1);
+                        }
+                    }
+                    // Use VP9 codec - better compression and error resilience
+                    streamFlags.push(`-c:v libvpx-vp9`);
+                    streamFlags.push(`-deadline realtime`);
+                    streamFlags.push(`-cpu-used 8`);  // Fastest encoding
+                    streamFlags.push(`-row-mt 1`);  // Enable row-based multithreading
+                    streamFlags.push(`-g 30`);  // Keyframe every 30 frames
+                    streamFlags.push(`-b:v 800k`);
+                    streamFlags.push(`-maxrate 800k`);
+                    streamFlags.push(`-bufsize 1600k`);
+                    // RTP output with fixed payload type and SSRC for mediasoup
+                    streamFlags.push(`-an`);  // No audio for now
+                    streamFlags.push(`-f rtp -payload_type 96 -ssrc ${ssrc} "rtp://127.0.0.1:${rtpPort}"`)
+                    // Store WebRTC info on monitor object for producer creation
+                    if(!e.webrtcInfo) e.webrtcInfo = {};
+                    e.webrtcInfo.ssrc = ssrc;
+                    e.webrtcInfo.rtpPort = rtpPort;
+                    e.webrtcInfo.payloadType = 96;
+                    e.webrtcInfo.codec = 'VP9';  // Track which codec we're using
+                break;
             }
             s.onFfmpegBuildMainStreamExtensions.forEach(function(extender){
                 extender(streamType,streamFlags,e)

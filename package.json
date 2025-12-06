@@ -35,6 +35,8 @@
     "knex": "^3.1.0",
     "ldapauth-fork": "^5.0.2",
     "marked": "^4.3.0",
+    "mediasoup": "^3.13.0",
+    "mediasoup-client": "^3.7.0",
     "moment": "^2.29.4",
     "mp4frag": "^0.6.1",
     "mqtt": "^4.3.7",
@@ -89,5 +91,8 @@
       "languages/**/*",
       "web/**/*"
     ]
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.1"
   }
 }

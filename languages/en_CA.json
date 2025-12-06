@@ -1747,6 +1747,8 @@
    "fieldTextStreamTypeMJPEG": "Standard Motion JPEG image. No audio.",
    "fieldTextStreamTypeFLV": "Sending FLV encoded frames over WebSocket.",
    "fieldTextStreamTypeHLS(includesAudio)": "Similar method to facebook live streams. <b>Includes audio</b> if input provides it. There is a delay of about 4-6 seconds because this method records segments then pushes them to the client rather than push as while it creates them.",
+   "fieldTextStreamTypeWebRTC": "Ultra-low latency streaming using WebRTC via mediasoup. Typically achieves <500ms latency compared to 2-10 seconds for HLS. Requires WebRTC to be enabled in server configuration.",
+   "WebRTC (Ultra-Low Latency)": "WebRTC (Ultra-Low Latency)",
    "fieldTextStreamFlvType": "This is for the Shinobi dashboard only. Both stream methods are still active and ready to use.",
    "fieldTextStreamVcodec": "Video codec for streaming.",
    "fieldTextStreamVcodecAuto": "Let FFMPEG choose.",

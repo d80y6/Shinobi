@@ -713,6 +713,11 @@ module.exports = (s,config,lang) => {
                            "info": lang["fieldTextStreamTypeHLS(includesAudio)"]
                        },
                         {
+                           "name": lang['WebRTC (Ultra-Low Latency)'] || 'WebRTC (Ultra-Low Latency)',
+                           "value": "webrtc",
+                           "info": lang["fieldTextStreamTypeWebRTC"] || "Ultra-low latency streaming using WebRTC via mediasoup. Requires WebRTC to be enabled in configuration."
+                        },
+                        {
                            "name": lang.useSubStreamOnlyWhenWatching,
                            "value": "useSubstream",
                         }
