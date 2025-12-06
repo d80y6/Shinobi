@@ -364,7 +364,8 @@ module.exports = function(s,config,lang,io){
                         mail: r.mail,
                         details: r.details,
                         logged_in_at: s.timeObject(new Date).format(),
-                        login_type: 'Dashboard'
+                        login_type: 'Dashboard',
+                        connectionCount: (s.group[d.ke].users[d.auth]?.connectionCount || 0) + 1
                     }
                     s.clientSocketConnection[cn.id] = cn
                     try{s.group[d.ke].users[d.auth].details=JSON.parse(r.details)}catch(er){}
@@ -1008,9 +1009,12 @@ module.exports = function(s,config,lang,io){
                     }
                 }else if(!cn.embedded){
                     if(s.group[cn.ke].users[cn.auth]){
-                        s.tx({f:'user_status_change',ke:cn.ke,uid:cn.uid,status:0})
-                        s.userLog({ke:cn.ke,mid:'$USER'},{type:lang['Websocket Disconnected'],msg:{mail:s.group[cn.ke].users[cn.auth].mail,id:cn.uid,ip:cn.ip}})
-                        delete(s.group[cn.ke].users[cn.auth]);
+                        s.group[cn.ke].users[cn.auth].connectionCount = (s.group[cn.ke].users[cn.auth].connectionCount || 1) - 1;
+                        if(s.group[cn.ke].users[cn.auth].connectionCount <= 0){
+                            s.tx({f:'user_status_change',ke:cn.ke,uid:cn.uid,status:0})
+                            s.userLog({ke:cn.ke,mid:'$USER'},{type:lang['Websocket Disconnected'],msg:{mail:s.group[cn.ke].users[cn.auth].mail,id:cn.uid,ip:cn.ip}})
+                            delete(s.group[cn.ke].users[cn.auth]);
+                        }
                     }
                     if(s.group[cn.ke].dashcamUsers && s.group[cn.ke].dashcamUsers[cn.auth])delete(s.group[cn.ke].dashcamUsers[cn.auth]);
                 }
