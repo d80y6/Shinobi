@@ -525,11 +525,14 @@ module.exports = (s,config,lang) => {
                         streamFlags.push(`-preset ultrafast`);  // Fastest encoding
                         streamFlags.push(`-tune zerolatency`);  // Optimize for low latency
                         streamFlags.push(`-profile:v baseline`);  // Maximum compatibility
+                        streamFlags.push(`-level 3.1`);  // Compatibility level
+                        streamFlags.push(`-flags +low_delay`);  // Low delay mode
                         streamFlags.push(`-g 15`);  // Keyframe every 15 frames (~0.5s at 30fps)
                         streamFlags.push(`-keyint_min 15`);  // Minimum keyframe interval
+                        streamFlags.push(`-sc_threshold 0`);  // Disable scene change detection
                         streamFlags.push(`-b:v ${webrtcPreset.bitrate}`);
                         streamFlags.push(`-maxrate ${webrtcPreset.bitrate}`);
-                        streamFlags.push(`-bufsize ${webrtcPreset.buffer}`);
+                        streamFlags.push(`-bufsize ${webrtcPreset.bitrate}`);  // Same as bitrate for minimal buffering
                         webrtcCodecName = 'H264';
                     } else {
                         // VP9 encoding
@@ -540,12 +543,13 @@ module.exports = (s,config,lang) => {
                         streamFlags.push(`-g 15`);  // Keyframe every 15 frames (~0.5s at 30fps for faster recovery)
                         streamFlags.push(`-b:v ${webrtcPreset.bitrate}`);
                         streamFlags.push(`-maxrate ${webrtcPreset.bitrate}`);
-                        streamFlags.push(`-bufsize ${webrtcPreset.buffer}`);
+                        streamFlags.push(`-bufsize ${webrtcPreset.bitrate}`);  // Same as bitrate for minimal buffering
                         webrtcCodecName = 'VP9';
                     }
 
                     // RTP output with fixed payload type and SSRC for mediasoup
                     streamFlags.push(`-an`);  // No audio for now
+                    streamFlags.push(`-flush_packets 1`);  // Flush packets immediately for lower latency
                     streamFlags.push(`-f rtp -payload_type 96 -ssrc ${ssrc} "rtp://127.0.0.1:${rtpPort}"`)
                     // Store WebRTC info on monitor object for producer creation
                     if(!e.webrtcInfo) e.webrtcInfo = {};
