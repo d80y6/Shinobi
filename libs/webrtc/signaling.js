@@ -199,6 +199,17 @@ module.exports = (s, config, lang, io) => {
                 if (!cn.webrtcConsumers) cn.webrtcConsumers = [];
                 cn.webrtcConsumers.push(consumer.id);
 
+                // Immediately request keyframe for faster startup
+                // This is especially important for H264 copy mode where keyframes are infrequent
+                setImmediate(async () => {
+                    try {
+                        await consumer.requestKeyFrame();
+                        s.debugLog('WebRTC Signaling', `Initial keyframe requested for consumer ${consumer.id}`);
+                    } catch (err) {
+                        // Ignore - consumer might not be ready yet
+                    }
+                });
+
                 if (typeof callback === 'function') callback({
                     id: consumer.id,
                     producerId: consumer.producerId,
@@ -237,11 +248,21 @@ module.exports = (s, config, lang, io) => {
                 await consumer.resume();
 
                 // Request keyframe from producer to help consumer start decoding immediately
-                try {
-                    await consumer.requestKeyFrame();
-                } catch (kfErr) {
-                    // Keyframe request may fail if producer isn't ready yet
-                }
+                // For H264 copy mode, we can't force keyframes, but we signal that we need one
+                // Multiple requests increase the chance of catching the next keyframe
+                const requestKeyframes = async () => {
+                    for (let i = 0; i < 3; i++) {
+                        try {
+                            if (!consumer.closed) {
+                                await consumer.requestKeyFrame();
+                            }
+                        } catch (kfErr) {
+                            // Ignore - keyframe request may fail
+                        }
+                        if (i < 2) await new Promise(r => setTimeout(r, 500));
+                    }
+                };
+                requestKeyframes(); // Fire and forget
 
                 if (typeof callback === 'function') callback({ success: true });
 
@@ -310,6 +331,61 @@ module.exports = (s, config, lang, io) => {
             } catch (error) {
                 s.debugLog('WebRTC Signaling', `closeConsumer error: ${error.message}`);
                 if (callback) callback({ error: error.message });
+            }
+        });
+
+        /**
+         * Request keyframe for a monitor's stream
+         * Requests keyframe from producer which will be forwarded when available
+         */
+        cn.on('webrtc:requestKeyframe', async (data, callback) => {
+            try {
+                const { monitorId, consumerId } = data;
+
+                if (!cn.ke) {
+                    if (typeof callback === 'function') callback({ error: 'Not authenticated' });
+                    return;
+                }
+
+                // If consumerId provided, request keyframe for specific consumer
+                if (consumerId) {
+                    const consumer = s.webrtc.consumers.get(consumerId);
+                    if (consumer && !consumer.closed) {
+                        try {
+                            await consumer.requestKeyFrame();
+                            if (typeof callback === 'function') callback({ success: true });
+                        } catch (err) {
+                            if (typeof callback === 'function') callback({ error: err.message });
+                        }
+                        return;
+                    }
+                }
+
+                // Otherwise request keyframe for all consumers of this monitor
+                if (monitorId) {
+                    const key = `${cn.ke}_${monitorId}`;
+                    const producerData = s.webrtc.producers.get(key);
+                    if (producerData) {
+                        let keyframeCount = 0;
+                        for (const [cid, consumer] of s.webrtc.consumers) {
+                            if (consumer.producerId === producerData.producer.id && !consumer.closed) {
+                                try {
+                                    await consumer.requestKeyFrame();
+                                    keyframeCount++;
+                                } catch (err) {
+                                    // Ignore individual failures
+                                }
+                            }
+                        }
+                        if (typeof callback === 'function') callback({ success: true, keyframesRequested: keyframeCount });
+                        return;
+                    }
+                }
+
+                if (typeof callback === 'function') callback({ error: 'No producer or consumer found' });
+            } catch (error) {
+                s.debugLog('WebRTC Signaling', `requestKeyframe error: ${error.message}`);
+                if (typeof callback === 'function') callback({ error: error.message });
             }
         });
 

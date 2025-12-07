@@ -7,11 +7,8 @@
 (function() {
     'use strict';
 
-    // mediasoup-client Device instance (shared across connections)
-    let device = null;
-    let deviceLoaded = false;
-    let deviceLoading = false;
-    let deviceLoadPromise = null;
+    // Device cache per socket connection (each socket gets its own device)
+    const deviceCache = new WeakMap();
 
     // Transport cache per socket connection
     const transportCache = new WeakMap();
@@ -22,58 +19,63 @@
      * @returns {Promise<Object>} mediasoup Device
      */
     async function initializeDevice(socket) {
-        // If device is already loaded, return it
-        if (device && deviceLoaded) {
-            return device;
+        // Check if this socket already has a device
+        let cached = deviceCache.get(socket);
+        if (cached && cached.device && cached.loaded) {
+            return cached.device;
         }
 
-        // If device is currently loading, wait for it
-        if (deviceLoading && deviceLoadPromise) {
-            return deviceLoadPromise;
+        // If device is currently loading for this socket, wait for it
+        if (cached && cached.loading && cached.promise) {
+            return cached.promise;
         }
 
-        // Start loading the device
-        deviceLoading = true;
+        // Start loading the device for this socket
+        if (!cached) {
+            cached = { device: null, loaded: false, loading: false, promise: null };
+            deviceCache.set(socket, cached);
+        }
+        cached.loading = true;
 
-        deviceLoadPromise = new Promise((resolve, reject) => {
+        cached.promise = new Promise((resolve, reject) => {
             // Check if mediasoup-client is available
             if (typeof mediasoupClient === 'undefined') {
-                deviceLoading = false;
+                cached.loading = false;
                 reject(new Error('mediasoup-client library not loaded'));
                 return;
             }
 
-            // Create new Device
-            device = new mediasoupClient.Device();
+            // Create new Device for this socket
+            cached.device = new mediasoupClient.Device();
 
             // Get router capabilities from server
             socket.emit('webrtc:getRouterCapabilities', {}, async (response) => {
                 if (response.error) {
-                    deviceLoading = false;
-                    device = null;
+                    cached.loading = false;
+                    cached.device = null;
                     reject(new Error(response.error));
                     return;
                 }
 
                 try {
                     // Load device with router capabilities
-                    await device.load({
+                    await cached.device.load({
                         routerRtpCapabilities: response.rtpCapabilities
                     });
 
-                    deviceLoaded = true;
-                    deviceLoading = false;
+                    cached.loaded = true;
+                    cached.loading = false;
                     console.log('Shinobi WebRTC: Device loaded successfully');
-                    resolve(device);
+                    resolve(cached.device);
                 } catch (err) {
-                    deviceLoading = false;
-                    device = null;
+                    cached.loading = false;
+                    cached.device = null;
                     reject(err);
                 }
             });
         });
 
-        return deviceLoadPromise;
+        return cached.promise;
     }
 
     /**
@@ -88,8 +90,8 @@
             return cached.recvTransport;
         }
 
-        // Ensure device is loaded
-        await initializeDevice(socket);
+        // Ensure device is loaded and get it
+        const device = await initializeDevice(socket);
 
         return new Promise((resolve, reject) => {
             socket.emit('webrtc:createTransport', {}, async (response) => {
@@ -158,7 +160,7 @@
     async function consumeMonitor(socket, monitorId, videoElement, options = {}) {
         try {
             // Ensure device is loaded and transport exists
-            await initializeDevice(socket);
+            const device = await initializeDevice(socket);
             const transport = await createRecvTransport(socket);
 
             return new Promise((resolve, reject) => {
@@ -251,6 +253,71 @@
                             console.log('Shinobi WebRTC: Consumer track ended');
                         });
 
+                        // Stall detection and automatic recovery
+                        let lastPlaybackTime = 0;
+                        let lastDecodedFrames = 0;
+                        let stallCount = 0;
+                        let keyframeRequestInterval = null;
+                        let stallCheckInterval = null;
+                        let isRecovering = false;
+
+                        // Request keyframe using dedicated endpoint
+                        const requestKeyframe = () => {
+                            if (!consumer.closed) {
+                                socket.emit('webrtc:requestKeyframe', {
+                                    consumerId: consumer.id,
+                                    monitorId: monitorId
+                                }, () => {});
+                            }
+                        };
+
+                        // Periodic keyframe requests (every 2 seconds) for smoother playback
+                        keyframeRequestInterval = setInterval(() => {
+                            requestKeyframe();
+                        }, 2000);
+
+                        // Check for stalls every 300ms with more sophisticated detection
+                        stallCheckInterval = setInterval(async () => {
+                            if (isRecovering) return;
+
+                            try {
+                                // Try to get video playback quality stats
+                                const stats = videoElement.getVideoPlaybackQuality?.() || {};
+                                const currentDecodedFrames = stats.totalVideoFrames || 0;
+
+                                // Check if frames are being decoded
+                                const framesDecoded = currentDecodedFrames > lastDecodedFrames;
+                                lastDecodedFrames = currentDecodedFrames;
+
+                                // Check if playback time is advancing
+                                const timeAdvancing = videoElement.currentTime !== lastPlaybackTime;
+                                lastPlaybackTime = videoElement.currentTime;
+
+                                // Stall conditions: video ready but nothing playing/decoding
+                                if (videoElement.readyState >= 2 && !videoElement.paused) {
+                                    if (!timeAdvancing && !framesDecoded) {
+                                        stallCount++;
+                                        if (stallCount >= 3) { // Stalled for ~1 second
+                                            console.log('Shinobi WebRTC: Stall detected, requesting keyframe');
+                                            isRecovering = true;
+                                            requestKeyframe();
+
+                                            // Also try resuming the consumer
+                                            socket.emit('webrtc:resumeConsumer', { consumerId: consumer.id }, () => {
+                                                isRecovering = false;
+                                            });
+
+                                            stallCount = 0;
+                                        }
+                                    } else {
+                                        stallCount = 0;
+                                    }
+                                }
+                            } catch (err) {
+                                // Ignore stats errors
+                            }
+                        }, 300);
+
                         // Create wrapper object with close method
                         const consumerWrapper = {
                             consumer: consumer,
@@ -259,6 +326,9 @@
                             monitorId: monitorId,
                             close: () => {
                                 try {
+                                    // Clear stall detection intervals
+                                    if (keyframeRequestInterval) clearInterval(keyframeRequestInterval);
+                                    if (stallCheckInterval) clearInterval(stallCheckInterval);
                                     consumer.close();
                                     socket.emit('webrtc:closeConsumer', {
                                         consumerId: consumer.id
@@ -346,13 +416,16 @@
     }
 
     /**
-     * Reset the device (useful after connection errors)
+     * Reset the device for a specific socket (useful after connection errors)
+     * @param {Object} socket - Socket.io connection (optional, if not provided clears nothing)
      */
-    function resetDevice() {
-        device = null;
-        deviceLoaded = false;
-        deviceLoading = false;
-        deviceLoadPromise = null;
+    function resetDevice(socket) {
+        if (socket && deviceCache.has(socket)) {
+            deviceCache.delete(socket);
+        }
+        if (socket && transportCache.has(socket)) {
+            transportCache.delete(socket);
+        }
         console.log('Shinobi WebRTC: Device reset');
     }
 
@@ -369,11 +442,13 @@
 
     /**
      * Get device handler name
+     * @param {Object} socket - Socket.io connection
      * @returns {string|null}
      */
-    function getHandlerName() {
-        if (device && device.loaded) {
-            return device.handlerName;
+    function getHandlerName(socket) {
+        const cached = socket ? deviceCache.get(socket) : null;
+        if (cached && cached.device && cached.loaded) {
+            return cached.device.handlerName;
         }
         return null;
     }

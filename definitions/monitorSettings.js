@@ -929,6 +929,7 @@ module.exports = (s,config,lang) => {
                    "selector": "h_webrtc_v",
                    "possible": [
                       { "name": lang["H264 Copy (Passthrough)"] || "H264 Copy (Passthrough)", "value": "copy" },
+                      { "name": lang["H264 (Re-encode)"] || "H264 (Re-encode)", "value": "libx264" },
                       { "name": "VP9", "value": "libvpx-vp9" }
                    ]
                 },
@@ -937,7 +938,7 @@ module.exports = (s,config,lang) => {
                    "field": lang["WebRTC Quality"] || "WebRTC Quality",
                    "description": lang["fieldTextWebrtcQuality"] || "Video quality preset. Higher quality uses more bandwidth.",
                    "default": "2",
-                   "form-group-class": "h_st_input h_st_webrtc h_webrtc_v_input h_webrtc_v_libvpx-vp9",
+                   "form-group-class": "h_st_input h_st_webrtc h_webrtc_v_input h_webrtc_v_libvpx-vp9 h_webrtc_v_libx264",
                    "fieldType": "select",
                    "possible": [
                       { "name": lang["Low (500 Kbps)"] || "Low (500 Kbps)", "value": "1" },

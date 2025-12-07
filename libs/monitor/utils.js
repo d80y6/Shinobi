@@ -191,13 +191,32 @@ module.exports = (s,config,lang) => {
                     delete(activeMonitor.mp4frag[channel])
                 })
             }
-            // Cleanup WebRTC resources
+            // Cleanup WebRTC resources - must await to ensure port is released before restart
             if(activeMonitor.webrtcProducer || activeMonitor.webrtcRtpTransport){
-                if(s.cleanupWebrtcMonitor){
-                    s.cleanupWebrtcMonitor(groupKey, e.id || e.mid).catch(err => {
-                        s.debugLog('WebRTC', `Cleanup error: ${err.message}`)
-                    });
+                // Close transport directly if it exists (handles case where producer wasn't created yet)
+                if(activeMonitor.webrtcRtpTransport){
+                    try {
+                        activeMonitor.webrtcRtpTransport.close();
+                    } catch(err) {
+                        // Transport may already be closed
+                    }
                 }
+                if(activeMonitor.webrtcProducer){
+                    try {
+                        activeMonitor.webrtcProducer.close();
+                    } catch(err) {
+                        // Producer may already be closed
+                    }
+                }
+                if(s.cleanupWebrtcMonitor){
+                    try {
+                        await s.cleanupWebrtcMonitor(groupKey, e.id || e.mid);
+                    } catch(err) {
+                        s.debugLog('WebRTC', `Cleanup error: ${err.message}`)
+                    }
+                }
+                // Small delay to ensure OS releases the port
+                await new Promise(r => setTimeout(r, 150));
                 delete activeMonitor.webrtcProducer;
                 delete activeMonitor.webrtcRtpTransport;
             }

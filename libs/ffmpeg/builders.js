@@ -505,9 +505,31 @@ module.exports = (s,config,lang) => {
 
                     let webrtcCodecName = 'H264';  // For mediasoup producer
 
+                    // Quality preset mapping (shared between H264 and VP9 encoding)
+                    const webrtcQualityPresets = {
+                        '1': { bitrate: '500k', buffer: '1000k' },   // Low
+                        '2': { bitrate: '1000k', buffer: '2000k' },  // Medium
+                        '3': { bitrate: '2000k', buffer: '4000k' },  // High
+                        '4': { bitrate: '4000k', buffer: '8000k' }   // Ultra
+                    };
+                    const webrtcPreset = webrtcQualityPresets[e.details.webrtc_quality] || webrtcQualityPresets['2'];
+
                     if(webrtcCodec === 'copy'){
                         // H264 passthrough - no re-encoding (lowest CPU)
+                        // Note: Keyframe interval depends on camera settings
                         streamFlags.push(`-c:v copy`);
+                        webrtcCodecName = 'H264';
+                    } else if(webrtcCodec === 'libx264'){
+                        // H264 re-encoding - allows keyframe control
+                        streamFlags.push(`-c:v libx264`);
+                        streamFlags.push(`-preset ultrafast`);  // Fastest encoding
+                        streamFlags.push(`-tune zerolatency`);  // Optimize for low latency
+                        streamFlags.push(`-profile:v baseline`);  // Maximum compatibility
+                        streamFlags.push(`-g 15`);  // Keyframe every 15 frames (~0.5s at 30fps)
+                        streamFlags.push(`-keyint_min 15`);  // Minimum keyframe interval
+                        streamFlags.push(`-b:v ${webrtcPreset.bitrate}`);
+                        streamFlags.push(`-maxrate ${webrtcPreset.bitrate}`);
+                        streamFlags.push(`-bufsize ${webrtcPreset.buffer}`);
                         webrtcCodecName = 'H264';
                     } else {
                         // VP9 encoding
@@ -515,16 +537,7 @@ module.exports = (s,config,lang) => {
                         streamFlags.push(`-deadline realtime`);
                         streamFlags.push(`-cpu-used 8`);  // Fastest encoding
                         streamFlags.push(`-row-mt 1`);  // Enable row-based multithreading
-                        streamFlags.push(`-g 30`);  // Keyframe every 30 frames
-
-                        // Quality preset mapping
-                        const webrtcQualityPresets = {
-                            '1': { bitrate: '500k', buffer: '1000k' },   // Low
-                            '2': { bitrate: '1000k', buffer: '2000k' },  // Medium
-                            '3': { bitrate: '2000k', buffer: '4000k' },  // High
-                            '4': { bitrate: '4000k', buffer: '8000k' }   // Ultra
-                        };
-                        const webrtcPreset = webrtcQualityPresets[e.details.webrtc_quality] || webrtcQualityPresets['2'];
+                        streamFlags.push(`-g 15`);  // Keyframe every 15 frames (~0.5s at 30fps for faster recovery)
                         streamFlags.push(`-b:v ${webrtcPreset.bitrate}`);
                         streamFlags.push(`-maxrate ${webrtcPreset.bitrate}`);
                         streamFlags.push(`-bufsize ${webrtcPreset.buffer}`);

@@ -83,7 +83,7 @@ module.exports = async (s, config, lang, app, io) => {
         consumers: new Map(),         // consumerId -> consumer
         rtpPorts: new Map(),          // `${groupKey}_${monitorId}` -> rtpPort
         nextWorkerIdx: 0,
-        nextRtpPort: config.webrtc.rtpPortBase,
+        nextRtpPortIndex: 0,          // Counter for port allocation (prevents collision on restart)
         mediaCodecs: mediaCodecs
     };
 
@@ -172,8 +172,8 @@ module.exports = async (s, config, lang, app, io) => {
     };
 
     /**
-     * Allocate an RTP port for a monitor - increments by monitor
-     * Port assignment: rtpPortBase + (monitorIndex * 2)
+     * Allocate an RTP port for a monitor
+     * Uses a counter to ensure unique ports even after monitor restarts
      * Each monitor gets 2 ports (RTP + RTCP)
      * @param {string} groupKey - The group identifier
      * @param {string} monitorId - The monitor identifier
@@ -182,7 +182,9 @@ module.exports = async (s, config, lang, app, io) => {
     s.allocateRtpPort = (groupKey, monitorId) => {
         const key = `${groupKey}_${monitorId}`;
         if (!s.webrtc.rtpPorts.has(key)) {
-            const port = config.webrtc.rtpPortBase + (s.webrtc.rtpPorts.size * 2);
+            // Use a counter instead of map size to avoid port collisions on restart
+            const port = config.webrtc.rtpPortBase + (s.webrtc.nextRtpPortIndex * 2);
+            s.webrtc.nextRtpPortIndex++;
             s.webrtc.rtpPorts.set(key, port);
         }
         return s.webrtc.rtpPorts.get(key);
@@ -202,13 +204,14 @@ module.exports = async (s, config, lang, app, io) => {
     };
 
     /**
-     * Release an allocated RTP port
+     * Release an allocated RTP port - keeps port reserved for this monitor
+     * This prevents port collisions when monitors restart
      * @param {string} groupKey - The group identifier
      * @param {string} monitorId - The monitor identifier
      */
     s.releaseRtpPort = (groupKey, monitorId) => {
-        const key = `${groupKey}_${monitorId}`;
-        s.webrtc.rtpPorts.delete(key);
+        // Don't delete - keep the port reserved so the same monitor gets the same port on restart
+        // This prevents port collision issues when multiple monitors restart
     };
 
     /**
@@ -230,23 +233,58 @@ module.exports = async (s, config, lang, app, io) => {
      * @returns {Promise<Object>} { transport, rtpPort, rtcpPort }
      */
     s.createRtpTransportOnPort = async (groupKey, monitorId, rtpPort) => {
+        const key = `${groupKey}_${monitorId}`;
+
+        // Close any existing producer/transport for this monitor first
+        const existingProducer = s.webrtc.producers.get(key);
+        if (existingProducer) {
+            try {
+                s.debugLog('WebRTC', `Closing existing producer/transport for ${key} before creating new one`);
+                existingProducer.producer.close();
+                existingProducer.transport.close();
+                s.webrtc.producers.delete(key);
+            } catch (err) {
+                s.debugLog('WebRTC', `Error closing existing producer: ${err.message}`);
+            }
+            // Small delay to ensure port is released
+            await new Promise(r => setTimeout(r, 100));
+        }
+
         const router = await s.getOrCreateRouter(groupKey);
         const rtcpPort = rtpPort + 1;
 
-        const transport = await router.createPlainTransport({
-            listenInfo: {
-                protocol: 'udp',
-                ip: config.webrtc.listenIp,
-                port: rtpPort
-            },
-            rtcpListenInfo: {
-                protocol: 'udp',
-                ip: config.webrtc.listenIp,
-                port: rtcpPort
-            },
-            rtcpMux: false,
-            comedia: true // Auto-detect source address from first RTP packet
-        });
+        // Retry logic in case port is briefly in use
+        let transport;
+        let lastError;
+        for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+                transport = await router.createPlainTransport({
+                    listenInfo: {
+                        protocol: 'udp',
+                        ip: config.webrtc.listenIp,
+                        port: rtpPort
+                    },
+                    rtcpListenInfo: {
+                        protocol: 'udp',
+                        ip: config.webrtc.listenIp,
+                        port: rtcpPort
+                    },
+                    rtcpMux: false,
+                    comedia: true // Auto-detect source address from first RTP packet
+                });
+                break; // Success, exit retry loop
+            } catch (err) {
+                lastError = err;
+                s.debugLog('WebRTC', `PlainTransport creation attempt ${attempt + 1} failed for ${key}: ${err.message}`);
+                if (attempt < 2) {
+                    await new Promise(r => setTimeout(r, 200 * (attempt + 1))); // Increasing delay
+                }
+            }
+        }
+
+        if (!transport) {
+            throw lastError || new Error('Failed to create PlainTransport after retries');
+        }
 
         transport.on('close', () => {
             s.debugLog('WebRTC', `PlainTransport closed for ${groupKey}/${monitorId}`);
@@ -269,8 +307,9 @@ module.exports = async (s, config, lang, app, io) => {
                 ip: config.webrtc.listenIp,
                 announcedIp: config.webrtc.announcedIp || undefined
             }],
-            enableUdp: false,  // Disable UDP - force TCP due to packet loss issues
-            enableTcp: true,
+            enableUdp: true,   // UDP is essential for low-latency streaming
+            enableTcp: true,   // TCP as fallback when UDP is blocked
+            preferUdp: true,   // Prefer UDP over TCP
             initialAvailableOutgoingBitrate: 1000000,
             minimumAvailableOutgoingBitrate: 600000,
             maxSctpMessageSize: 262144,
@@ -325,7 +364,13 @@ module.exports = async (s, config, lang, app, io) => {
                         'packetization-mode': 1,
                         'profile-level-id': '42e01f',
                         'level-asymmetry-allowed': 1
-                    }
+                    },
+                    rtcpFeedback: [
+                        { type: 'nack' },
+                        { type: 'nack', parameter: 'pli' },
+                        { type: 'ccm', parameter: 'fir' },
+                        { type: 'goog-remb' }
+                    ]
                 }],
                 encodings: [{
                     ssrc: codecInfo.ssrc
