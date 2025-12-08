@@ -82,6 +82,8 @@ module.exports = async (s, config, lang, app, io) => {
         transports: new Map(),        // transportId -> transport
         consumers: new Map(),         // consumerId -> consumer
         rtpPorts: new Map(),          // `${groupKey}_${monitorId}` -> rtpPort
+        bweState: new Map(),          // consumerId -> { bandwidth, loss, score, lastDowngrade, lastUpgrade }
+        bweIntervals: new Map(),      // consumerId -> intervalId (for cleanup)
         nextWorkerIdx: 0,
         nextRtpPortIndex: 0,          // Counter for port allocation (prevents collision on restart)
         mediaCodecs: mediaCodecs
@@ -302,14 +304,17 @@ module.exports = async (s, config, lang, app, io) => {
     s.createWebRtcTransport = async (groupKey) => {
         const router = await s.getOrCreateRouter(groupKey);
 
+        // Allow forcing TCP-only via config (useful for VPN/restrictive networks)
+        const forceTcp = config.webrtc.forceTcp === true;
+
         const transport = await router.createWebRtcTransport({
             listenIps: [{
                 ip: config.webrtc.listenIp,
                 announcedIp: config.webrtc.announcedIp || undefined
             }],
-            enableUdp: true,   // UDP is essential for low-latency streaming
-            enableTcp: true,   // TCP as fallback when UDP is blocked
-            preferUdp: true,   // Prefer UDP over TCP
+            enableUdp: !forceTcp,   // Disable UDP if forceTcp is set
+            enableTcp: true,        // TCP as fallback (or primary if forceTcp)
+            preferUdp: !forceTcp,   // Prefer UDP unless forceTcp
             initialAvailableOutgoingBitrate: 1000000,
             minimumAvailableOutgoingBitrate: 600000,
             maxSctpMessageSize: 262144,
@@ -525,6 +530,203 @@ module.exports = async (s, config, lang, app, io) => {
             consumers: s.webrtc.consumers.size,
             transports: s.webrtc.transports.size,
             allocatedRtpPorts: s.webrtc.rtpPorts.size
+        };
+    };
+
+    // BWE Algorithm Constants
+    const BWE_CONFIG = {
+        pollInterval: 500,           // ms - fast polling for cellular
+        lossThresholdDown: 0.02,     // 2% packet loss triggers downgrade (more sensitive)
+        lossThresholdUp: 0.005,      // < 0.5% loss allows upgrade
+        scoreThresholdDown: 8,       // Score < 8 triggers downgrade
+        scoreThresholdUp: 9,         // Score >= 9 allows upgrade
+        reductionFactor: 0.7,        // Reduce to 70% (more aggressive)
+        increaseFactor: 1.15,        // Increase to 115%
+        initialBitrate: 500000,      // Start at 500kbps (conservative for cellular)
+        minBitrate: 150000,          // 150 kbps floor (lower for cellular)
+        maxBitrate: 4000000,         // 4 Mbps ceiling
+        downgradeHysteresis: 800,    // 800ms before allowing upgrade after downgrade
+        upgradeHysteresis: 2000      // 2s before allowing downgrade after upgrade
+    };
+
+    /**
+     * Adjust transport bitrate based on network conditions
+     * @param {Object} transport - WebRtcTransport instance
+     * @param {Object} state - BWE state for this consumer
+     * @param {number} fractionLost - Packet loss fraction (0-1)
+     * @param {number} score - mediasoup consumer score (0-10)
+     */
+    s.adjustTransportBitrate = async (transport, state, fractionLost, score) => {
+        if (!transport || transport.closed) return;
+
+        const now = Date.now();
+        const currentBitrate = state.currentBitrate || 1000000; // Default 1Mbps
+
+        // Check if we should downgrade
+        const shouldDowngrade = fractionLost > BWE_CONFIG.lossThresholdDown || score < BWE_CONFIG.scoreThresholdDown;
+        // Check if we can upgrade
+        const canUpgrade = fractionLost < BWE_CONFIG.lossThresholdUp && score > BWE_CONFIG.scoreThresholdUp;
+
+        if (shouldDowngrade) {
+            // Respect upgrade hysteresis - don't downgrade right after upgrade
+            if (state.lastUpgrade && (now - state.lastUpgrade) < BWE_CONFIG.upgradeHysteresis) {
+                return;
+            }
+
+            const newBitrate = Math.max(BWE_CONFIG.minBitrate, Math.floor(currentBitrate * BWE_CONFIG.reductionFactor));
+            if (newBitrate < currentBitrate) {
+                try {
+                    await transport.setMaxOutgoingBitrate(newBitrate);
+                    state.currentBitrate = newBitrate;
+                    state.lastDowngrade = now;
+                    s.debugLog('WebRTC', `BWE: Reduced bitrate to ${Math.round(newBitrate/1000)}kbps (loss=${(fractionLost*100).toFixed(1)}%, score=${score})`);
+                } catch (err) {
+                    s.debugLog('WebRTC', `BWE: Failed to set bitrate: ${err.message}`);
+                }
+            }
+        } else if (canUpgrade && currentBitrate < BWE_CONFIG.maxBitrate) {
+            // Respect downgrade hysteresis - don't upgrade right after downgrade
+            if (state.lastDowngrade && (now - state.lastDowngrade) < BWE_CONFIG.downgradeHysteresis) {
+                return;
+            }
+
+            const newBitrate = Math.min(BWE_CONFIG.maxBitrate, Math.floor(currentBitrate * BWE_CONFIG.increaseFactor));
+            if (newBitrate > currentBitrate) {
+                try {
+                    await transport.setMaxOutgoingBitrate(newBitrate);
+                    state.currentBitrate = newBitrate;
+                    state.lastUpgrade = now;
+                    s.debugLog('WebRTC', `BWE: Increased bitrate to ${Math.round(newBitrate/1000)}kbps (loss=${(fractionLost*100).toFixed(1)}%, score=${score})`);
+                } catch (err) {
+                    s.debugLog('WebRTC', `BWE: Failed to set bitrate: ${err.message}`);
+                }
+            }
+        }
+    };
+
+    /**
+     * Start BWE monitoring for a consumer
+     * @param {string} consumerId - Consumer ID
+     * @param {Object} transport - WebRtcTransport instance
+     * @param {Object} consumer - Consumer instance
+     */
+    s.startBweMonitoring = (consumerId, transport, consumer) => {
+        // Clean up any existing monitoring
+        s.stopBweMonitoring(consumerId);
+
+        // Initialize BWE state with conservative initial bitrate
+        const state = {
+            currentBitrate: BWE_CONFIG.initialBitrate,
+            lastDowngrade: null,
+            lastUpgrade: null,
+            score: 10,
+            fractionLost: 0
+        };
+        s.webrtc.bweState.set(consumerId, state);
+
+        // Set initial conservative bitrate on transport
+        transport.setMaxOutgoingBitrate(BWE_CONFIG.initialBitrate).catch(err => {
+            s.debugLog('WebRTC', `BWE: Failed to set initial bitrate: ${err.message}`);
+        });
+
+        // Start monitoring interval
+        const interval = setInterval(async () => {
+            const currentConsumer = s.webrtc.consumers.get(consumerId);
+            if (!currentConsumer || currentConsumer.closed) {
+                s.stopBweMonitoring(consumerId);
+                return;
+            }
+
+            try {
+                const stats = await currentConsumer.getStats();
+                let fractionLost = 0;
+                let packetsLost = 0;
+                let packetsSent = 0;
+
+                // Extract packet loss from stats (mediasoup returns array)
+                if (Array.isArray(stats)) {
+                    for (const stat of stats) {
+                        if (stat.type === 'outbound-rtp' && stat.kind === 'video') {
+                            packetsLost = stat.packetsLost || 0;
+                            packetsSent = stat.packetsSent || 0;
+                            if (packetsSent > 0) {
+                                fractionLost = packetsLost / (packetsSent + packetsLost);
+                            }
+                        }
+                    }
+                }
+
+                // Get consumer score (from last score event)
+                const score = state.score;
+
+                // Update state
+                state.fractionLost = fractionLost;
+
+                // Status logging every 20 polls (~10 seconds)
+                if (!state.pollCount) state.pollCount = 0;
+                state.pollCount++;
+                if (state.pollCount % 20 === 0) {
+                    s.debugLog('WebRTC', `BWE [${consumerId.slice(0,8)}]: ${Math.round(state.currentBitrate/1000)}kbps score=${score} loss=${(fractionLost*100).toFixed(1)}%`);
+                }
+
+                // Adjust bitrate based on conditions
+                await s.adjustTransportBitrate(transport, state, fractionLost, score);
+
+            } catch (err) {
+                // Consumer might have closed during stats collection
+                if (err.message && err.message.includes('closed')) {
+                    s.stopBweMonitoring(consumerId);
+                }
+            }
+        }, BWE_CONFIG.pollInterval);
+
+        s.webrtc.bweIntervals.set(consumerId, interval);
+
+        // Listen for score updates
+        consumer.on('score', (scoreData) => {
+            const consumerState = s.webrtc.bweState.get(consumerId);
+            if (consumerState && scoreData && scoreData.score !== undefined) {
+                consumerState.score = scoreData.score;
+            }
+        });
+
+        s.debugLog('WebRTC', `BWE: Started monitoring for consumer ${consumerId}`);
+    };
+
+    /**
+     * Stop BWE monitoring for a consumer
+     * @param {string} consumerId - Consumer ID
+     */
+    s.stopBweMonitoring = (consumerId) => {
+        const interval = s.webrtc.bweIntervals.get(consumerId);
+        if (interval) {
+            clearInterval(interval);
+            s.webrtc.bweIntervals.delete(consumerId);
+        }
+        s.webrtc.bweState.delete(consumerId);
+    };
+
+    /**
+     * Get BWE stats for a consumer
+     * @param {string} consumerId - Consumer ID
+     * @returns {Object|null} BWE state or null
+     */
+    s.getBweStats = (consumerId) => {
+        const state = s.webrtc.bweState.get(consumerId);
+        if (!state) return null;
+
+        // Quality levels aligned with BWE thresholds
+        // excellent: score >= 9 (upgrade allowed)
+        // good: score >= 8 (stable, no action)
+        // fair: score >= 6 (downgrade triggered)
+        // poor: score < 6 (severely degraded)
+        return {
+            bitrate: state.currentBitrate,
+            score: state.score,
+            fractionLost: state.fractionLost,
+            quality: state.score >= 9 ? 'excellent' :
+                     state.score >= 8 ? 'good' :
+                     state.score >= 6 ? 'fair' : 'poor'
         };
     };
 

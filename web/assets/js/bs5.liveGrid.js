@@ -1451,6 +1451,18 @@ $(document).ready(function(e){
                 .on('touchmove', monitor.magnifyMouseAction)
         }
     })
+    .on('click','.toggle-webrtc-quality-indicator',function(){
+        const monitorId = $(this).parents('[data-mid]').attr('data-mid')
+        const monitorData = loadedLiveGrids[monitorId]
+        if(monitorData && monitorData.webrtcConsumer){
+            const isVisible = !monitorData.webrtcQualityIndicatorVisible
+            monitorData.webrtcQualityIndicatorVisible = isVisible
+            if(monitorData.webrtcConsumer.setQualityIndicatorVisible){
+                monitorData.webrtcConsumer.setQualityIndicatorVisible(isVisible)
+            }
+            console.log('Shinobi WebRTC: Quality indicator ' + (isVisible ? 'enabled' : 'disabled') + ' for ' + monitorId)
+        }
+    })
     $('.open-all-monitors').click(function(){
         openAllLiveGridPlayers()
     })

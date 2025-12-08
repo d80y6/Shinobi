@@ -318,6 +318,27 @@
                             }
                         }, 300);
 
+                        // BWE stats polling for network quality indicator
+                        let bweStatsInterval = null;
+                        // Use the video element's parent as the container
+                        let qualityIndicatorContainer = videoElement.parentElement;
+
+                        // Quality indicator OFF by default - user can enable via menu
+                        // Start BWE stats polling if indicator is explicitly enabled
+                        if (options.showQualityIndicator === true) {
+                            bweStatsInterval = setInterval(async () => {
+                                if (consumer.closed) {
+                                    if (bweStatsInterval) clearInterval(bweStatsInterval);
+                                    return;
+                                }
+
+                                const stats = await getBandwidthStats(socket, consumer.id);
+                                if (stats && qualityIndicatorContainer) {
+                                    updateNetworkQualityIndicator(qualityIndicatorContainer, stats);
+                                }
+                            }, 3000); // Poll every 3 seconds (less frequent than server-side BWE)
+                        }
+
                         // Create wrapper object with close method
                         const consumerWrapper = {
                             consumer: consumer,
@@ -329,6 +350,12 @@
                                     // Clear stall detection intervals
                                     if (keyframeRequestInterval) clearInterval(keyframeRequestInterval);
                                     if (stallCheckInterval) clearInterval(stallCheckInterval);
+                                    // Clear BWE stats interval
+                                    if (bweStatsInterval) clearInterval(bweStatsInterval);
+                                    // Remove quality indicator
+                                    if (qualityIndicatorContainer) {
+                                        removeNetworkQualityIndicator(qualityIndicatorContainer);
+                                    }
                                     consumer.close();
                                     socket.emit('webrtc:closeConsumer', {
                                         consumerId: consumer.id
@@ -366,6 +393,41 @@
                                         }
                                     });
                                 });
+                            },
+                            // Expose method to manually get BWE stats
+                            getBandwidthStats: async () => {
+                                return getBandwidthStats(socket, consumer.id);
+                            },
+                            // Toggle quality indicator visibility
+                            setQualityIndicatorVisible: (visible) => {
+                                if (visible && !bweStatsInterval && qualityIndicatorContainer) {
+                                    // Fetch immediately on enable
+                                    (async () => {
+                                        const stats = await getBandwidthStats(socket, consumer.id);
+                                        if (stats && qualityIndicatorContainer) {
+                                            updateNetworkQualityIndicator(qualityIndicatorContainer, stats);
+                                        }
+                                    })();
+                                    // Then poll every 3 seconds
+                                    bweStatsInterval = setInterval(async () => {
+                                        if (consumer.closed) {
+                                            if (bweStatsInterval) clearInterval(bweStatsInterval);
+                                            return;
+                                        }
+                                        const stats = await getBandwidthStats(socket, consumer.id);
+                                        if (stats) {
+                                            updateNetworkQualityIndicator(qualityIndicatorContainer, stats);
+                                        }
+                                    }, 3000);
+                                } else if (!visible) {
+                                    if (bweStatsInterval) {
+                                        clearInterval(bweStatsInterval);
+                                        bweStatsInterval = null;
+                                    }
+                                    if (qualityIndicatorContainer) {
+                                        removeNetworkQualityIndicator(qualityIndicatorContainer);
+                                    }
+                                }
                             }
                         };
 
@@ -416,6 +478,89 @@
     }
 
     /**
+     * Get BWE (Bandwidth Estimation) stats for a consumer
+     * @param {Object} socket - Socket.io connection
+     * @param {string} consumerId - Consumer ID
+     * @returns {Promise<Object|null>} BWE stats or null
+     */
+    async function getBandwidthStats(socket, consumerId) {
+        return new Promise((resolve) => {
+            socket.emit('webrtc:getBandwidthStats', { consumerId }, (response) => {
+                resolve(response.stats || null);
+            });
+        });
+    }
+
+    /**
+     * Create/update network quality indicator element
+     * @param {HTMLElement} container - Container element (usually the video wrapper)
+     * @param {Object} stats - BWE stats from server
+     * @returns {HTMLElement} The indicator element
+     */
+    function updateNetworkQualityIndicator(container, stats) {
+        if (!container || !stats) return null;
+
+        // Find or create indicator element
+        let indicator = container.querySelector('.webrtc-quality-indicator');
+        if (!indicator) {
+            indicator = document.createElement('div');
+            indicator.className = 'webrtc-quality-indicator';
+            indicator.style.cssText = `
+                position: absolute;
+                top: 5px;
+                right: 5px;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-size: 10px;
+                font-weight: bold;
+                z-index: 100;
+                pointer-events: none;
+                text-shadow: 0 0 2px rgba(0,0,0,0.5);
+            `;
+            container.style.position = 'relative';
+            container.appendChild(indicator);
+        }
+
+        // Update indicator based on quality
+        const qualityColors = {
+            excellent: '#22c55e', // green
+            good: '#eab308',      // yellow
+            fair: '#f97316',      // orange
+            poor: '#ef4444'       // red
+        };
+
+        const qualityLabels = {
+            excellent: 'HD',
+            good: 'SD',
+            fair: 'LOW',
+            poor: 'POOR'
+        };
+
+        const color = qualityColors[stats.quality] || qualityColors.poor;
+        const label = qualityLabels[stats.quality] || 'N/A';
+        const bitrateMbps = (stats.bitrate / 1000000).toFixed(1);
+
+        indicator.style.backgroundColor = color;
+        indicator.style.color = stats.quality === 'good' ? '#000' : '#fff';
+        indicator.textContent = `${label} ${bitrateMbps}M`;
+        indicator.title = `Quality: ${stats.quality}\nBitrate: ${Math.round(stats.bitrate/1000)} kbps\nScore: ${stats.score}/10\nLoss: ${(stats.fractionLost * 100).toFixed(1)}%`;
+
+        return indicator;
+    }
+
+    /**
+     * Remove network quality indicator
+     * @param {HTMLElement} container - Container element
+     */
+    function removeNetworkQualityIndicator(container) {
+        if (!container) return;
+        const indicator = container.querySelector('.webrtc-quality-indicator');
+        if (indicator) {
+            indicator.remove();
+        }
+    }
+
+    /**
      * Reset the device for a specific socket (useful after connection errors)
      * @param {Object} socket - Socket.io connection (optional, if not provided clears nothing)
      */
@@ -460,6 +605,9 @@
         consumeMonitor,
         getProducers,
         getStats,
+        getBandwidthStats,
+        updateNetworkQualityIndicator,
+        removeNetworkQualityIndicator,
         resetDevice,
         isSupported,
         getHandlerName

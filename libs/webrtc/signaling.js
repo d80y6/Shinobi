@@ -199,6 +199,11 @@ module.exports = (s, config, lang, io) => {
                 if (!cn.webrtcConsumers) cn.webrtcConsumers = [];
                 cn.webrtcConsumers.push(consumer.id);
 
+                // Start BWE monitoring for adaptive bitrate
+                if (s.startBweMonitoring) {
+                    s.startBweMonitoring(consumer.id, transport, consumer);
+                }
+
                 // Immediately request keyframe for faster startup
                 // This is especially important for H264 copy mode where keyframes are infrequent
                 setImmediate(async () => {
@@ -316,6 +321,11 @@ module.exports = (s, config, lang, io) => {
 
                 const consumer = s.webrtc.consumers.get(consumerId);
                 if (consumer) {
+                    // Stop BWE monitoring before closing
+                    if (s.stopBweMonitoring) {
+                        s.stopBweMonitoring(consumerId);
+                    }
+
                     consumer.close();
                     s.webrtc.consumers.delete(consumerId);
 
@@ -407,10 +417,37 @@ module.exports = (s, config, lang, io) => {
         });
 
         /**
+         * Get BWE (Bandwidth Estimation) stats for a consumer
+         * Returns current bitrate, quality level, and network score
+         */
+        cn.on('webrtc:getBandwidthStats', async (data, callback) => {
+            try {
+                const { consumerId } = data;
+
+                if (!consumerId) {
+                    if (typeof callback === 'function') callback({ error: 'Missing consumerId' });
+                    return;
+                }
+
+                const stats = s.getBweStats(consumerId);
+                if (typeof callback === 'function') callback({ stats });
+            } catch (error) {
+                if (typeof callback === 'function') callback({ error: error.message });
+            }
+        });
+
+        /**
          * Cleanup on disconnect
          * Close all transports and consumers for this connection
          */
         cn.on('disconnect', () => {
+            // Stop BWE monitoring for all consumers
+            if (cn.webrtcConsumers && s.stopBweMonitoring) {
+                cn.webrtcConsumers.forEach(consumerId => {
+                    s.stopBweMonitoring(consumerId);
+                });
+            }
+
             // Close all transports (which also closes consumers)
             if (cn.webrtcTransports) {
                 cn.webrtcTransports.forEach(transportId => {
