@@ -688,6 +688,10 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
                                         { muted: true }
                                     );
                                     console.log('[WebRTC LiveGrid] Stream started for monitor:', monitor.mid);
+                                    // Update dimensions when video metadata loads for motion detection overlay
+                                    videoElement.addEventListener('loadedmetadata', function() {
+                                        updateLiveGridElementHeightWidth(monitor.mid);
+                                    }, { once: true });
                                 } catch (consumeErr) {
                                     console.error('[WebRTC LiveGrid] Consume error:', consumeErr);
                                     new PNotify({
