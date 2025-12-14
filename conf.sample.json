@@ -28,5 +28,14 @@
     }
   },
   "cron":{},
-  "pluginKeys":{}
+  "pluginKeys":{},
+  "webrtc": {
+    "enabled": false,
+    "listenIp": "0.0.0.0",
+    "announcedIp": null,
+    "rtcMinPort": 40000,
+    "rtcMaxPort": 49999,
+    "rtpPortBase": 50000,
+    "logLevel": "warn"
+  }
 }

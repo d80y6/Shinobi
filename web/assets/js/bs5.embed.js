@@ -32,7 +32,7 @@ function buildStreamElementHtml(streamType){
         html = '<img class="stream-element">';
     }else{
         switch(streamType){
-            case'hls':case'flv':case'mp4':
+            case'hls':case'flv':case'mp4':case'webrtc':
                 html = `<video class="stream-element" playsinline muted autoplay></video>`;
             break;
             case'mjpeg':
@@ -313,6 +313,89 @@ function initiateLiveGridPlayer(monitor){
                 },4000)
             })
         break;
+        case'webrtc':
+            // WebRTC ultra-low latency streaming via mediasoup
+            console.log('[WebRTC Embed] Starting WebRTC player for monitor:', monitor.mid);
+            (async function() {
+                try {
+                    // Check if WebRTC client is available
+                    if (typeof ShinobiWebRTC === 'undefined') {
+                        console.error('[WebRTC Embed] WebRTC client library not loaded');
+                        return;
+                    }
+
+                    if (!ShinobiWebRTC.isSupported()) {
+                        console.error('[WebRTC Embed] Browser does not support WebRTC');
+                        return;
+                    }
+
+                    var videoElement = containerElement.find('.stream-element')[0];
+
+                    // Create dedicated WebSocket connection for WebRTC signaling
+                    if (loadedPlayer.webrtcSocket && loadedPlayer.webrtcSocket.connected) {
+                        loadedPlayer.webrtcSocket.disconnect();
+                    }
+
+                    loadedPlayer.webrtcSocket = io(location.origin, {
+                        path: websocketPath,
+                        transports: ['websocket'],
+                        forceNew: true
+                    });
+
+                    var ws = loadedPlayer.webrtcSocket;
+
+                    ws.on('disconnect', function() {
+                        console.log('[WebRTC Embed] Signaling disconnected');
+                        if (loadedPlayer.webrtcConsumer) {
+                            loadedPlayer.webrtcConsumer.close();
+                            loadedPlayer.webrtcConsumer = null;
+                        }
+                    });
+
+                    ws.on('connect', function() {
+                        console.log('[WebRTC Embed] Signaling connected');
+                        ws.emit('f', {
+                            f: 'init',
+                            auth: $user.auth_token,
+                            ke: monitor.ke,
+                            uid: $user.uid
+                        });
+                    });
+
+                    ws.on('f', async function(data) {
+                        if (data.f === 'init_success') {
+                            try {
+                                loadedPlayer.webrtcConsumer = await ShinobiWebRTC.consumeMonitor(
+                                    ws,
+                                    monitor.mid,
+                                    videoElement,
+                                    { muted: true }
+                                );
+                                console.log('[WebRTC Embed] Stream started for monitor:', monitor.mid);
+                            } catch (consumeErr) {
+                                console.error('[WebRTC Embed] Consume error:', consumeErr);
+                            }
+                        } else if (data.ok === false) {
+                            console.error('[WebRTC Embed] Authentication failed:', data.msg);
+                        }
+                    });
+
+                    loadedPlayer.webrtcCleanup = function() {
+                        if (loadedPlayer.webrtcConsumer) {
+                            loadedPlayer.webrtcConsumer.close();
+                            loadedPlayer.webrtcConsumer = null;
+                        }
+                        if (loadedPlayer.webrtcSocket) {
+                            loadedPlayer.webrtcSocket.disconnect();
+                            loadedPlayer.webrtcSocket = null;
+                        }
+                    };
+
+                } catch (err) {
+                    console.error('[WebRTC Embed] Initialization error:', err);
+                }
+            })();
+        break;
     }
     $.each(onLiveStreamInitiateExtensions,function(n,extender){
         extender(streamType,monitor,loadedPlayer,subStreamChannel)
@@ -349,6 +432,10 @@ function closeLiveGridPlayer(monitorId,killElement){
             if(livePlayerElement.dash){livePlayerElement.dash.reset()}
             if(livePlayerElement.jpegInterval){
                 stopJpegStream(monitorId)
+            }
+            // Cleanup WebRTC resources
+            if(livePlayerElement.webrtcCleanup){
+                livePlayerElement.webrtcCleanup()
             }
             $.each(onLiveStreamCloseExtensions,function(n,extender){
                 extender(livePlayerElement)

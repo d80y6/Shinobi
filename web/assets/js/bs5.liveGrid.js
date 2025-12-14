@@ -89,7 +89,7 @@ function buildStreamElementHtml(streamType){
         html = '<img class="stream-element">';
     }else{
         switch(streamType){
-            case'hls':case'flv':case'mp4':
+            case'hls':case'flv':case'mp4':case'webrtc':
                 html = `<video class="stream-element" playsinline autoplay muted></video>`;
             break;
             case'mjpeg':
@@ -617,6 +617,109 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
                     },4000)
                 })
             break;
+            case'webrtc':
+                // WebRTC ultra-low latency streaming via mediasoup
+                console.log('[WebRTC LiveGrid] Starting WebRTC player for monitor:', monitor.mid);
+                (async function() {
+                    try {
+                        // Check if WebRTC client is available
+                        if (typeof ShinobiWebRTC === 'undefined') {
+                            console.error('[WebRTC LiveGrid] ShinobiWebRTC not available');
+                            new PNotify({
+                                title: lang['WebRTC Not Available'] || 'WebRTC Not Available',
+                                text: lang['WebRTC client library not loaded'] || 'WebRTC client library not loaded. Please refresh the page.',
+                                type: 'error'
+                            });
+                            return;
+                        }
+
+                        if (!ShinobiWebRTC.isSupported()) {
+                            console.error('[WebRTC LiveGrid] WebRTC not supported');
+                            new PNotify({
+                                title: lang['WebRTC Not Supported'] || 'WebRTC Not Supported',
+                                text: lang['Your browser does not support WebRTC'] || 'Your browser does not support WebRTC.',
+                                type: 'error'
+                            });
+                            return;
+                        }
+
+                        var videoElement = containerElement.find('.stream-element')[0];
+
+                        // Create dedicated WebSocket connection for WebRTC signaling
+                        if (loadedPlayer.webrtcSocket && loadedPlayer.webrtcSocket.connected) {
+                            loadedPlayer.webrtcSocket.disconnect();
+                        }
+
+                        loadedPlayer.webrtcSocket = io(location.origin, {
+                            path: websocketPath,
+                            query: websocketQuery,
+                            transports: ['websocket'],
+                            forceNew: true
+                        });
+
+                        var ws = loadedPlayer.webrtcSocket;
+
+                        ws.on('disconnect', function() {
+                            console.log('[WebRTC LiveGrid] Signaling disconnected');
+                            if (loadedPlayer.webrtcConsumer) {
+                                loadedPlayer.webrtcConsumer.close();
+                                loadedPlayer.webrtcConsumer = null;
+                            }
+                        });
+
+                        ws.on('connect', function() {
+                            console.log('[WebRTC LiveGrid] Signaling connected, authenticating...');
+                            ws.emit('f', {
+                                f: 'init',
+                                auth: $user.auth_token,
+                                ke: monitor.ke,
+                                uid: $user.uid
+                            });
+                        });
+
+                        ws.on('f', async function(data) {
+                            if (data.f === 'init_success') {
+                                console.log('[WebRTC LiveGrid] Authenticated, starting consume...');
+                                try {
+                                    loadedPlayer.webrtcConsumer = await ShinobiWebRTC.consumeMonitor(
+                                        ws,
+                                        monitor.mid,
+                                        videoElement,
+                                        { muted: true }
+                                    );
+                                    console.log('[WebRTC LiveGrid] Stream started for monitor:', monitor.mid);
+                                    // Update dimensions when video metadata loads for motion detection overlay
+                                    videoElement.addEventListener('loadedmetadata', function() {
+                                        updateLiveGridElementHeightWidth(monitor.mid);
+                                    }, { once: true });
+                                } catch (consumeErr) {
+                                    console.error('[WebRTC LiveGrid] Consume error:', consumeErr);
+                                    new PNotify({
+                                        title: lang['WebRTC Error'] || 'WebRTC Error',
+                                        text: consumeErr.message || 'Failed to start WebRTC stream',
+                                        type: 'error'
+                                    });
+                                }
+                            } else if (data.ok === false) {
+                                console.error('[WebRTC LiveGrid] Auth failed:', data.msg);
+                                new PNotify({
+                                    title: lang['Authentication Failed'] || 'Authentication Failed',
+                                    text: data.msg || 'Failed to authenticate for WebRTC stream',
+                                    type: 'error'
+                                });
+                            }
+                        });
+
+                    } catch (err) {
+                        console.error('[WebRTC LiveGrid] Init error:', err);
+                        new PNotify({
+                            title: lang['WebRTC Error'] || 'WebRTC Error',
+                            text: err.message || 'Failed to initialize WebRTC',
+                            type: 'error'
+                        });
+                    }
+                })();
+            break;
         }
     $.each(onLiveStreamInitiateExtensions,function(n,extender){
         extender(streamType,monitor,loadedPlayer,subStreamChannel)
@@ -682,6 +785,15 @@ function closeLiveGridPlayer(monitorId,killElement){
             if(loadedPlayer.dash){loadedPlayer.dash.reset()}
             if(loadedPlayer.jpegInterval){
                 stopJpegStream(monitorId)
+            }
+            // Cleanup WebRTC resources
+            if(loadedPlayer.webrtcConsumer){
+                loadedPlayer.webrtcConsumer.close();
+                loadedPlayer.webrtcConsumer = null;
+            }
+            if(loadedPlayer.webrtcSocket){
+                loadedPlayer.webrtcSocket.disconnect();
+                loadedPlayer.webrtcSocket = null;
             }
             $.each(onLiveStreamCloseExtensions,function(n,extender){
                 extender(loadedPlayer)
@@ -1341,6 +1453,18 @@ $(document).ready(function(e){
             zoomHoverShade
                 .on('mousemove', monitor.magnifyMouseAction)
                 .on('touchmove', monitor.magnifyMouseAction)
+        }
+    })
+    .on('click','.toggle-webrtc-quality-indicator',function(){
+        const monitorId = $(this).parents('[data-mid]').attr('data-mid')
+        const monitorData = loadedLiveGrids[monitorId]
+        if(monitorData && monitorData.webrtcConsumer){
+            const isVisible = !monitorData.webrtcQualityIndicatorVisible
+            monitorData.webrtcQualityIndicatorVisible = isVisible
+            if(monitorData.webrtcConsumer.setQualityIndicatorVisible){
+                monitorData.webrtcConsumer.setQualityIndicatorVisible(isVisible)
+            }
+            console.log('Shinobi WebRTC: Quality indicator ' + (isVisible ? 'enabled' : 'disabled') + ' for ' + monitorId)
         }
     })
     $('.open-all-monitors').click(function(){

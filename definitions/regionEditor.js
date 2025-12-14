@@ -9,7 +9,7 @@ module.exports = (s,config,lang) => {
                 "color": "green",
                 isFormGroupGroup: true,
                 "noHeader": true,
-                "section-class": "col-md-6",
+                "section-class": "col-md-4",
                 "noDefaultSectionClasses": true,
                 "info": [
                     {
@@ -168,7 +168,7 @@ module.exports = (s,config,lang) => {
            "Points": {
               "name": lang["Points"],
               "color": "orange",
-              "section-pre-class": "col-md-6",
+              "section-pre-class": "col-md-8",
               "style": "overflow:auto",
               "blockquoteClass": "global_tip",
               "blockquote": lang.RegionNote,

@@ -191,6 +191,35 @@ module.exports = (s,config,lang) => {
                     delete(activeMonitor.mp4frag[channel])
                 })
             }
+            // Cleanup WebRTC resources - must await to ensure port is released before restart
+            if(activeMonitor.webrtcProducer || activeMonitor.webrtcRtpTransport){
+                // Close transport directly if it exists (handles case where producer wasn't created yet)
+                if(activeMonitor.webrtcRtpTransport){
+                    try {
+                        activeMonitor.webrtcRtpTransport.close();
+                    } catch(err) {
+                        // Transport may already be closed
+                    }
+                }
+                if(activeMonitor.webrtcProducer){
+                    try {
+                        activeMonitor.webrtcProducer.close();
+                    } catch(err) {
+                        // Producer may already be closed
+                    }
+                }
+                if(s.cleanupWebrtcMonitor){
+                    try {
+                        await s.cleanupWebrtcMonitor(groupKey, e.id || e.mid);
+                    } catch(err) {
+                        s.debugLog('WebRTC', `Cleanup error: ${err.message}`)
+                    }
+                }
+                // Small delay to ensure OS releases the port
+                await new Promise(r => setTimeout(r, 150));
+                delete activeMonitor.webrtcProducer;
+                delete activeMonitor.webrtcRtpTransport;
+            }
             if(config.childNodes.enabled === true && config.childNodes.mode === 'child' && config.childNodes.host){
                 s.cx({f:'clearCameraFromActiveList',ke:groupKey,id:e.id})
             }
@@ -1332,6 +1361,80 @@ module.exports = (s,config,lang) => {
                       activeMonitor.emitter.emit('data',Buffer.concat(buffer))
                       buffer = null
                   }
+               }
+           break;
+           case'webrtc':
+               // WebRTC streaming - initialize mediasoup producer after FFmpeg starts
+               if(config.webrtc && config.webrtc.enabled && s.createRtpTransportOnPort){
+                   (async () => {
+                       try {
+                           // Use the RTP port that FFmpeg was configured with
+                           const ffmpegRtpPort = e.webrtcInfo?.rtpPort;
+                           if (!ffmpegRtpPort) {
+                               s.debugLog('WebRTC', `No RTP port info from FFmpeg for ${groupKey}/${monitorId}`);
+                               return;
+                           }
+                           // Create RTP transport for ingestion from FFmpeg using the same port
+                           const { transport, rtpPort } = await s.createRtpTransportOnPort(groupKey, monitorId, ffmpegRtpPort);
+                           activeMonitor.webrtcRtpTransport = transport;
+
+                           // Wait briefly for FFmpeg to start sending RTP packets
+                           setTimeout(async () => {
+                               try {
+                                   if(!activeMonitor.isStarted) {
+                                       return; // Monitor may have stopped
+                                   }
+
+                                   // Create producer with codec info from FFmpeg builder
+                                   const codec = e.webrtcInfo?.codec || 'H264';
+                                   let codecInfo;
+                                   if (codec === 'VP9') {
+                                       codecInfo = {
+                                           mimeType: 'video/VP9',
+                                           payloadType: e.webrtcInfo?.payloadType || 96,
+                                           ssrc: e.webrtcInfo?.ssrc || 0,
+                                           clockRate: 90000,
+                                           parameters: { 'profile-id': 0 }  // Profile 0 is most compatible
+                                       };
+                                   } else if (codec === 'VP8') {
+                                       codecInfo = {
+                                           mimeType: 'video/VP8',
+                                           payloadType: e.webrtcInfo?.payloadType || 96,
+                                           ssrc: e.webrtcInfo?.ssrc || 0,
+                                           clockRate: 90000
+                                       };
+                                   } else {
+                                       codecInfo = {
+                                           mimeType: 'video/H264',
+                                           payloadType: e.webrtcInfo?.payloadType || 96,
+                                           ssrc: e.webrtcInfo?.ssrc || 0,
+                                           parameters: {
+                                               'packetization-mode': 1,
+                                               'profile-level-id': '42e01f',
+                                               'level-asymmetry-allowed': 1
+                                           }
+                                       };
+                                   }
+
+                                   const producer = await s.createWebrtcProducer(
+                                       groupKey,
+                                       monitorId,
+                                       transport,
+                                       codecInfo
+                                   );
+                                   activeMonitor.webrtcProducer = producer;
+                                   s.debugLog('WebRTC', `Producer created for ${groupKey}/${monitorId}`);
+                                   resetStreamCheck(e);
+                               } catch (producerErr) {
+                                   s.debugLog('WebRTC', `Producer creation failed: ${producerErr.message}`);
+                               }
+                           }, 1500); // Wait for FFmpeg RTP output to stabilize
+                       } catch (err) {
+                           s.debugLog('WebRTC', `RTP transport creation failed: ${err.message}`);
+                       }
+                   })();
+               } else {
+                   s.debugLog('WebRTC', 'WebRTC streaming selected but not enabled in configuration');
                }
            break;
         }

@@ -3,7 +3,8 @@ module.exports = function(s,config,lang,io){
     s.onOtherWebSocketMessages(async (d,cn,tx) => {
         const authKey = cn.auth
         const groupKey = cn.ke
-        const user = s.group[groupKey].users[authKey];
+        const user = s.group[groupKey]?.users?.[authKey];
+        if (!user) return; // User session not found (likely disconnected)
         const monitorId = d.mid || d.id;
         const callbackId = d.callbackId;
         const response = { f: 'callback', callbackId, args: [true] }

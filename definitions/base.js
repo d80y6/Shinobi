@@ -2470,6 +2470,12 @@ module.exports = function(s,config,lang){
                  "class": "default magnify-glass-live-grid-stream",
                  "icon": "search-plus"
               },
+              "Network Quality": {
+                 "label": lang['Network Quality'] || 'Network Quality',
+                 "class": "default toggle-webrtc-quality-indicator",
+                 "icon": "signal",
+                 eval: `streamType === 'webrtc'`,
+              },
               // "Calendar": {
               //    "label": lang['Calendar'],
               //    "attr": `monitor="calendar"`,

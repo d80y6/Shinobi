@@ -22,7 +22,7 @@ module.exports = function(s,config,lang,app,io){
             if(data in s.dataPortTokens){
                 client.removeListener('message', onAuthenticate);
                 client.on('message', onAuthenticatedData)
-                delete(s.dataPortTokens[data]);
+                // Token kept for reconnection - cleanup happens when camera process ends
             }else{
                 client.terminate()
             }

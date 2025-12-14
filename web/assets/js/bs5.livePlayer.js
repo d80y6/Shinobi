@@ -10,12 +10,13 @@ function createLivePlayerTab(monitor){
         return
     }
     var monitorDetails = safeJsonParse(monitor.details)
+    console.log('[LivePlayer] Creating player for monitor:', monitor.mid, 'stream_type:', monitorDetails.stream_type);
     var newTabId = `livePlayer-${monitor.mid}`
     var tabLabel = `<b>${lang['Stream']}</b> : ${monitor.name}<br><small>${monitor.mid}</small>`
     var streamElement
     if(!loadedLivePlayers[monitor.mid])loadedLivePlayers[monitor.mid] = {}
     switch(monitorDetails.stream_type){
-        case'hls':case'flv':case'mp4':
+        case'hls':case'flv':case'mp4':case'webrtc':
             streamElement = `<video class="stream-element" playsinline muted autoplay></video>`;
         break;
         case'mjpeg':
@@ -301,6 +302,118 @@ function initiateLivePlayer(monitor){
               loadedPlayer.h265HttpStream = player.createHttpStream(url)
             }
         break;
+        case'webrtc':
+            // WebRTC ultra-low latency streaming via mediasoup
+            console.log('[WebRTC] Starting WebRTC player for monitor:', monitor.mid);
+            (async function() {
+                try {
+                    // Check if WebRTC client is available
+                    console.log('[WebRTC] Checking ShinobiWebRTC availability:', typeof ShinobiWebRTC);
+                    console.log('[WebRTC] mediasoupClient availability:', typeof mediasoupClient);
+                    if (typeof ShinobiWebRTC === 'undefined') {
+                        $.ccio.init('note', {
+                            title: lang['WebRTC Not Available'] || 'WebRTC Not Available',
+                            text: lang['WebRTC client library not loaded'] || 'WebRTC client library not loaded. Please refresh the page.',
+                            type: 'error'
+                        });
+                        return;
+                    }
+
+                    if (!ShinobiWebRTC.isSupported()) {
+                        $.ccio.init('note', {
+                            title: lang['WebRTC Not Supported'] || 'WebRTC Not Supported',
+                            text: lang['Your browser does not support WebRTC'] || 'Your browser does not support WebRTC. Try a modern browser like Chrome, Firefox, or Edge.',
+                            type: 'error'
+                        });
+                        return;
+                    }
+
+                    var videoElement = containerElement.find('.stream-element')[0];
+
+                    // Create dedicated WebSocket connection for WebRTC signaling
+                    if (loadedPlayer.webrtcSocket && loadedPlayer.webrtcSocket.connected) {
+                        loadedPlayer.webrtcSocket.disconnect();
+                    }
+
+                    loadedPlayer.webrtcSocket = io(location.origin, {
+                        path: websocketPath,
+                        query: websocketQuery,
+                        transports: ['websocket'],
+                        forceNew: true
+                    });
+
+                    var ws = loadedPlayer.webrtcSocket;
+
+                    ws.on('disconnect', function() {
+                        console.log('WebRTC signaling disconnected');
+                        if (loadedPlayer.webrtcConsumer) {
+                            loadedPlayer.webrtcConsumer.close();
+                            loadedPlayer.webrtcConsumer = null;
+                        }
+                    });
+
+                    ws.on('connect', function() {
+                        console.log('WebRTC signaling connected');
+                        // Authenticate with server
+                        ws.emit('f', {
+                            f: 'init',
+                            auth: $user.auth_token,
+                            ke: monitor.ke,
+                            uid: $user.uid
+                        });
+                    });
+
+                    ws.on('f', async function(data) {
+                        if (data.f === 'init_success') {
+                            // Authentication successful, start WebRTC consumption
+                            try {
+                                loadedPlayer.webrtcConsumer = await ShinobiWebRTC.consumeMonitor(
+                                    ws,
+                                    monitor.mid,
+                                    videoElement,
+                                    { muted: true }
+                                );
+                                console.log('WebRTC stream started for monitor:', monitor.mid);
+                            } catch (consumeErr) {
+                                console.error('WebRTC consume error:', consumeErr);
+                                $.ccio.init('note', {
+                                    title: lang['WebRTC Error'] || 'WebRTC Error',
+                                    text: consumeErr.message || 'Failed to start WebRTC stream',
+                                    type: 'error'
+                                });
+                            }
+                        } else if (data.ok === false) {
+                            console.error('WebRTC authentication failed:', data.msg);
+                            $.ccio.init('note', {
+                                title: lang['Authentication Failed'] || 'Authentication Failed',
+                                text: data.msg || 'Failed to authenticate for WebRTC stream',
+                                type: 'error'
+                            });
+                        }
+                    });
+
+                    // Store cleanup function
+                    loadedPlayer.webrtcCleanup = function() {
+                        if (loadedPlayer.webrtcConsumer) {
+                            loadedPlayer.webrtcConsumer.close();
+                            loadedPlayer.webrtcConsumer = null;
+                        }
+                        if (loadedPlayer.webrtcSocket) {
+                            loadedPlayer.webrtcSocket.disconnect();
+                            loadedPlayer.webrtcSocket = null;
+                        }
+                    };
+
+                } catch (err) {
+                    console.error('WebRTC initialization error:', err);
+                    $.ccio.init('note', {
+                        title: lang['WebRTC Error'] || 'WebRTC Error',
+                        text: err.message || 'Failed to initialize WebRTC',
+                        type: 'error'
+                    });
+                }
+            })();
+        break;
     }
 }
 function closeLivePlayer(tabId){
@@ -315,6 +428,10 @@ function closeLivePlayer(tabId){
         if(livePlayerElement.dash){livePlayerElement.dash.reset()}
         if(livePlayerElement.h265HttpStream && livePlayerElement.abort){
             livePlayerElement.h265HttpStream.abort()
+        }
+        // Cleanup WebRTC resources
+        if(livePlayerElement.webrtcCleanup){
+            livePlayerElement.webrtcCleanup()
         }
     }catch(err){
         console.log(err)
