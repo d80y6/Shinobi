@@ -292,7 +292,7 @@ module.exports = function(jsonData,pamDiffResponder,alternatePamDiff){
                     y: y
                 })
             })
-            if(region.polygon.length < 4)return logData(`Failed to Create Region : ${monitorName} : ${region.name}`,region.points);
+            if(region.polygon.length < 3)return logData(`Failed to Create Region : ${monitorName} : ${region.name}`,region.points);
             if(region.sensitivity===''){
                 region.sensitivity = globalSensitivity
             }else{
