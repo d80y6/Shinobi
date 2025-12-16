@@ -130,13 +130,13 @@ function attachVideoElementErrorHandler(monitorId){
         console.error(`Failed to Set Error Handler for Video Element`,err)
     }
 }
-function resetMonitorCanvas(monitorId,initiateAfter,subStreamChannel){
+async function resetMonitorCanvas(monitorId,initiateAfter,subStreamChannel){
     var monitor = loadedMonitors[monitorId]
     var details = monitor.details
     var streamType = subStreamChannel ? details.substream ? details.substream.output.stream_type : 'hls' : details.stream_type
     if(!liveGridElements[monitorId])return;
     var streamBlock = liveGridElements[monitorId].monitorItem.find('.stream-block')
-    closeLiveGridPlayer(monitorId,false)
+    await closeLiveGridPlayer(monitorId,false)  // Wait for cleanup to complete
     streamBlock.find('.stream-element').remove()
     streamBlock.append(buildStreamElementHtml(streamType))
     attachVideoElementErrorHandler(monitorId)
@@ -409,9 +409,19 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
     var monitorItem = livePlayerBlocks.monitorItem
     var loadedMonitor = loadedMonitors[monitorId]
     var loadedPlayer = loadedLiveGrids[monitorId]
+
+    // Wait for cleanup to complete before initializing
+    if (loadedPlayer && loadedPlayer.cleaningUp) {
+        setTimeout(() => initiateLiveGridPlayer(monitor, subStreamChannel), 100);
+        return;
+    }
+
     var websocketPath = checkCorrectPathEnding(location.pathname) + 'socket.io'
     var containerElement = $(`#monitor_live_${monitor.mid}`)
     var streamType = subStreamChannel ? details.substream ? details.substream.output.stream_type : 'hls' : details.stream_type
+
+    console.log(`[LiveGrid] Initializing ${streamType} for monitor ${monitor.mid}${subStreamChannel ? ' (substream)' : ''}`);
+
     var isInView = isScrolledIntoView(monitorItem[0])
     if(!isInView){
         return;
@@ -471,10 +481,34 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
             break;
             case'mp4':
                 var stream = containerElement.find('.stream-element');
-                var onPoseidonError = function(){
-                    // setTimeout(function(){
-                    //     mainSocket.f({f:'monitor',ff:'watch_on',id:monitorId})
-                    // },2000)
+                var onPoseidonError = function(err){
+                    console.error('[Poseidon Error] Monitor:', monitor.mid, 'Error:', err);
+
+                    if(!loadedPlayer.PoseidonErrorCount) loadedPlayer.PoseidonErrorCount = 0;
+                    loadedPlayer.PoseidonErrorCount++;
+
+                    // Give up after 5 errors
+                    if(loadedPlayer.PoseidonErrorCount >= 5) {
+                        console.error('[Poseidon] Max retry attempts reached for monitor', monitor.mid);
+                        new PNotify({
+                            title: lang['Stream Error'] || 'Stream Error',
+                            text: 'Unable to establish MP4 stream connection after multiple attempts',
+                            type: 'error'
+                        });
+                        return;
+                    }
+
+                    // Retry with exponential backoff
+                    const retryDelay = Math.min(1000 * Math.pow(2, loadedPlayer.PoseidonErrorCount - 1), 10000);
+                    console.log(`[Poseidon] Retry attempt ${loadedPlayer.PoseidonErrorCount}/5 in ${retryDelay}ms...`);
+
+                    setTimeout(() => {
+                        if (loadedPlayer.Poseidon) {
+                            loadedPlayer.Poseidon.stop();
+                        }
+                        // Reinitialize Poseidon stream (same type, no fallback)
+                        initiateLiveGridPlayer(monitor, subStreamChannel);
+                    }, retryDelay);
                 }
                 if(!loadedPlayer.PoseidonErrorCount)loadedPlayer.PoseidonErrorCount = 0
                 if(loadedPlayer.PoseidonErrorCount >= 5)return
@@ -497,6 +531,7 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
                             channel : subStreamChannel
                         })
                         loadedPlayer.Poseidon.start();
+                        loadedPlayer.PoseidonErrorCount = 0;  // Reset error count on successful init
                     }catch(err){
                         // onPoseidonError()
                         console.log('onTryPoseidonError',err)
@@ -774,31 +809,88 @@ function revokeVideoPlayerUrl(monitorId){
         debugLog(err)
     }
 }
-function closeLiveGridPlayer(monitorId,killElement){
+async function closeLiveGridPlayer(monitorId,killElement){
     try{
+        console.log(`[LiveGrid] Closing player for monitor ${monitorId}${killElement ? ' (removing element)' : ''}`);
+
         var loadedPlayer = loadedLiveGrids[monitorId]
         if(loadedPlayer){
-            if(loadedPlayer.hls){loadedPlayer.hls.destroy()}
+            // Mark as cleaning up to prevent new initializations
+            loadedPlayer.cleaningUp = true;
+
+            // Wait for all cleanup to complete
+            const cleanupPromises = [];
+
+            if(loadedPlayer.hls){
+                cleanupPromises.push(new Promise(resolve => {
+                    loadedPlayer.hls.destroy();
+                    resolve();
+                }));
+            }
             clearTimeout(loadedPlayer.m3uCheck)
-            if(loadedPlayer.Poseidon){loadedPlayer.Poseidon.stop()}
-            if(loadedPlayer.Base64){loadedPlayer.Base64.disconnect()}
-            if(loadedPlayer.dash){loadedPlayer.dash.reset()}
+
+            if(loadedPlayer.Poseidon){
+                cleanupPromises.push(new Promise(resolve => {
+                    loadedPlayer.Poseidon.stop();
+                    setTimeout(resolve, 100); // Allow socket disconnect
+                }));
+            }
+
+            if(loadedPlayer.Base64){
+                cleanupPromises.push(new Promise(resolve => {
+                    loadedPlayer.Base64.disconnect();
+                    resolve();
+                }));
+            }
+
+            if(loadedPlayer.dash){
+                cleanupPromises.push(new Promise(resolve => {
+                    loadedPlayer.dash.reset();
+                    resolve();
+                }));
+            }
+
             if(loadedPlayer.jpegInterval){
                 stopJpegStream(monitorId)
             }
+
             // Cleanup WebRTC resources
             if(loadedPlayer.webrtcConsumer){
-                loadedPlayer.webrtcConsumer.close();
-                loadedPlayer.webrtcConsumer = null;
+                cleanupPromises.push(new Promise(resolve => {
+                    loadedPlayer.webrtcConsumer.close();
+                    loadedPlayer.webrtcConsumer = null;
+                    resolve();
+                }));
             }
+
             if(loadedPlayer.webrtcSocket){
-                loadedPlayer.webrtcSocket.disconnect();
-                loadedPlayer.webrtcSocket = null;
+                cleanupPromises.push(new Promise(resolve => {
+                    loadedPlayer.webrtcSocket.disconnect();
+                    loadedPlayer.webrtcSocket = null;
+                    setTimeout(resolve, 50); // Allow disconnect
+                }));
             }
+
+            // Wait for all cleanup operations to complete
+            await Promise.all(cleanupPromises);
+
             $.each(onLiveStreamCloseExtensions,function(n,extender){
                 extender(loadedPlayer)
             })
             clearInterval(loadedPlayer.signal)
+
+            // Now safe to reset video element
+            if(liveGridElements[monitorId]){
+                const videoEl = liveGridElements[monitorId].monitorItem.find('video')[0];
+                if (videoEl) {
+                    videoEl.pause();
+                    videoEl.removeAttribute('src');
+                    videoEl.load();
+                    videoEl.srcObject = null;
+                }
+            }
+
+            delete loadedPlayer.cleaningUp;
         }
         if(liveGridElements[monitorId]){
             revokeVideoPlayerUrl(monitorId)

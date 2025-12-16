@@ -29,12 +29,18 @@ var Poseidon = function () {
             this._callback = callback;
         } else {
             this._callback = function (err, msg) {
+                const logPrefix = `[Poseidon ${options.ke}/${options.id}]`;
                 if (err) {
                     if(_monitor.errorCallback)_monitor.errorCallback(err)
-                    console.error('Poseidon Error: ' + err,options);
+                    console.error(`${logPrefix} Error:`, err, {
+                        monitor: options.id,
+                        channel: options.channel,
+                        namespace: _this._namespace,
+                        timestamp: new Date().toISOString()
+                    });
                     return;
                 }
-                console.log('Poseidon Message: ' + msg,options);
+                console.log(`${logPrefix} Message:`, msg);
             };
         }
         if (!options.video || !(options.video instanceof HTMLVideoElement)) {
