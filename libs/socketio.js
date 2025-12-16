@@ -224,9 +224,31 @@ module.exports = function(s,config,lang,io){
 
             var tx = function(z){cn.emit('data',z);}
             const cleanup = () => {
+                console.log(`[Socket.io MP4] Cleanup for ${d.ke}/${d.id} channel:${d.channel || 'main'} (connection: ${cn.id})`);
+
                 if (mp4frag) {
-                    if (onSegment) mp4frag.removeListener('segment', onSegment);
-                    if (onInitialized) mp4frag.removeListener('initialized', onInitialized);
+                    // Only remove THIS connection's listeners, not all
+                    if (onSegment) {
+                        mp4frag.removeListener('segment', onSegment);
+                        onSegment = null;
+                    }
+                    if (onInitialized) {
+                        mp4frag.removeListener('initialized', onInitialized);
+                        onInitialized = null;
+                    }
+
+                    // Remove from active connections tracking
+                    if (mp4frag._activeConnections) {
+                        mp4frag._activeConnections.delete(cn.id);
+
+                        console.log(`[Socket.io MP4] Remaining active connections: ${mp4frag._activeConnections.size}`);
+
+                        // Only stop mp4frag if no active connections
+                        if (mp4frag._activeConnections.size === 0) {
+                            // Can safely clean up mp4frag resources here
+                            // Currently no additional cleanup needed, but this is where it would go
+                        }
+                    }
                 }
                 cn.removeAllListeners('MP4Command');
             };
@@ -246,6 +268,12 @@ module.exports = function(s,config,lang,io){
                     onFail('MP4 fragment not available');
                     return;
                 }
+
+                // Track active connections per mp4frag
+                if (!mp4frag._activeConnections) {
+                    mp4frag._activeConnections = new Set();
+                }
+                mp4frag._activeConnections.add(cn.id);
 
                 // Define handlers
                 onSegment = function(data) {

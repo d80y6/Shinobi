@@ -34,8 +34,10 @@
     "listenIp": "0.0.0.0",
     "announcedIp": null,
     "rtcMinPort": 40000,
-    "rtcMaxPort": 49999,
+    "maxWorkers": 2,
     "rtpPortBase": 50000,
-    "logLevel": "warn"
+    "logLevel": "warn",
+    "enableUdp": false,
+    "forceTcp": true
   }
 }

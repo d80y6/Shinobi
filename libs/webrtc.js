@@ -86,6 +86,7 @@ module.exports = async (s, config, lang, app, io) => {
         bweIntervals: new Map(),      // consumerId -> intervalId (for cleanup)
         nextWorkerIdx: 0,
         nextRtpPortIndex: 0,          // Counter for port allocation (prevents collision on restart)
+        webrtcServers: new Map(),     // workerPid -> webRtcServer (for port sharing)
         mediaCodecs: mediaCodecs
     };
 
@@ -102,13 +103,50 @@ module.exports = async (s, config, lang, app, io) => {
                 rtcMaxPort: config.webrtc.rtcMaxPort
             });
 
+            // Create WebRtcServer for this worker (enables port sharing across transports)
+            try {
+                const tcpPort = (config.webrtc.rtcMinPort || 40000) + i;
+                const listenInfos = [{
+                    protocol: 'tcp',
+                    ip: config.webrtc.listenIp || '0.0.0.0',
+                    announcedAddress: config.webrtc.announcedIp || undefined,
+                    port: tcpPort
+                }];
+
+                // Optional UDP support (doubles port requirement)
+                if (config.webrtc.enableUdp === true) {
+                    listenInfos.push({
+                        protocol: 'udp',
+                        ip: config.webrtc.listenIp || '0.0.0.0',
+                        announcedAddress: config.webrtc.announcedIp || undefined,
+                        port: tcpPort + numWorkers
+                    });
+                }
+
+                const webRtcServer = await worker.createWebRtcServer({ listenInfos });
+                s.webrtc.webrtcServers.set(worker.pid, webRtcServer);
+                s.debugLog('WebRTC', `Worker ${worker.pid}: WebRtcServer on port ${tcpPort}`);
+            } catch (err) {
+                s.systemLog(`WebRTC: Failed to create WebRtcServer for worker ${i}: ${err.message}`);
+            }
+
             worker.on('died', (error) => {
                 s.systemLog(`WebRTC: Worker ${worker.pid} died! Error: ${error?.message || 'unknown'}`);
-                // Remove dead worker and attempt to create a new one
+
+                // Cleanup WebRtcServer for dead worker
+                const deadPid = worker.pid;
+                const webRtcServer = s.webrtc.webrtcServers.get(deadPid);
+                if (webRtcServer) {
+                    try { webRtcServer.close(); } catch (e) {}
+                    s.webrtc.webrtcServers.delete(deadPid);
+                }
+
+                // Remove dead worker
                 const idx = s.webrtc.workers.indexOf(worker);
                 if (idx !== -1) {
                     s.webrtc.workers.splice(idx, 1);
                 }
+
                 // Attempt to restart worker after delay
                 setTimeout(async () => {
                     try {
@@ -117,6 +155,23 @@ module.exports = async (s, config, lang, app, io) => {
                             rtcMinPort: config.webrtc.rtcMinPort,
                             rtcMaxPort: config.webrtc.rtcMaxPort
                         });
+
+                        // Create WebRtcServer for replacement worker
+                        const tcpPort = (config.webrtc.rtcMinPort || 40000) + s.webrtc.workers.length;
+                        try {
+                            const listenInfos = [{
+                                protocol: 'tcp',
+                                ip: config.webrtc.listenIp || '0.0.0.0',
+                                announcedAddress: config.webrtc.announcedIp || undefined,
+                                port: tcpPort
+                            }];
+                            const webRtcServer = await newWorker.createWebRtcServer({ listenInfos });
+                            s.webrtc.webrtcServers.set(newWorker.pid, webRtcServer);
+                            s.debugLog('WebRTC', `Replacement worker ${newWorker.pid}: WebRtcServer on port ${tcpPort}`);
+                        } catch (err) {
+                            s.systemLog(`WebRTC: Failed to create WebRtcServer for replacement: ${err.message}`);
+                        }
+
                         s.webrtc.workers.push(newWorker);
                         s.debugLog('WebRTC', `Replacement worker ${newWorker.pid} created`);
                     } catch (err) {
@@ -162,6 +217,9 @@ module.exports = async (s, config, lang, app, io) => {
 
         const worker = s.getNextMediasoupWorker();
         const router = await worker.createRouter({ mediaCodecs });
+
+        // Store worker PID for WebRtcServer lookup
+        router.appData = { workerPid: worker.pid };
 
         router.on('workerclose', () => {
             s.debugLog('WebRTC', `Router for group ${groupKey} closed due to worker close`);
@@ -303,23 +361,34 @@ module.exports = async (s, config, lang, app, io) => {
      */
     s.createWebRtcTransport = async (groupKey) => {
         const router = await s.getOrCreateRouter(groupKey);
-
-        // Allow forcing TCP-only via config (useful for VPN/restrictive networks)
         const forceTcp = config.webrtc.forceTcp === true;
 
-        const transport = await router.createWebRtcTransport({
-            listenIps: [{
-                ip: config.webrtc.listenIp,
-                announcedIp: config.webrtc.announcedIp || undefined
-            }],
-            enableUdp: !forceTcp,   // Disable UDP if forceTcp is set
-            enableTcp: true,        // TCP as fallback (or primary if forceTcp)
-            preferUdp: !forceTcp,   // Prefer UDP unless forceTcp
+        // Get WebRtcServer for this router's worker (enables port sharing)
+        const workerPid = router.appData?.workerPid;
+        const webRtcServer = workerPid ? s.webrtc.webrtcServers.get(workerPid) : null;
+
+        const transportOptions = {
+            enableUdp: config.webrtc.enableUdp === true && !forceTcp,
+            enableTcp: true,
+            preferUdp: config.webrtc.enableUdp === true && !forceTcp,
+            preferTcp: forceTcp || config.webrtc.enableUdp !== true,
             initialAvailableOutgoingBitrate: 1000000,
             minimumAvailableOutgoingBitrate: 600000,
             maxSctpMessageSize: 262144,
             maxIncomingBitrate: 1500000
-        });
+        };
+
+        // Use WebRtcServer if available (port sharing), otherwise fall back to listenIps
+        if (webRtcServer) {
+            transportOptions.webRtcServer = webRtcServer;
+        } else {
+            transportOptions.listenIps = [{
+                ip: config.webrtc.listenIp,
+                announcedIp: config.webrtc.announcedIp || undefined
+            }];
+        }
+
+        const transport = await router.createWebRtcTransport(transportOptions);
 
         transport.on('close', () => {
             s.debugLog('WebRTC', `WebRtcTransport ${transport.id} closed`);
@@ -731,7 +800,8 @@ module.exports = async (s, config, lang, app, io) => {
     };
 
     // Log successful initialization
-    s.systemLog(`WebRTC: Initialized with ${s.webrtc.workers.length} workers (ports ${config.webrtc.rtcMinPort}-${config.webrtc.rtcMaxPort})`);
+    const maxPort = (config.webrtc.rtcMinPort || 40000) + s.webrtc.workers.length - 1;
+    s.systemLog(`WebRTC: Initialized with ${s.webrtc.workers.length} workers (ports ${config.webrtc.rtcMinPort || 40000}-${maxPort})`);
 
     // Load signaling handlers
     require('./webrtc/signaling.js')(s, config, lang, io);
