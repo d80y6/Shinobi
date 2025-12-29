@@ -255,10 +255,10 @@ module.exports = (processCwd,config) => {
             } catch (e) {
               if (currentIsWithinDetectorFilters) {
                 // Special handling for detector_filters - allow comparison operators
-                obj[key] = obj[key].replace(/[^\w\s.\-=+(){}\[\]*$@!`^%#:?\/&,><=!'|"]/gi, '');
+                obj[key] = obj[key].replace(/[^\w\p{L}\p{N}\s.\-=+(){}\[\]*$@!`^%#:?\/&,><=!'|"]/giu, '');
               } else {
                 // Normal string cleaning
-                obj[key] = obj[key].replace(/[^\w\s.\-=+(){}\[\]*$@!`^%#:?\/&,'|"]/gi, '');
+                obj[key] = obj[key].replace(/[^\w\p{L}\p{N}\s.\-=+(){}\[\]*$@!`^%#:?\/&,'|"]/giu, '');
               }
             }
           }
@@ -278,9 +278,9 @@ module.exports = (processCwd,config) => {
                   obj[key][index] = cleanStringsInObject(parsed, currentIsWithinDetectorFilters);
                 } catch (e) {
                   if (currentIsWithinDetectorFilters) {
-                    obj[key][index] = item.replace(/[^\w\s.\-=+(){}\[\]*$@!`^%#:?\/&,><=!'|"]/gi, '');
+                    obj[key][index] = item.replace(/[^\w\p{L}\p{N}\s.\-=+(){}\[\]*$@!`^%#:?\/&,><=!'|"]/giu, '');
                   } else {
-                    obj[key][index] = item.replace(/[^\w\s.\-=+(){}\[\]*$@!`^%#:?\/&,'|"]/gi, '');
+                    obj[key][index] = item.replace(/[^\w\p{L}\p{N}\s.\-=+(){}\[\]*$@!`^%#:?\/&,'|"]/giu, '');
                   }
                 }
               } else if (typeof item === 'object' && item !== null) {
