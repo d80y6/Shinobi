@@ -4,6 +4,7 @@ $(document).ready(function(e){
     var canvasData = GridStack.init({}, '#crossfeed-canvas');
     var embedHost = getQueryString().host || `/`;
     var currentMainMonitor = null;
+    var lastMainMonitor = null;
     var onScreenLockTimeout = null;
     var crossfeedWindowResizeTimeout = null;
     var openCrossFeedOnEvent = false;
@@ -47,6 +48,7 @@ $(document).ready(function(e){
         if(onScreenLockTimeout || currentMainMonitor === monitorId)return;
         setOnScreenLock()
         currentMainMonitor = `${monitorId}`
+        lastMainMonitor = `${monitorId}`
         const monitors = getTriggerMonitors(monitorId)
         let mainWidth = 8
         let mainHeight = 8
@@ -68,13 +70,11 @@ $(document).ready(function(e){
         theElements.each(function(n,theElement){
             canvasData.removeWidget(theElement, true)
         })
-        if(removeFromMemory){
-            currentMainMonitor = null;
-        }
+        currentMainMonitor = null;
     }
-    function reopenMonitorsInMemory(){
-        if(currentMainMonitor){
-            addMonitorAndAssociated(currentMainMonitor)
+    function reopenLastMonitor(){
+        if(lastMainMonitor){
+            addMonitorAndAssociated(lastMainMonitor)
         }
     }
     function setOnScreenLock(){
@@ -121,7 +121,7 @@ $(document).ready(function(e){
         onPageInit()
     })
     addOnTabReopen('crossfeed', function () {
-        reopenMonitorsInMemory()
+        reopenLastMonitor()
     })
     addOnTabAway('crossfeed', function () {
         closeMonitors()
