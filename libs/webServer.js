@@ -94,6 +94,7 @@ module.exports = function(s,config,lang,io){
             'home/studio',
             'home/monitorMap',
             'home/timeline',
+            'home/crossfeed',
             'confirm',
             'home/help',
         ]

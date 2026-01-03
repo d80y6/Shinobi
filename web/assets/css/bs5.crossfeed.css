@@ -1,0 +1,22 @@
+#crossfeed-canvas {
+    overflow: hidden;
+    height: 100%;
+}
+#crossfeed-canvas .stream-item,
+#crossfeed-canvas .stream-item iframe {
+    height: 100%;
+    width: 100%;
+    border: 0;
+}
+#tab-crossfeed {
+    overflow: auto;
+    height: 100vh;
+}
+#crossfeed-canvas, #tab-crossfeed {
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
+}
+#crossfeed-canvas::-webkit-scrollbar,
+#tab-crossfeed::-webkit-scrollbar {
+    display: none;  /* Safari and Chrome */
+}

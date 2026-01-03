@@ -2597,6 +2597,12 @@ module.exports = function(s,config,lang){
                                   attributes: 'shinobi-switch="popOnEvent" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
                                   color: 'grey',
                               },
+                              {
+                                  label: lang[`Crossfeed on Event`],
+                                  class: 'cursor-pointer',
+                                  attributes: 'shinobi-switch="openCrossFeedOnEvent" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                                  color: 'grey',
+                              },
                               ...[
                                   1,2,3
                                   //,4,6
@@ -2665,6 +2671,11 @@ module.exports = function(s,config,lang){
                           icon: 'file-o',
                           label: `${lang['FileBin']}`,
                           pageOpen: 'fileBinView',
+                      },
+                      {
+                          icon: 'exclamation-circle',
+                          label: `${lang['Crossfeed']}`,
+                          pageOpen: 'crossfeed',
                       },
                       {
                           divider: true,
