@@ -21,7 +21,6 @@ $(document).ready(function(e){
         var monitorTriggerTags = (mainMonitor && mainMonitor.details.det_trigger_tags ? mainMonitor.details.det_trigger_tags : '').split(',')
         $.each(getLoadedMonitors(),function(monitorId,monitor){
             $.each(monitorTriggerTags,function(n,tag){
-                console.log(monitor.name, tag, monitor.tags.includes(tag))
                 if(monitor.tags.includes(tag) && monitor.mid !== targetMonitorId)foundMonitors.push(monitor)
             })
         })
@@ -80,7 +79,7 @@ $(document).ready(function(e){
     function setOnScreenLock(){
         clearTimeout(onScreenLockTimeout)
         onScreenLockTimeout = setTimeout(function(){
-            delete(onScreenLockTimeout)
+            onScreenLockTimeout = null
         },5000)
     }
     function onPageInit(){
