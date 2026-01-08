@@ -991,7 +991,7 @@ $(document).ready(function(e){
         );
     }
     function pauseAllLiveGridPlayers(unpause){
-        $('.monitor_item').each(function(n,el){
+        liveGrid.find('.monitor_item').each(function(n,el){
             var monitorId = $(el).attr('data-mid')
             if(!unpause){
                 pauseMonitorItem(monitorId)
@@ -1001,7 +1001,7 @@ $(document).ready(function(e){
         })
     }
     function setPauseStatusForMonitorItems(forceResume){
-        $('.monitor_item').each(function(n,el){
+        liveGrid.find('.monitor_item').each(function(n,el){
             var monitorId = $(el).attr('data-mid')
             var isVisible = isScrolledIntoView(el)
             if(isVisible){
