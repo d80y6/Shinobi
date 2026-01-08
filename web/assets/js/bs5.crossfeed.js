@@ -8,6 +8,13 @@ $(document).ready(function(e){
     var onScreenLockTimeout = null;
     var crossfeedWindowResizeTimeout = null;
     var openCrossFeedOnEvent = false;
+    var crossFeedOpeningByEvent = false;
+    var liveStreamController = new LiveStreamController({
+        blockIdPrefix: 'crossfeed-',
+        blockClass: 'stream-item',
+        mainCanvas: theCanvas,
+        // tabName: 'crossfeed'
+    });
     var legend = {
         "1": 12,
         "2": 6,
@@ -32,9 +39,10 @@ $(document).ready(function(e){
         mainMonitor
     }){
         var isSmallMobile = isMobile || window.innerWidth <= 812;
-        var html = `<div class="stream-item ${mainMonitor ? 'main-monitor' : ''}" id="crossfeed-${monitorId}">
-            <iframe src="${getApiPrefix('embed')}/${monitorId}/fullscreen%7Cjquery%7Crelative?host=${embedHost}"></iframe>
-        </div>`
+        var monitor = loadedMonitors[monitorId];
+        var html = liveStreamController.buildStreamBlock({
+            monitor,
+        });
         canvasData.addWidget({
             x,
             y,
@@ -42,6 +50,9 @@ $(document).ready(function(e){
             w: isSmallMobile ? 4 :  width,
             content: html
         })
+        liveStreamController.createElementCache(monitor)
+        liveStreamController.initiateLiveGridPlayer(monitor)
+        liveStreamController.resetLiveGridDimensionsInMemory(monitorId)
     }
     function addMonitorAndAssociated(monitorId){
         if(onScreenLockTimeout || currentMainMonitor === monitorId)return;
@@ -63,11 +74,13 @@ $(document).ready(function(e){
         canvasData.compact()
     }
     function closeMonitors(removeFromMemory){
-        clearTimeout(onScreenLockTimeout)
-        theCanvas.find('iframe').attr('src','about:blank')
+        clearOnScreenLock()
         const theElements = theCanvas.find('.grid-stack-item')
         theElements.each(function(n,theElement){
-            canvasData.removeWidget(theElement, true)
+            var monitorId = $(this).find('.stream-item').data('mid')
+            liveStreamController.closeLiveGridPlayer(monitorId,true,() => {
+                canvasData.removeWidget(theElement, true)
+            })
         })
         currentMainMonitor = null;
     }
@@ -81,6 +94,10 @@ $(document).ready(function(e){
         onScreenLockTimeout = setTimeout(function(){
             onScreenLockTimeout = null
         },5000)
+    }
+    function clearOnScreenLock(){
+        clearTimeout(onScreenLockTimeout)
+        onScreenLockTimeout = null
     }
     function onPageInit(){
         if(dashboardOptions().switches){
@@ -110,8 +127,10 @@ $(document).ready(function(e){
         switch(data.f){
             case'detector_trigger':
                 if(openCrossFeedOnEvent){
+                    crossFeedOpeningByEvent = true
                     openTab('crossfeed',{})
                     addMonitorAndAssociated(data.id)
+                    crossFeedOpeningByEvent = false
                 }
             break;
         }
@@ -120,7 +139,7 @@ $(document).ready(function(e){
         onPageInit()
     })
     addOnTabReopen('crossfeed', function () {
-        reopenLastMonitor()
+        if(!crossFeedOpeningByEvent)reopenLastMonitor()
     })
     addOnTabAway('crossfeed', function () {
         closeMonitors()

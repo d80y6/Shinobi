@@ -3,10 +3,11 @@
     height: 100%;
 }
 #crossfeed-canvas .stream-item,
-#crossfeed-canvas .stream-item iframe {
-    height: 100%;
-    width: 100%;
+#crossfeed-canvas .stream-item .stream-element {
     border: 0;
+    object-fit: fill;
+    height: 100%;
+    width:100%
 }
 #tab-crossfeed {
     overflow: auto;
