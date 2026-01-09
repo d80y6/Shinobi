@@ -40,6 +40,7 @@ module.exports = (s,config,lang) => {
         isEven,
         fetchTimeout,
         copyFile,
+        parseJSON,
     } = require('../basic/utils.js')(process.cwd(),config)
     const glyphs = require('../../definitions/glyphs.js')
     async function saveImageFromEvent(options,frameBuffer){
@@ -1010,6 +1011,56 @@ module.exports = (s,config,lang) => {
         }
         return response
     }
+    function beginSendingDetectorEventsToUser(groupKey, authToken, targetMonitorId){
+        let allowedMonitors = []
+        const user = s.group[groupKey].users[authToken];
+        const permissions = user.details;
+        const connectionId = user.cnid
+        const connection = s.clientSocketConnection[connectionId]
+        if(targetMonitorId && s.group[groupKey].activeMonitors[targetMonitorId]){
+            if(
+                !permissions.sub ||
+                (
+                    permissions.sub &&
+                    permissions.monitors &&
+                    permissions.allmonitors !== '1' &&
+                    permissions.monitors.indexOf(targetMonitorId) > -1
+                )
+            ){
+                allowedMonitors.push(targetMonitorId)
+            }
+        }else{
+            if(permissions.sub && permissions.monitors && permissions.allmonitors !== '1'){
+                try{
+                    permissions.monitors = parseJSON(permissions.monitors);
+                    permissions.monitors.forEach(function(v,n){
+                        allowedMonitors.push(v)
+                    })
+                }catch(er){
+                    console.error(er)
+                }
+            }else{
+                allowedMonitors = Object.keys(s.group[groupKey].activeMonitors)
+            }
+        }
+        for(monitorId of allowedMonitors){
+            const monitor = s.group[groupKey].rawMonitorConfigurations[monitorId]
+            // if(monitor && monitor.details.detector === '1'){
+                connection.join(`DETECTOR_${groupKey+monitorId}`);
+            // }
+        }
+    }
+    function findUsersAndBeginSendingDetectorEvents(groupKey,monitorId){
+        if(s.group[groupKey].users){
+            for(authToken in s.group[groupKey].users){
+                const user = s.group[groupKey].users[authToken]
+                const connectionId = user.cnid
+                if(connectionId){
+                    beginSendingDetectorEventsToUser(groupKey,authToken,monitorId)
+                }
+            }
+        }
+    }
     return {
         getAssociatedMonitorPtzTargets,
         moveAssociatedMonitorPtzTargets,
@@ -1035,5 +1086,7 @@ module.exports = (s,config,lang) => {
         addEventDetailsToString: addEventDetailsToString,
         getEventBasedRecordingUponCompletion: getEventBasedRecordingUponCompletion,
         getEventBasedRecordingsUponCompletion,
+        beginSendingDetectorEventsToUser,
+        findUsersAndBeginSendingDetectorEvents,
     }
 }

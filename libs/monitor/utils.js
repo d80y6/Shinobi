@@ -26,6 +26,7 @@ module.exports = (s,config,lang) => {
         closeEventBasedRecording,
         convertRegionPointsToNewDimensions,
         triggerEvent,
+        findUsersAndBeginSendingDetectorEvents,
     } = require('../events/utils.js')(s,config,lang)
     const {
         setHomePositionPreset,
@@ -1766,6 +1767,7 @@ module.exports = (s,config,lang) => {
         let monitorConfig = getMonitorConfiguration(groupKey,monitorId);
         monitorConfigurationMigrator(e)
         s.initiateMonitorObject({ke:groupKey,mid:monitorId})
+        findUsersAndBeginSendingDetectorEvents(groupKey,monitorId)
         const activeMonitor = getActiveMonitor(groupKey,monitorId)
         if(!monitorConfig){
             monitorConfig = s.cleanMonitorObject(e)

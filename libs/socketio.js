@@ -11,7 +11,8 @@ module.exports = function(s,config,lang,io){
         applyPermissionsToUser,
     } = require('./user/permissionSets.js')(s,config,lang)
     const {
-        legacyFilterEvents
+        legacyFilterEvents,
+        beginSendingDetectorEventsToUser,
     } = require('./events/utils.js')(s,config,lang)
     s.clientSocketConnection = {}
     //send data to socket client function
@@ -378,6 +379,7 @@ module.exports = function(s,config,lang,io){
                     }
                     tx({f:'users_online',users:s.group[d.ke].users})
                     s.tx({f:'user_status_change',ke:d.ke,uid:cn.uid,status:1,user:s.group[d.ke].users[d.auth]},'GRP_'+d.ke)
+                    beginSendingDetectorEventsToUser(d.ke, d.auth)
                     s.sendDiskUsedAmountToClients(d.ke)
                     s.sendCloudDiskUsedAmountToClients(d.ke)
                     tx({
@@ -717,7 +719,7 @@ module.exports = function(s,config,lang,io){
                                 s.initiateMonitorObject({mid:d.id,ke:d.ke});
                                 if(!s.group[d.ke]||!s.group[d.ke].activeMonitors[d.id]||s.group[d.ke].activeMonitors[d.id].isStarted === false){return false}
                                 cn.join('MON_'+d.ke+d.id);
-                                cn.join('DETECTOR_'+d.ke+d.id);
+                                // cn.join('DETECTOR_'+d.ke+d.id);
                                 if(cn.jpeg_on !== true){
                                     cn.join('MON_STREAM_'+d.ke+d.id);
                                 }
