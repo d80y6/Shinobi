@@ -62,7 +62,8 @@
     "socket.io": "^4.8.0",
     "socket.io-client": "^4.8.0",
     "tree-kill": "1.2.2",
-    "unzipper": "0.10.11"
+    "unzipper": "0.10.11",
+    "dotenv": "16.4.7"
   },
   "bin": "camera.js",
   "scripts": {
