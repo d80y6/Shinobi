@@ -156,7 +156,7 @@ module.exports = (s,config,lang) => {
             activeMonitor.firstStreamChunk = {}
             clearTimeout(activeMonitor.recordingChecker);
             delete(activeMonitor.recordingChecker);
-            clearTimeout(activeMonitor.streamChecker);
+            clearInterval(activeMonitor.streamChecker);
             delete(activeMonitor.streamChecker);
             clearTimeout(activeMonitor.timelapseFramesChecker);
             delete(activeMonitor.timelapseFramesChecker);
@@ -414,10 +414,7 @@ module.exports = (s,config,lang) => {
             });
 
             subStreamProcess.stdio[5].on('data',(data) => {
-                resetStreamCheck({
-                    ke: groupKey,
-                    mid: monitorId,
-                })
+                activeMonitor.streamCheckerLastUpdateTime = new Date()
             });
 
             subStreamProcess.on('close',(data) => {
@@ -588,24 +585,15 @@ module.exports = (s,config,lang) => {
         const monitorConfig = copyMonitorConfiguration(groupKey,monitorId);
         const streamType = monitorConfig.details.stream_type;
         const analyzeDuration = (parseInt(monitorConfig.details.aduration) / 1000) || 10000;
-        let initialHeartBeat = null
-        if(streamType !== 'useSubstream'){
-            initialHeartBeat = setTimeout(() => {
-                resetStreamCheck({
-                    ke: groupKey,
-                    mid: monitorId,
-                })
-            }, analyzeDuration);
-        }
         activeMonitor.spawn_exit = async function(){
-            clearTimeout(initialHeartBeat)
+            // clearTimeout(initialHeartBeat)
             if(activeMonitor.isStarted === true){
                 if(e.details.loglevel !== 'quiet'){
                     s.userLog(e,{type:lang['Process Unexpected Exit'],msg:{msg:lang.unexpectedExitText,cmd:activeMonitor.ffmpeg}});
                 }
                 await fatalError(e,'Process Unexpected Exit');
                 scanForOrphanedVideos(e,{
-                    forceCheck: true,
+                    // forceCheck: true,
                     checkMax: 2
                 })
                 s.onMonitorUnexpectedExitExtensions.forEach(function(extender){
@@ -852,7 +840,7 @@ module.exports = (s,config,lang) => {
                     ke: groupKey,
                     mid: monitorId,
                 },{
-                    forceCheck: true,
+                    // forceCheck: true,
                     checkMax: 2
                 })
             },2000)
@@ -1029,7 +1017,7 @@ module.exports = (s,config,lang) => {
             ke: groupKey,
             mid: monitorId,
         },{
-            forceCheck: true,
+            // forceCheck: true,
             checkMax: 2
         })
     }
@@ -1069,11 +1057,15 @@ module.exports = (s,config,lang) => {
     function resetStreamCheck(e){
         const groupKey = e.ke
         const monitorId = e.mid || e.id
-        const activeMonitor = getActiveMonitor(groupKey,monitorId)
+        var activeMonitor = getActiveMonitor(groupKey,monitorId)
         if(!activeMonitor)return;
-        clearTimeout(activeMonitor.streamChecker)
-        activeMonitor.streamChecker = setTimeout(function(){
-            if(activeMonitor && activeMonitor.isStarted === true){
+        const maxTimeAllowed = 60000 * 1
+        clearInterval(activeMonitor.streamChecker)
+        activeMonitor.streamChecker = setInterval(function(){
+            const lastUpdate = activeMonitor.streamCheckerLastUpdateTime
+            const currentTime = new Date()
+            const mustRestart = (currentTime - lastUpdate) > maxTimeAllowed
+            if(activeMonitor.streamChecker && mustRestart && activeMonitor.isStarted === true){
                 forceMonitorRestart({
                     ke: groupKey,
                     mid: monitorId,
@@ -1084,7 +1076,7 @@ module.exports = (s,config,lang) => {
                     }
                 })
             }
-        },60000 * 1);
+        }, maxTimeAllowed);
     }
     function resetTimelapseFramesCheck(e){
         const groupKey = e.ke
@@ -1160,6 +1152,8 @@ module.exports = (s,config,lang) => {
             if(buffer[buffer.length-2] === 0xFF && buffer[buffer.length-1] === 0xD9){
                 activeMonitor.secondaryDetectorOutput.emit('data',Buffer.concat(theArray))
                 activeMonitor.pipe4BufferPieces = []
+            } else if(theArray.length > 500) {
+                activeMonitor.pipe4BufferPieces = []
             }
         }
     }
@@ -1229,7 +1223,7 @@ module.exports = (s,config,lang) => {
         const monitorConfig = s.group[groupKey].rawMonitorConfigurations[monitorId]
         const detectorEnabled = e.details.detector === '1'
         activeMonitor.spawn.stdio[5].on('data',function(data){
-            resetStreamCheck(e)
+            activeMonitor.streamCheckerLastUpdateTime = new Date()
         })
         //emitter for mjpeg
         if(!e.details.stream_mjpeg_clients||e.details.stream_mjpeg_clients===''||isNaN(e.details.stream_mjpeg_clients)===false){e.details.stream_mjpeg_clients=20;}else{e.details.stream_mjpeg_clients=parseInt(e.details.stream_mjpeg_clients)}
@@ -1362,7 +1356,7 @@ module.exports = (s,config,lang) => {
                frameToStreamPrimary = function(d){
                    if(!activeMonitor.firstStreamChunk['MAIN'])activeMonitor.firstStreamChunk['MAIN'] = d;
                    frameToStreamPrimary = function(d){
-                       resetStreamCheck(e)
+                       activeMonitor.streamCheckerLastUpdateTime = new Date()
                        activeMonitor.emitter.emit('data',d)
                    }
                    frameToStreamPrimary(d)
@@ -1370,14 +1364,14 @@ module.exports = (s,config,lang) => {
            break;
            case'mjpeg':
                frameToStreamPrimary = function(d){
-                   resetStreamCheck(e)
+                   activeMonitor.streamCheckerLastUpdateTime = new Date()
                    activeMonitor.emitter.emit('data',d)
                }
            break;
            case'b64':case undefined:case null:case'':
                var buffer
                frameToStreamPrimary = function(d){
-                  resetStreamCheck(e)
+                   activeMonitor.streamCheckerLastUpdateTime = new Date()
                   if(!buffer){
                       buffer=[d]
                   }else{
@@ -1631,18 +1625,18 @@ module.exports = (s,config,lang) => {
                 if(e.details.detector === '1' && e.details.detector_notrigger === '1'){
                     setNoEventsDetector(e)
                 }
-                if(config.childNodes.mode !== 'child' && s.platform!=='darwin' && (e.functionMode === 'record' || (e.functionMode === 'start'&&e.details.detector_record_method==='sip'))){
-                    if(activeMonitor.fswatch && activeMonitor.fswatch.close){
-                      activeMonitor.fswatch.close()
-                    }
-                    activeMonitor.fswatch = fs.watch(e.dir, {encoding : 'utf8'}, (event, filename) => {
-                        switch(event){
-                            case'change':
-                                resetRecordingCheck(e)
-                            break;
-                        }
-                    });
-                }
+                // if(config.childNodes.mode !== 'child' && s.platform!=='darwin' && (e.functionMode === 'record' || (e.functionMode === 'start'&&e.details.detector_record_method==='sip'))){
+                //     if(activeMonitor.fswatch && activeMonitor.fswatch.close){
+                //       activeMonitor.fswatch.close()
+                //     }
+                //     activeMonitor.fswatch = fs.watch(e.dir, {encoding : 'utf8'}, (event, filename) => {
+                //         switch(event){
+                //             case'change':
+                //                 resetRecordingCheck(e)
+                //             break;
+                //         }
+                //     });
+                // }
                 if(
                     isMacOS &&
                     isWatchOnlyOrRecord &&
@@ -1652,7 +1646,7 @@ module.exports = (s,config,lang) => {
                         activeMonitor.fswatchStream.close()
                     }
                     activeMonitor.fswatchStream = fs.watch(activeMonitor.sdir, {encoding : 'utf8'}, () => {
-                        resetStreamCheck(e)
+                        activeMonitor.streamCheckerLastUpdateTime = new Date()
                     })
                 }
                 // if(!activeMonitor.criticalErrors['453'])s.cameraSendSnapshot({mid:monitorId,ke:groupKey,mon:e},{useIcon: true});
@@ -1830,6 +1824,7 @@ module.exports = (s,config,lang) => {
             monitorConfig = s.cleanMonitorObject(e)
             s.group[groupKey].rawMonitorConfigurations[monitorId] = monitorConfig
         }
+        const streamType = monitorConfig.details.stream_type;
         if(activeMonitor.isStarted === true){
             s.debugLog('Monitor Already Started!')
             return
@@ -1882,7 +1877,9 @@ module.exports = (s,config,lang) => {
         }
         try{
             await launchMonitorProcesses(e)
-            resetStreamCheck(e)
+            if(streamType !== 'useSubstream'){
+                resetStreamCheck(e)
+            }
         }catch(err){
             console.error(err)
         }

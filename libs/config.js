@@ -54,6 +54,7 @@ module.exports = function(s){
     if(config.showLoginTypeSelector === undefined){config.showLoginTypeSelector = true}
     if(config.timezone === undefined){config.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone}
     if(config.liveJpegApiEnabled === undefined){config.liveJpegApiEnabled = true}
+    if(config.checkCpuAndRamUsage === undefined){config.checkCpuAndRamUsage = true}
     //Child Nodes
     if(config.childNodes === undefined)config.childNodes = {};
         //enabled

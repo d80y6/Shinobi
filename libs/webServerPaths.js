@@ -2118,6 +2118,8 @@ module.exports = function(s,config,lang,app,io){
     * Robots.txt
     */
     app.get('/robots.txt', function (req,res){
-        fs.createReadStream(s.mainDirectory + '/web/pages/robots.txt').pipe(res)
+        const stream = fs.createReadStream(s.mainDirectory + '/web/pages/robots.txt')
+        stream.pipe(res)
+        res.on('close', () => { try{ stream.destroy() }catch(e){} })
     })
 }

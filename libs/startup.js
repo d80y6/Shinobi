@@ -110,6 +110,7 @@ module.exports = function(s,config,lang,io){
         var checkForOrphanedVideos = async function(callback){
             var monitors = foundMonitors
             if(monitors && monitors[0]){
+                if(config.insertOrphans === false)return callback();
                 var loadCompleted = 0
                 var orphanedVideosForMonitors = {}
                 var checkForOrphanedVideosForMonitor = async function(monitor){

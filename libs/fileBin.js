@@ -291,7 +291,9 @@ module.exports = function(s,config,lang,app,io){
                                 s.streamMp4FileOverHttp(filePath,req,res,!!req.query.pureStream)
                             }else{
                                 res.on('finish',function(){res.end()})
-                                fs.createReadStream(filePath).pipe(res)
+                                const stream = fs.createReadStream(filePath)
+                                stream.pipe(res)
+                                res.on('close', () => { try { stream.destroy() } catch(e) {} })
                             }
                         }else{
                             failed()

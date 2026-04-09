@@ -614,7 +614,9 @@ module.exports = function(s,config,lang,app,io){
                         if(!err){
                             res.contentType('image/jpeg')
                             res.on('finish',function(){res.end()})
-                            fs.createReadStream(fileLocation).pipe(res)
+                            const stream = fs.createReadStream(fileLocation)
+                            stream.pipe(res)
+                            res.on('close', () => { try { stream.destroy() } catch(e) {} })
                         }else{
                             s.closeJsonResponse(res,{ok: false, msg: lang[`Nothing exists`]})
                         }

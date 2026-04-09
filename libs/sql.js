@@ -7,7 +7,8 @@ module.exports = function(s,config){
         pool: {
             min: config.databasePoolMin || 0,
             max: config.databasePoolMax || 10,
-            propagateCreateError: true
+            propagateCreateError: true,
+            idleTimeoutMillis: 120000, 
         }
     }
     const {

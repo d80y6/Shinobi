@@ -17,8 +17,8 @@ module.exports = function(s,config,lang,app,io){
             const readStream = fs.createReadStream(filePath);
             const writeStream = fs.createWriteStream(snapPath);
 
-            readStream.on('error', reject);
-            writeStream.on('error', reject);
+            readStream.on('error', (err) => { try{ writeStream.destroy() }catch(e){} reject(err) });
+            writeStream.on('error', (err) => { try{ readStream.destroy() }catch(e){} reject(err) });
             writeStream.on('finish', resolve);
 
             readStream.pipe(writeStream);
@@ -77,7 +77,10 @@ module.exports = function(s,config,lang,app,io){
             var shinobiFilename = s.formattedTime(startTime) + '.mp4'
             var recordingPath = s.getVideoDirectory(monitorConfig) + shinobiFilename
             var writeStream = fs.createWriteStream(recordingPath)
-            fs.createReadStream(filePath).pipe(writeStream)
+            const rs = fs.createReadStream(filePath)
+            rs.on('error', (err) => { try{ writeStream.destroy() }catch(e){} })
+            writeStream.on('error', (err) => { try{ rs.destroy() }catch(e){} })
+            rs.pipe(writeStream)
             writeStream.on('finish', () => {
                 s.insertCompletedVideo(monitorConfig,{
                     file: shinobiFilename,

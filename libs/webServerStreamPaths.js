@@ -287,11 +287,11 @@ module.exports = function(s,config,lang,app){
                     'Cache-Control': 'no-cache',
                     'Pragma': 'no-cache'
                 });
-                if (fs.existsSync(req.dir)){
-                    fs.createReadStream(req.dir).pipe(res);
-                }else{
-                    fs.createReadStream(config.defaultMjpeg).pipe(res);
-                }
+                fs.access(req.dir, fs.constants.F_OK, (err) => {
+                    const stream = fs.createReadStream(err ? config.defaultMjpeg : req.dir)
+                    stream.pipe(res)
+                    res.on('close', () => { try { stream.destroy() } catch(e) {} })
+                })
             },res,req);
         },res,req);
     });

@@ -132,7 +132,7 @@ module.exports = function(s,config,lang,io){
             })
         }
     }
-    if(config.childNodes.mode !== 'child'){
+    if(config.checkCpuAndRamUsage && config.childNodes.mode !== 'child'){
         setInterval(async () => {
             const cpu = await s.cpuUsage()
             const ram = await s.ramUsage()

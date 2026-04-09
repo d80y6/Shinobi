@@ -387,7 +387,9 @@ module.exports = function(s,config,lang){
                                 createMerged(copiedItems.sort())
                             }
                         })
-                        fs.createReadStream(pathDir+filename).pipe(tempWriteStream)
+                        const rs = fs.createReadStream(pathDir+filename)
+                        rs.on('error', () => { try { tempWriteStream.destroy() } catch(e) {} })
+                        rs.pipe(tempWriteStream)
                     }catch(err){
 
                     }

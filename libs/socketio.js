@@ -164,6 +164,7 @@ module.exports = function(s,config,lang,io){
                 if(!Emitter) return
                 validatedAndBindAuthenticationToSocketConnection(cn,d,true)
                 var contentWriter
+                cn.socketVideoStream = true
                 cn.closeSocketVideoStream = function(){
                     Emitter.removeListener('data', contentWriter);
                 }
@@ -198,6 +199,7 @@ module.exports = function(s,config,lang,io){
                 if(!Emitter) return
                 validatedAndBindAuthenticationToSocketConnection(cn,d,true)
                 var contentWriter
+                cn.socketVideoStream = true
                 cn.closeSocketVideoStream = function(){
                     Emitter.removeListener('data', contentWriter);
                 }

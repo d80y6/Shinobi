@@ -395,6 +395,10 @@ module.exports = function(s,config,lang){
             let groupsDone = 0
             let monitorsDoneCount = 0
             let numberOfGroups = Object.keys(s.group).length
+            if(!config.checkUploaderMountForOrphans){
+                resolve()
+                return
+            }
             for(groupKey in s.group){
                 if(s.group[groupKey].mnt){
                     const { err, rows: monitors } = await s.knexQueryPromise({

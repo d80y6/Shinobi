@@ -59,7 +59,7 @@ module.exports = function(s,config,lang,app,io){
         client.on('message', onAuthenticate)
         client.on('close', () => {
             clearTimeout(client.killTimer)
-            client.removeAllListeners() 
+            client.removeAllListeners()
         })
     })
     s.onHttpRequestUpgrade('/dataPort',(request, socket, head) => {

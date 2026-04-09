@@ -870,6 +870,7 @@ module.exports = (s,config,lang) => {
         return new Promise((resolve, reject) => {
             const ffmpegArgs = [
                 '-loglevel', 'warning',
+                '-threads', '1',
                 '-ss', seconds.toString(),
                 '-i', filePath,
                 '-frames:v', '1',
