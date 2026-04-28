@@ -10,27 +10,27 @@ A full Shinobi install will try to embed itself into the system, so ideally a ma
 Shinobi would only be running Shinobi; but when developing Shinobi that would be fairly
 inconvenient. This guide is going to outline a development process where Shinobi will be fairly
 contained, and development won't have any wide reaching effects on the system or generally require
-any sort of super user access.  
+any sort of super user access.
 
 Prerequisites
 =============
 
 
 - *Node.js* :
-You'll need Node and NPM, and for this guide we recommend you set up a user-local install of
-[NVM](https://github.com/creationix/nvm) and install the latest LTS release. Keeping the Node
-installation managed and separate from the system Node/NPM will help keep things clean and
-contained. Node.js version must be at least version 8.11. Use Node.js 9 to be ready for
-future development.
+  You'll need Node and NPM, and for this guide we recommend you set up a user-local install of
+  [NVM](https://github.com/creationix/nvm) and install the latest LTS release. Keeping the Node
+  installation managed and separate from the system Node/NPM will help keep things clean and
+  contained. Node.js version must be at least version 8.11. Use Node.js 9 to be ready for
+  future development.
 
 - *MariaDB/MySQL or SQLite3* :
-You'll also need either MariaDB/MySQL or SQLite (version 3) or both. SQLite will be esepcially
-easy to develop with as clearing the DB is as simple as deleting a file and you can keep the DB
-instance you're working with by copying it. It is recommended to use at least version 15.1.
+  You'll also need either MariaDB/MySQL or SQLite (version 3) or both. SQLite will be especially
+  easy to develop with as clearing the DB is as simple as deleting a file, and you can keep the DB
+  instance you're working with by copying it. It is recommended to use at least version 15.1.
 
 - *FFmpeg* :
-You'll also need FFmpeg. This is the video processing engine at the core of Shinobi. You will
-need at least version 3.3.3.
+  You'll also need FFmpeg. This is the video processing engine at the core of Shinobi. You will
+  need at least version 3.3.3.
 
 ### Installing prerequisites automatically
 To get all of Shinobi at once you can use the Ninja Way. Learn more about that here
@@ -67,7 +67,7 @@ To install the required Node packages you need to install them with NPM:
 ```sh
 npm install
 ```
-If the install fails you may need to install additional packages on your system or you may need
+If the install fails you may need to install additional packages on your system, or you may need
 to change how you installed Node/NPM or change your installation method.
 
 Setting your cloned repository for quick development
@@ -94,10 +94,10 @@ but for development we advise leaving it as the default.
 Running Shinobi
 ---------------
 Shinobi is usually run with the PM2 process manager, but for development we'll run the "camera"
-and "cron" processes directy. To monitor output, we recommend you use a terminal multiplexer like
+and "cron" processes directly. To monitor output, we recommend you use a terminal multiplexer like
 byobu, tmux, or screen. In one terminal window, run ```node cron.js``` and in another run
 ```node camera.js```. Shinobi should now be running on port 8080 on your local machine (you can
-change the port in conf.json) and accessable at http://localhost:8080 in your browser. Any source
+change the port in conf.json) and accessible at http://localhost:8080 in your browser. Any source
 code changes you make will require restarting either the camera or cron process [or both]. To avoid manually restarting, use the npm package `nodemon`. Run these commands in two separate terminals.
 ```sh  
 npx nodemon server.js
