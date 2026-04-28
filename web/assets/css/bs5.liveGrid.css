@@ -65,7 +65,7 @@
 .monitor_item .stream-hud .bottom-text{position:absolute;bottom:0;left:0;width:70%;padding:5px;text-shadow: 0 0 10px #333;}
 .monitor_item .stream-hud:hover .bottom-text{top:0;}
 .monitor_item .stream-hud .bottom-text .detector-fade{background: rgba(0,0,0,0.4);padding:10px 20px;border-radius:10px}
-.monitor_item .stream-hud .lamp{position:absolute;top:5px;right:5px;z-index:1;text-shadow: 0 0 15px #333;}
+.monitor_item .stream-hud .lamp{position:absolute;top:5px;right:5px;z-index:1;text-shadow: 0 0 15px #333;cursor:pointer}
 .monitor_item .mdl-overlay-menu{
     position: absolute;
     top: 0;
@@ -118,6 +118,10 @@
 }
 .monitor_item .mdl-overlay-menu li:hover{
     background: #021B79;
+}
+.monitor_item[mode="Record"] {
+    border: 2px solid #d9534f;
+    animation: border-pulsate-died 2s infinite;
 }
 .monitor_item[mode="Disabled"] .stream-hud .lamp{color:#5d5d5d}
 .monitor_item[mode="Watch Only"] .stream-hud .lamp{color:#5da8e8}
