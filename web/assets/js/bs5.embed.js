@@ -557,6 +557,16 @@ function toggleSubStream(monitorId,callback){
 }
 $(document).ready(function(e){
     $('body')
+    .on('click','.lamp',function(){
+        var monitorItem = $(this).parents('[data-mid]');
+        var monitorId = monitorItem.attr('data-mid');
+        var monitor = loadedMonitors[monitorId];
+        if(!monitor)return;
+        var newMode = (monitor.mode === 'record') ? 'start' : 'record';
+        $.getJSON(`${getApiPrefix('monitor')}/${monitorId}/${newMode}`,function(data){
+            console.log(data)
+        })
+    })
     .on('dblclick','.stream-block',function(){
         var monitorItem = $(this).parents('[data-mid]');
         fullScreenLiveGridStream(monitorItem)
