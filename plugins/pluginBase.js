@@ -56,8 +56,8 @@ module.exports = function makePluginBase(__dirname, cfg = {}) {
   // basic defaults ----------------------------------------------------------------
   Object.assign(config, {
     dirname: ".",
-    port: 8080,
-    hostPort: 8082,
+    port: config.port || 8080,
+    hostPort: config.hostPort || 8082,
     systemLog: true,
     connectionType: "websocket",
     streamDir: config.streamDir || (process.platform === "win32" ? config.windowsTempDir : "/dev/shm"),
@@ -221,16 +221,16 @@ module.exports = function makePluginBase(__dirname, cfg = {}) {
     const url = `ws://${config.host || "localhost"}:${config.port}`;
 
     function connect() {
-        cleanupSocket(io)
+      cleanupSocket(io)
       const sock = SocketIOClient(url, { transports: ["websocket"] });
       io = sock;
 
       const reconnect = () => {
-          if(stayDisconnected)return;
+        if(stayDisconnected)return;
         if (++retry > MAX_RETRY){
-            stayDisconnected = true;
-            s.disconnectWebSocket()
-            return plugLog("Max retries reached");
+          stayDisconnected = true;
+          s.disconnectWebSocket()
+          return plugLog("Max retries reached");
         }
         setTimeout(connect, 3_000);
       };

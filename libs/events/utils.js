@@ -42,11 +42,136 @@ module.exports = (s,config,lang) => {
         copyFile,
     } = require('../basic/utils.js')(process.cwd(),config)
     const glyphs = require('../../definitions/glyphs.js')
+
+    /**
+     * @typedef {Object} Matrix
+     * @property {number} x - Left edge of the bounding box in pixels
+     * @property {number} y - Top edge of the bounding box in pixels
+     * @property {number} width - Width of the bounding box in pixels
+     * @property {number} height - Height of the bounding box in pixels
+     * @property {string} tag - Detected object label (e.g. 'person', 'car', 'face')
+     * @property {number} confidence - Detection confidence score (0–1)
+     * @property {number} [id] - Optional tracked object ID assigned by the tracking system
+     */
+
+    /**
+     * @typedef {Object} Region
+     * @property {Array<[string, string]>} points - Polygon vertices as [x, y] string pairs
+     */
+
+    /**
+     * @typedef {Object} EventDetails
+     * @property {string} reason - Trigger reason ('motion', 'object', or plugin name)
+     * @property {string} name - Region or trigger name
+     * @property {string} [plug] - Name of the plugin that generated the event
+     * @property {Matrix[]} [matrices] - Detected objects with bounding boxes
+     * @property {number} [confidence] - Overall event confidence score
+     * @property {number} [time] - AI processing duration in milliseconds
+     */
+
+    /**
+     * @typedef {Object} EventData
+     * @property {string} ke - Group key
+     * @property {string} id - Monitor ID
+     * @property {string} [mid] - Alternate monitor ID field (some paths use mid instead of id)
+     * @property {string} f - Event type identifier (e.g. 'trigger', 'frame')
+     * @property {EventDetails} details - Detection details payload
+     * @property {Buffer} [frame] - Raw JPEG frame buffer attached to the event
+     * @property {boolean} [doObjectDetection] - Set to true when follow-up object detection is queued
+     * @property {Date} [currentTime] - Populated by runEventExecutions with the event timestamp
+     * @property {string} [currentTimestamp] - ISO-formatted event timestamp string
+     * @property {string} [screenshotName] - Computed filename for the event snapshot
+     * @property {Buffer|null} [screenshotBuffer] - Screenshot buffer (null until populated by an extender)
+     */
+
+    /**
+     * @typedef {Object} MonitorDetails
+     * @property {string} [detector] - Whether the detector is enabled ('1' | '0')
+     * @property {string} [detector_trigger] - Whether event-based recording is triggered ('1' | '0')
+     * @property {string} [detector_record_method] - Recording method ('sip' | 'hot' | 'del')
+     * @property {string} [detector_timeout] - Recording timeout in minutes (string-encoded float)
+     * @property {string} [detector_lock_timeout] - Motion lock debounce in ms (string-encoded float)
+     * @property {string} [detector_save] - Whether to persist the event to the DB ('1' | '0')
+     * @property {string} [detector_webhook] - Whether to fire a webhook on event ('1' | '0')
+     * @property {string} [detector_webhook_url] - Webhook URL template (supports {{placeholders}})
+     * @property {string} [detector_webhook_method] - HTTP method for webhook ('GET' | 'POST' etc.)
+     * @property {string} [detector_webhook_timeout] - Webhook cooldown timeout in seconds
+     * @property {string} [detector_command_enable] - Whether to run a shell command on event ('1' | '0')
+     * @property {string} [detector_command] - Shell command template (supports {{placeholders}})
+     * @property {string} [detector_command_timeout] - Command cooldown timeout in seconds
+     * @property {string} [detector_ptz_follow] - Follow detected object with PTZ ('1' | '0')
+     * @property {string} [detector_ptz_follow_target] - Which object tag to follow with PTZ
+     * @property {string} [detector_obj_region] - Restrict detections to defined regions ('1' | '0')
+     * @property {string} [detector_object_ignore_not_move] - Ignore stationary objects ('1' | '0')
+     * @property {string} [detector_use_detect_object] - Enable secondary object detection plugin ('1' | '0')
+     * @property {string} [detector_use_motion] - Use motion to trigger object detection ('1' | '0')
+     * @property {string} [detector_obj_count] - Count detected objects per tag ('1' | '0')
+     * @property {string} [detector_obj_count_in_region] - Only count objects inside region ('1' | '0')
+     * @property {string} [detector_record_overlap] - Allow overlapping event recordings ('1' | '0')
+     * @property {string} [detector_buffer_seconds_before] - Pre-event HLS buffer in seconds
+     * @property {string} [detector_buffer_acodec] - Audio codec for event recordings ('no' | 'auto' | 'aac' | codec)
+     * @property {string} [detector_motion_save_frame] - Save a snapshot on motion events ('1' | '0')
+     * @property {string} [detector_send_video_length] - Max clip length in seconds for email/webhook sends
+     * @property {string} [detector_delete_motionless_videos] - Delete recordings with no motion ('1' | '0')
+     * @property {Object} [detector_filters] - Configured event filter rule definitions
+     * @property {string} [use_detector_filters] - Whether event filters are active ('1' | '0')
+     * @property {string} [use_detector_filters_object] - Apply filters only to object events ('1' | '0')
+     * @property {string} [det_trigger_tags] - Comma-separated monitor tags to trigger on event
+     * @property {string} [detectorEventPtz] - Move associated monitor PTZ on event ('1' | '0')
+     * @property {Object} [triggerMonitorsPtzTargets] - Map of monitorId → ONVIF preset token
+     * @property {string} [watchdog_reset] - Whether to reset recording watchdog on new events ('1' | '0')
+     * @property {string} [event_record_aduration] - analyzeDuration passed to FFmpeg for event recordings
+     * @property {string} [event_record_probesize] - probeSize passed to FFmpeg for event recordings
+     * @property {string} [auto_compress_videos] - Auto-compress completed recordings to webm ('1' | '0')
+     * @property {string} [detectors_selected] - Comma-separated plugin names or 'all'
+     * @property {string} [is_onvif] - Whether this monitor has ONVIF support ('1' | '0')
+     */
+
+    /**
+     * @typedef {Object} MonitorConfig
+     * @property {string} ke - Group key
+     * @property {string} mid - Monitor ID
+     * @property {string} mode - Current monitor mode ('start' | 'record' | 'stop')
+     * @property {string} name - Human-readable monitor name
+     * @property {string} [tags] - Comma-separated tag labels
+     * @property {MonitorDetails} details - Monitor settings object
+     */
+
+    /**
+     * @typedef {Object} EventFilter
+     * @property {boolean} halt - Abort all further event processing when true
+     * @property {boolean} addToMotionCounter - Whether to increment the motion event counter
+     * @property {boolean} useLock - Whether to enforce the motion lock debounce
+     * @property {boolean} save - Whether to persist the event to the database
+     * @property {boolean} webhook - Whether to fire the configured webhook
+     * @property {boolean} command - Whether to execute the configured shell command
+     * @property {boolean} record - Whether to trigger event-based recording
+     * @property {boolean} forceRecord - Force recording regardless of other filter state
+     * @property {boolean|number|string} indifference - Minimum confidence threshold override (false = disabled)
+     * @property {boolean} countObjects - Whether to run per-tag object counting
+     */
+
+    /**
+     * @typedef {Object} SaveImageOptions
+     * @property {string} ke - Group key
+     * @property {string} [mid] - Monitor ID (preferred)
+     * @property {string} [id] - Monitor ID fallback
+     * @property {Date} time - Timestamp of the event
+     * @property {Matrix[]} matrices - Detected objects to associate with the saved frame
+     */
+
+    /**
+     * Saves a JPEG frame from a detection event into the timelapse frame directory,
+     * then creates a timelapse DB entry. Debounced per monitor with a 1-second lock.
+     * @param {SaveImageOptions} options
+     * @param {Buffer} frameBuffer - Raw JPEG image data
+     * @returns {Promise<void>}
+     */
     async function saveImageFromEvent(options,frameBuffer){
         const monitorId = options.mid || options.id
         const groupKey = options.ke
         //if(!frameBuffer || imageSaveEventLock[groupKey + monitorId])return;
-	    if(!frameBuffer || frameBuffer.length === 0 || imageSaveEventLock[groupKey + monitorId]) return;
+        if(!frameBuffer || frameBuffer.length === 0 || imageSaveEventLock[groupKey + monitorId]) return;
         const eventTime = options.time
         const objectsFound = options.matrices
         const monitorConfig = Object.assign({id: monitorId},s.group[groupKey].rawMonitorConfigurations[monitorId])
@@ -67,6 +192,13 @@ module.exports = (s,config,lang) => {
             delete(imageSaveEventLock[groupKey + monitorId])
         },1000)
     }
+
+    /**
+     * Accumulates object detection counts per tag for a monitor.
+     * Tracks unique object IDs and timestamps for each detected tag.
+     * @param {EventData} event
+     * @returns {Promise<Object.<string, {times: number[], count: Object.<string, number>, tag: string}>>}
+     */
     const countObjects = async (event) => {
         const matrices = event.details.matrices
         const eventsCounted = s.group[event.ke].activeMonitors[event.id].eventsCounted || {}
@@ -80,6 +212,16 @@ module.exports = (s,config,lang) => {
         }
         return eventsCounted
     }
+
+    /**
+     * Replaces {{PLACEHOLDER}} tokens in a template string with values derived
+     * from the event data. Supports: TIME, REGION_NAME, SNAP_PATH, MONITOR_ID,
+     * MONITOR_NAME, GROUP_KEY, DETAILS, TAG, CONFIDENCE, REASON.
+     * @param {EventData} eventData
+     * @param {string} string - Template string containing {{PLACEHOLDER}} tokens
+     * @param {Object} [addOps] - Additional properties to merge onto eventData before substitution
+     * @returns {string} The string with all recognized placeholders replaced
+     */
     const addEventDetailsToString = (eventData,string,addOps) => {
         //d = event data
         if(!addOps)addOps = {}
@@ -89,26 +231,34 @@ module.exports = (s,config,lang) => {
         var firstMatrix = d.details.matrices ? d.details.matrices[0] : null;
         var tag = firstMatrix ? firstMatrix.tag : '';
         newString = newString
-            .replace(/{{TIME}}/g,d.currentTimestamp)
-            .replace(/{{REGION_NAME}}/g,d.details.name)
-            .replace(/{{SNAP_PATH}}/g,s.dir.streams+d.ke+'/'+d.id+'/s.jpg')
-            .replace(/{{MONITOR_ID}}/g,d.id)
-            .replace(/{{MONITOR_NAME}}/g,s.group[d.ke].rawMonitorConfigurations[d.id].name)
-            .replace(/{{GROUP_KEY}}/g,d.ke)
-            .replace(/{{DETAILS}}/g,detailString);
+          .replace(/{{TIME}}/g,d.currentTimestamp)
+          .replace(/{{REGION_NAME}}/g,d.details.name)
+          .replace(/{{SNAP_PATH}}/g,s.dir.streams+d.ke+'/'+d.id+'/s.jpg')
+          .replace(/{{MONITOR_ID}}/g,d.id)
+          .replace(/{{MONITOR_NAME}}/g,s.group[d.ke].rawMonitorConfigurations[d.id].name)
+          .replace(/{{GROUP_KEY}}/g,d.ke)
+          .replace(/{{DETAILS}}/g,detailString);
         if(firstMatrix && tag){
             newString = newString.replace(/{{TAG}}/g,tag)
         }
         if(d.details.confidence || firstMatrix){
             newString = newString
-            .replace(/{{CONFIDENCE}}/g,d.details.confidence || firstMatrix.confidence)
+              .replace(/{{CONFIDENCE}}/g,d.details.confidence || firstMatrix.confidence)
         }
         if(d.details.reason && newString.includes("REASON")) {
             newString = newString
-            .replace(/{{REASON}}/g, d.details.reason)
+              .replace(/{{REASON}}/g, d.details.reason)
         }
         return newString
     }
+
+    /**
+     * Filters a list of detection matrices down to those that spatially overlap
+     * at least one of the configured regions, using SAT polygon collision testing.
+     * @param {Region[]} regions - Configured detection regions (polygon vertices)
+     * @param {Matrix[]} matrices - Detected object bounding boxes to test
+     * @returns {Matrix[]} Subset of matrices whose bounding boxes intersect a region
+     */
     const isAtleastOneMatrixInRegion = function(regions,matrices){
         var regionPolys = []
         var matrixPoints = []
@@ -136,6 +286,13 @@ module.exports = (s,config,lang) => {
         })
         return collisions
     }
+
+    /**
+     * Returns the matrix with the largest width AND height from the list.
+     * Returns null if no matrix has non-zero dimensions or the list is empty.
+     * @param {Matrix[]} matrices
+     * @returns {Matrix|null}
+     */
     const getLargestMatrix = (matrices) => {
         var largestMatrix = {width: 0, height: 0}
         matrices.forEach((matrix) => {
@@ -143,19 +300,55 @@ module.exports = (s,config,lang) => {
         })
         return largestMatrix.x ? largestMatrix : null
     }
+
+    /**
+     * Appends the event to the monitor's in-memory motion event counter array.
+     * @param {EventData} eventData
+     * @returns {void}
+     */
     const addToEventCounter = (eventData) => {
         const eventsCounted = s.group[eventData.ke].activeMonitors[eventData.id].detector_motion_count
         eventsCounted.push(eventData)
     }
+
+    /**
+     * Resets the motion event counter for a monitor to an empty array.
+     * @param {string} groupKey
+     * @param {string} monitorId
+     * @returns {void}
+     */
     const clearEventCounter = (groupKey,monitorId) => {
         s.group[groupKey].activeMonitors[monitorId].detector_motion_count = []
     }
+
+    /**
+     * Returns the number of motion events accumulated since the last reset.
+     * @param {string} groupKey
+     * @param {string} monitorId
+     * @returns {number}
+     */
     const getEventsCounted = (groupKey,monitorId) => {
         return s.group[groupKey].activeMonitors[monitorId].detector_motion_count.length
     }
+
+    /**
+     * Returns true when event details contain at least one detection matrix
+     * and the reason is not raw motion (i.e. it is an object-detection result).
+     * @param {EventDetails} eventDetails
+     * @returns {boolean}
+     */
     const hasMatrices = (eventDetails) => {
         return (eventDetails.matrices && eventDetails.matrices.length > 0) && eventDetails.reason !== 'motion'
     }
+
+    /**
+     * Performs a type-safe comparison between two values using the given operator.
+     * Numeric operators coerce both operands via parseFloat.
+     * @param {*} a - Left-hand operand
+     * @param {'==='|'!=='|'>='|'>'|'<'|'<='} op - Comparison operator
+     * @param {*} b - Right-hand operand
+     * @returns {boolean}
+     */
     const safeCompare = (a, op, b) => {
         switch(op){
             case '===': return a === b
@@ -167,11 +360,21 @@ module.exports = (s,config,lang) => {
             default: return false
         }
     }
+
+    /**
+     * Evaluates all configured event filter rules against the incoming event.
+     * Mutates `filter` in place — setting flags like save, record, webhook, halt, etc.
+     * Returns false if the event should be suppressed entirely, true otherwise.
+     * @param {EventData} d - Incoming event (matrices may be pruned in place)
+     * @param {MonitorDetails} monitorDetails
+     * @param {EventFilter} filter - Filter state object; mutated by this function
+     * @returns {boolean|undefined} false to halt the event, true to allow it, undefined on indifference failure
+     */
     const checkEventFilters = (d,monitorDetails,filter) => {
-        const eventDetails = d.details
+        const eventDetails = d.details;
         if(
-            monitorDetails.use_detector_filters === '1' &&
-            ((monitorDetails.use_detector_filters_object === '1' && d.details.matrices && d.details.reason !== 'motion') ||
+          monitorDetails.use_detector_filters === '1' &&
+          ((monitorDetails.use_detector_filters_object === '1' && eventDetails.matrices && eventDetails.reason !== 'motion') ||
             monitorDetails.use_detector_filters_object !== '1')
         ){
             const parseValue = function(key,val){
@@ -179,16 +382,16 @@ module.exports = (s,config,lang) => {
                 switch(val){
                     case'':
                         newVal = filter[key]
-                    break;
+                        break;
                     case'0':
                         newVal = false
-                    break;
+                        break;
                     case'1':
                         newVal = true
-                    break;
+                        break;
                     default:
                         newVal = val
-                    break;
+                        break;
                 }
                 return newVal
             }
@@ -225,12 +428,12 @@ module.exports = (s,config,lang) => {
                                 if(param.indexOf(condition.p3) > -1){
                                     pass()
                                 }
-                            break;
+                                break;
                             case'!indexOf':
                                 if(param.indexOf(condition.p3) === -1){
                                     pass()
                                 }
-                            break;
+                                break;
                             case'===':
                             case'!==':
                             case'>=':
@@ -238,7 +441,7 @@ module.exports = (s,config,lang) => {
                             case'<':
                             case'<=':
                                 if(safeCompare(param, condition.p2, condition.p3)){ pass() }
-                            break;
+                                break;
                         }
                     }
                     switch(condition.p1){
@@ -253,7 +456,7 @@ module.exports = (s,config,lang) => {
                                     modifyFilters(matrix,position)
                                 })
                             }
-                        break;
+                            break;
                         case'time':
                             var timeNow = new Date()
                             var timeCondition = new Date()
@@ -271,10 +474,10 @@ module.exports = (s,config,lang) => {
                                     conditionChain[place].ok = true
                                 }
                             }
-                        break;
+                            break;
                         default:
                             modifyFilters(d.details)
-                        break;
+                            break;
                     }
                 })
                 var conditionArray = Object.values(conditionChain)
@@ -310,9 +513,9 @@ module.exports = (s,config,lang) => {
                     }
                 }
             })
-            if(d.details.matrices && d.details.matrices.length === 0 && d.details.reason !== 'motion' || filter.halt === true){
+            if ((d.details.matrices && d.details.matrices.length === 0 && d.details.reason !== 'motion') || filter.halt === true) {
                 return false
-            }else if(hasMatrices(d.details)){
+            } else if (hasMatrices(d.details)) {
                 var reviewedMatrix = []
                 d.details.matrices.forEach(function(matrix){
                     if(matrix)reviewedMatrix.push(matrix)
@@ -322,14 +525,23 @@ module.exports = (s,config,lang) => {
         }
         // check modified indifference
         if(
-            filter.indifference &&
-            eventDetails.confidence < parseFloat(filter.indifference)
+          filter.indifference &&
+          eventDetails.confidence < parseFloat(filter.indifference)
         ){
             // fails indifference check for modified indifference
             return
         }
         return true
     }
+
+    /**
+     * Checks whether the monitor's motion lock allows a new event to be processed.
+     * If no lock is active, sets a new debounce timeout and returns true.
+     * Returns false if the lock is already held.
+     * @param {EventData} eventData
+     * @param {MonitorDetails} monitorDetails
+     * @returns {boolean} true if the event may proceed, false if suppressed by lock
+     */
     const checkMotionLock = (eventData,monitorDetails) => {
         if(s.group[eventData.ke].activeMonitors[eventData.id].motion_lock){
             return false
@@ -350,6 +562,15 @@ module.exports = (s,config,lang) => {
         }
         return true
     }
+
+    /**
+     * Triggers event-based recordings on a set of linked monitors when their
+     * detector_trigger flag is set and they are actively recording.
+     * @param {MonitorConfig} monitorConfig - The source monitor that fired the event
+     * @param {string[]} monitorIdsToTrigger - IDs of monitors to start recording on
+     * @param {Date} eventTime - Time of the original event
+     * @returns {void}
+     */
     const runMultiEventBasedRecord = (monitorConfig, monitorIdsToTrigger, eventTime) => {
         monitorIdsToTrigger.forEach(function(monitorId){
             const groupKey = monitorConfig.ke
@@ -357,9 +578,9 @@ module.exports = (s,config,lang) => {
             if(monitorId !== monitorConfig.mid && monitor){
                 const monitorDetails = monitor.details
                 if(
-                    monitorDetails.detector_trigger === '1' &&
-                    monitor.mode === 'start' &&
-                    (monitorDetails.detector_record_method === 'sip' || monitorDetails.detector_record_method === 'hot')
+                  monitorDetails.detector_trigger === '1' &&
+                  monitor.mode === 'start' &&
+                  (monitorDetails.detector_record_method === 'sip' || monitorDetails.detector_record_method === 'hot')
                 ){
                     const secondBefore = (parseInt(monitorDetails.detector_buffer_seconds_before) || 5) + 1
                     createEventBasedRecording(monitor,moment(eventTime).subtract(secondBefore,'seconds').format('YYYY-MM-DDTHH-mm-ss'))
@@ -367,6 +588,13 @@ module.exports = (s,config,lang) => {
             }
         })
     }
+
+    /**
+     * Builds (or rebuilds) the tag → monitorId index for a group.
+     * Stored at `s.group[groupKey].tagLegend` and used by findMonitorsAssociatedToTags.
+     * @param {string} groupKey
+     * @returns {void}
+     */
     function bindTagLegendForMonitors(groupKey){
         const newTagLegend = {}
         const theGroup = s.group[groupKey]
@@ -382,6 +610,14 @@ module.exports = (s,config,lang) => {
         })
         theGroup.tagLegend = newTagLegend
     }
+
+    /**
+     * Returns the unique set of monitor IDs that have been tagged with any of
+     * the provided trigger tags. Requires bindTagLegendForMonitors to have run first.
+     * @param {string} groupKey
+     * @param {string[]} triggerTags - Tag labels to look up
+     * @returns {string[]} Deduplicated list of matching monitor IDs
+     */
     function findMonitorsAssociatedToTags(groupKey,triggerTags){
         const monitorsToTrigger = []
         const theGroup = s.group[groupKey]
@@ -394,6 +630,20 @@ module.exports = (s,config,lang) => {
         })
         return monitorsToTrigger
     }
+
+    /**
+     * Executes all configured side-effects for a detector event: PTZ follow,
+     * tag-linked monitor recordings, snapshot saving, DB insert, event-based
+     * FFmpeg recording, webhook, shell command, PTZ presets, and plugin extenders.
+     * @param {Date} eventTime
+     * @param {MonitorConfig} monitorConfig
+     * @param {EventDetails} eventDetails
+     * @param {boolean} forceSave - Skip filter checks and force a DB save
+     * @param {EventFilter} filter - Filter state produced by checkEventFilters
+     * @param {EventData} d - Full event data (mutated: currentTime, currentTimestamp, screenshotName, screenshotBuffer)
+     * @param {function(EventData, boolean=): Promise<void>} triggerEvent - Reference to triggerEvent for re-entrant use by extenders
+     * @returns {Promise<void>}
+     */
     const runEventExecutions = async (eventTime,monitorConfig,eventDetails,forceSave,filter,d, triggerEvent) => {
         const groupKey = monitorConfig.ke
         const monitorId = d.id || d.mid
@@ -418,13 +668,13 @@ module.exports = (s,config,lang) => {
                 matrices: eventDetails.matrices || [],
             },d.frame)
         }else if(
-            !motionFrameSaveTimeouts[timeoutId] &&
-            reason === 'motion' &&
-            monitorDetails.detector_motion_save_frame === '1' &&
-            (
-              monitorDetails.detector_use_detect_object !== '1' ||
-              (monitorDetails.detector_use_detect_object === '1' && monitorDetails.detector_use_motion !== '1')
-            )
+          !motionFrameSaveTimeouts[timeoutId] &&
+          reason === 'motion' &&
+          monitorDetails.detector_motion_save_frame === '1' &&
+          (
+            monitorDetails.detector_use_detect_object !== '1' ||
+            (monitorDetails.detector_use_detect_object === '1' && monitorDetails.detector_use_motion !== '1')
+          )
         ){
             motionFrameSaveTimeouts[timeoutId] = setTimeout(() => {
                 delete(motionFrameSaveTimeouts[timeoutId])
@@ -459,9 +709,9 @@ module.exports = (s,config,lang) => {
             detector_timeout = parseFloat(monitorDetails.detector_timeout)
         }
         if(
-            (filter.forceRecord || (filter.record && monitorDetails.detector_trigger === '1')) &&
-            monitorConfig.mode === 'start' &&
-            (monitorDetails.detector_record_method === 'sip' || monitorDetails.detector_record_method === 'hot')
+          (filter.forceRecord || (filter.record && monitorDetails.detector_trigger === '1')) &&
+          monitorConfig.mode === 'start' &&
+          (monitorDetails.detector_record_method === 'sip' || monitorDetails.detector_record_method === 'hot')
         ){
             const secondBefore = (parseInt(monitorDetails.detector_buffer_seconds_before) || 5) + 1
             createEventBasedRecording(d,moment(eventTime).subtract(secondBefore,'seconds').format('YYYY-MM-DDTHH-mm-ss'))
@@ -484,10 +734,10 @@ module.exports = (s,config,lang) => {
         }
 
         if(
-            filter.command || (
-                monitorDetails.detector_command_enable === '1' &&
-                !s.group[d.ke].activeMonitors[monitorId].detector_command
-            )
+          filter.command || (
+            monitorDetails.detector_command_enable === '1' &&
+            !s.group[d.ke].activeMonitors[monitorId].detector_command
+          )
         ){
             s.group[d.ke].activeMonitors[monitorId].detector_command = s.createTimeout('detector_command',s.group[d.ke].activeMonitors[monitorId],monitorDetails.detector_command_timeout,10)
             var detector_command = addEventDetailsToString(d,monitorDetails.detector_command)
@@ -507,6 +757,18 @@ module.exports = (s,config,lang) => {
             await extender(d,filter,eventTime)
         }
     }
+
+    /**
+     * Copies a completed event-based recording clip to the file bin directory
+     * and inserts a file bin DB entry for it.
+     * @param {Object} options
+     * @param {string} options.groupKey
+     * @param {string} options.monitorId
+     * @param {string} options.filename - Destination filename in the file bin
+     * @param {string} options.filePath - Source path of the clip to copy
+     * @param {Object} [options.details={}] - Additional metadata to store with the file bin entry
+     * @returns {Promise<{ok: boolean, fileBinPath?: string, fileBinInsertQuery?: Object, err?: string}>}
+     */
     const saveEventBaseRecordingClip = async function({
         groupKey,
         monitorId,
@@ -539,6 +801,14 @@ module.exports = (s,config,lang) => {
         }
         return response;
     }
+
+    /**
+     * Waits for a running event-based recording process to exit, then optionally
+     * trims the clip to the configured send length and saves it to the file bin.
+     * @param {{ke: string, mid: string, fileTime?: string}} options
+     * @param {boolean} [getNonCut] - When true, skips trimming and returns the raw recording path
+     * @returns {Promise<{ok: boolean, filename?: string, filePath?: string, fileBinPath?: string, fileBinInsertQuery?: Object}>}
+     */
     const getEventBasedRecordingUponCompletion = async function(options, getNonCut){
         const response = {ok: true}
         const groupKey = options.ke
@@ -579,6 +849,17 @@ module.exports = (s,config,lang) => {
         }
         return response
     }
+
+    /**
+     * Waits for event-based recordings to complete on multiple monitors concurrently,
+     * then resolves with a map or array of the resulting filenames/paths.
+     * @param {string} groupKey
+     * @param {string[]} monitorIds
+     * @param {boolean} [withPath=false] - Include filePath in array-mode results
+     * @param {boolean} [asObject=true] - Return a `{monitorId: filename}` map; when false returns an array
+     * @param {boolean} [getNonCut] - Pass through to getEventBasedRecordingUponCompletion
+     * @returns {Promise<Object.<string,string>|Array<{mid: string, filename: string, filePath?: string}>>}
+     */
     const getEventBasedRecordingsUponCompletion = function(groupKey, monitorIds, withPath = false, asObject = true, getNonCut){
         return new Promise((resolve) => {
             const response = asObject ? {} : [];
@@ -609,6 +890,16 @@ module.exports = (s,config,lang) => {
             })
         })
     }
+
+    /**
+     * Starts an FFmpeg event-based recording for a monitor by reading from its
+     * HLS detector stream. Manages process lifecycle: restart on premature exit,
+     * watchdog timeout to stop recording, DB insert on completion, and optional
+     * auto-compression. Idempotent for a given fileTime when overlap is disabled.
+     * @param {EventData} d
+     * @param {string} [fileTime] - Formatted timestamp used as the output filename stem; defaults to now
+     * @returns {void}
+     */
     const createEventBasedRecording = function(d,fileTime){
         if(!fileTime)fileTime = s.formattedTime()
         const logTitleText = lang["Traditional Recording"]
@@ -670,10 +961,10 @@ module.exports = (s,config,lang) => {
                 }
                 //-t 00:'+s.timeObject(new Date(detector_timeout * 1000 * 60)).format('mm:ss')+'
                 if(
-                    audioCodec &&
-                    audioCodec !== 'no' &&
-                    audioCodec !== 'auto' &&
-                    audioCodec !== 'aac'
+                  audioCodec &&
+                  audioCodec !== 'no' &&
+                  audioCodec !== 'auto' &&
+                  audioCodec !== 'aac'
                 ){
                     outputMap += `-map 0:1 `
                 }
@@ -683,8 +974,8 @@ module.exports = (s,config,lang) => {
                 const ffmpegCommand = `-threads 1 -loglevel warning -live_start_index -${LiveStartIndex} -analyzeduration ${analyzeDuration} -probesize ${probeSize} -re -i "${s.dir.streams+groupKey+'/'+monitorId}/detectorStream.m3u8" ${outputMap}-movflags faststart -fflags +genpts+igndts -c:v copy ${noAudio ? '-an' : autoAudio ? '' : `-c:a aac`} -strict -2 -strftime 1 -y "${s.getVideoDirectory(monitorConfig) + filename}"`
                 s.debugLog(ffmpegCommand)
                 activeMonitor.eventBasedRecording[fileTime].process = spawn(
-                    config.ffmpegDir,
-                    splitForFFMPEG(ffmpegCommand)
+                  config.ffmpegDir,
+                  splitForFFMPEG(ffmpegCommand)
                 )
                 activeMonitor.eventBasedRecording[fileTime].process.stdout.on('data',function(data){
                     s.userLog(d,{
@@ -746,6 +1037,13 @@ module.exports = (s,config,lang) => {
             runRecord()
         }
     }
+
+    /**
+     * Terminates all active event-based recording processes for a monitor
+     * by sending SIGTERM and marking them as allowed to end cleanly.
+     * @param {{ke: string, id: string}} e - Object containing the group key and monitor ID
+     * @returns {void}
+     */
     const closeEventBasedRecording = function(e){
         const activeMonitor = s.group[e.ke].activeMonitors[e.id]
         const eventBasedRecordings = activeMonitor.eventBasedRecording;
@@ -764,24 +1062,42 @@ module.exports = (s,config,lang) => {
         //     item.process.kill('SIGTERM');
         // })
     }
+
+    /**
+     * Handles legacy (pre-filter) event actions: archiving or deleting a list of
+     * videos, or executing a shell command. Also calls any registered before-filter extenders.
+     * @param {'archive'|'delete'|'execute'} x - Action type
+     * @param {{videos?: Object[], execute?: string}} d - Action payload
+     * @returns {void}
+     */
     const legacyFilterEvents = (x,d) => {
         switch(x){
             case'archive':
                 d.videos.forEach(function(v,n){
                     s.video('archive',v)
                 })
-            break;
+                break;
             case'delete':
                 s.deleteListOfVideos(d.videos)
-            break;
+                break;
             case'execute':
                 exec(d.execute,{detached: true})
-            break;
+                break;
         }
         s.onEventTriggerBeforeFilterExtensions.forEach(function(extender){
             extender(x,d)
         })
     }
+
+    /**
+     * Starts (or extends) a window during which frames from the monitor's secondary
+     * detector output stream are forwarded to the configured detector plugin(s).
+     * Used to feed object-detection frames after a motion event fires.
+     * @param {string} groupKey
+     * @param {string} monitorId
+     * @param {number} [timeout=5000] - Duration in ms to keep forwarding frames
+     * @returns {void}
+     */
     const sendFramesFromSecondaryOutput = (groupKey,monitorId,timeout) => {
         const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
         const theEmitter = activeMonitor.secondaryDetectorOutput
@@ -824,6 +1140,16 @@ module.exports = (s,config,lang) => {
             delete(activeMonitor.sendingFromSecondaryDetectorOuput)
         },timeout || 5000)
     }
+
+    /**
+     * Main entry point for detector events. Validates the monitor exists, runs
+     * event filters, applies region/motion-tracking constraints to detection matrices,
+     * decides whether to forward frames for secondary object detection, executes all
+     * configured event actions via runEventExecutions, and notifies connected clients.
+     * @param {EventData} d - Incoming detector event (mutated: doObjectDetection, details.matrices)
+     * @param {boolean} [forceSave] - Force DB save regardless of filter configuration
+     * @returns {Promise<void>}
+     */
     const triggerEvent = async (d,forceSave) => {
         var didCountingAlready = false
         const groupKey = d.ke
@@ -856,29 +1182,29 @@ module.exports = (s,config,lang) => {
         if(!passedEventFilters)return;
         const eventTime = new Date()
         if(
-            filter.addToMotionCounter &&
-            filter.record &&
+          filter.addToMotionCounter &&
+          filter.record &&
+          (
+            monitorConfig.mode === 'record' ||
+            monitorConfig.mode === 'start' &&
             (
-                monitorConfig.mode === 'record' ||
-                monitorConfig.mode === 'start' &&
-                (
-                    (
-                        monitorDetails.detector_record_method === 'sip' &&
-                        monitorDetails.detector_trigger === '1'
-                    ) ||
-                    (
-                        monitorDetails.detector_record_method === 'del' &&
-                        monitorDetails.detector_delete_motionless_videos === '1'
-                    )
-                )
+              (
+                monitorDetails.detector_record_method === 'sip' &&
+                monitorDetails.detector_trigger === '1'
+              ) ||
+              (
+                monitorDetails.detector_record_method === 'del' &&
+                monitorDetails.detector_delete_motionless_videos === '1'
+              )
             )
+          )
         ){
             addToEventCounter(d)
         }
         const eventDetails = d.details
         if(
-            (filter.countObjects || monitorDetails.detector_obj_count === '1') &&
-            monitorDetails.detector_obj_count_in_region !== '1'
+          (filter.countObjects || monitorDetails.detector_obj_count === '1') &&
+          monitorDetails.detector_obj_count_in_region !== '1'
         ){
             didCountingAlready = true
             countObjects(d)
@@ -916,18 +1242,18 @@ module.exports = (s,config,lang) => {
         }
         //
         d.doObjectDetection = (
-            eventDetails.reason !== 'object' &&
-            s.isAtleatOneDetectorPluginConnected &&
-            monitorDetails.detector_use_detect_object === '1' &&
-            monitorDetails.detector_use_motion === '1'
+          eventDetails.reason !== 'object' &&
+          s.isAtleatOneDetectorPluginConnected &&
+          monitorDetails.detector_use_detect_object === '1' &&
+          monitorDetails.detector_use_motion === '1'
         );
         if(d.doObjectDetection === true){
             sendFramesFromSecondaryOutput(d.ke,d.id)
         }
         //
         if(
-            monitorDetails.detector_use_motion === '0' ||
-            d.doObjectDetection !== true
+          monitorDetails.detector_use_motion === '0' ||
+          d.doObjectDetection !== true
         ){
             runEventExecutions(eventTime,monitorConfig,eventDetails,forceSave,filter,d, triggerEvent)
         }
@@ -941,34 +1267,57 @@ module.exports = (s,config,lang) => {
             doObjectDetection: d.doObjectDetection
         },`DETECTOR_${monitorConfig.ke}${monitorConfig.mid}`);
     }
+
+    /**
+     * Scales region polygon points from one canvas resolution to another.
+     * Returns a new array of cloned region objects; the originals are not mutated.
+     * @param {Region[]} regions
+     * @param {{fromWidth: number, fromHeight: number, toWidth: number, toHeight: number}} options
+     * @returns {Region[]}
+     */
     function convertRegionPointsToNewDimensions(regions, options) {
-      const { fromWidth, fromHeight, toWidth, toHeight } = options;
+        const { fromWidth, fromHeight, toWidth, toHeight } = options;
 
-      // Compute the conversion factors for x and y coordinates
-      const xFactor = toWidth / fromWidth;
-      const yFactor = toHeight / fromHeight;
+        // Compute the conversion factors for x and y coordinates
+        const xFactor = toWidth / fromWidth;
+        const yFactor = toHeight / fromHeight;
 
-      // Clone the regions array and update the points for each region
-      const newRegions = regions.map(region => {
-        const { points } = region;
+        // Clone the regions array and update the points for each region
+        const newRegions = regions.map(region => {
+            const { points } = region;
 
-        // Clone the points array and update the coordinates
-        const newPoints = points.map(([x, y]) => {
-          const newX = Math.round(x * xFactor);
-          const newY = Math.round(y * yFactor);
-          return [newX.toString(), newY.toString()];
+            // Clone the points array and update the coordinates
+            const newPoints = points.map(([x, y]) => {
+                const newX = Math.round(x * xFactor);
+                const newY = Math.round(y * yFactor);
+                return [newX.toString(), newY.toString()];
+            });
+
+            // Clone the region object and update the points
+            return { ...region, points: newPoints };
         });
 
-        // Clone the region object and update the points
-        return { ...region, points: newPoints };
-      });
-
-      return newRegions;
+        return newRegions;
     }
+
+    /**
+     * Prepends a Unicode glyph icon to a tag label using the glyphs definition map.
+     * Falls back to the default glyph when the tag has no specific icon.
+     * @param {string} tag - Detected object label
+     * @returns {string} Icon + space + tag (e.g. '🧍 person')
+     */
     function getTagWithIcon(tag){
         var icon = glyphs[tag.toLowerCase()] || glyphs._default
         return `${icon} ${tag}`;
     }
+
+    /**
+     * Returns a deduplicated list of icon-prefixed tag strings derived from the
+     * event's detection matrices. Falls back to the event reason when no matrices
+     * are present, or to the motion label for raw motion events.
+     * @param {EventData} d
+     * @returns {string[]} e.g. ['🧍 person', '🚗 car']
+     */
     function getObjectTagsFromMatrices(d){
         if(d.details.reason === 'motion'){
             return [getTagWithIcon(lang.Motion)]
@@ -978,12 +1327,28 @@ module.exports = (s,config,lang) => {
         }
         return [getTagWithIcon(d.details.reason)]
     }
+
+    /**
+     * Builds a human-readable notification string summarising what was detected
+     * and on which monitor, e.g. "🧍 person, 🚗 car detected in Front Door".
+     * @param {EventData} d
+     * @returns {string}
+     */
     function getObjectTagNotifyText(d){
         const monitorId = d.mid || d.id
         const monitorName = s.group[d.ke].rawMonitorConfigurations[monitorId].name
         const tags = getObjectTagsFromMatrices(d)
         return `${tags.join(', ')} ${lang.detected} in ${monitorName}`
     }
+
+    /**
+     * Returns the map of target monitor IDs → ONVIF preset tokens that should be
+     * triggered when this monitor fires a detector event, or an empty object when
+     * the detectorEventPtz feature is disabled.
+     * @param {string} groupKey
+     * @param {string} monitorId
+     * @returns {Object.<string, string>} Map of monitorId → preset token
+     */
     function getAssociatedMonitorPtzTargets(groupKey, monitorId){
         const monitorDetails = s.group[groupKey].rawMonitorConfigurations[monitorId].details;
         const detectorEventPtz = monitorDetails.detectorEventPtz === '1';
@@ -994,6 +1359,14 @@ module.exports = (s,config,lang) => {
             return {}
         }
     }
+
+    /**
+     * Moves all ONVIF-enabled monitors associated with the triggering monitor
+     * to their configured preset positions, then schedules a return-to-home timeout.
+     * @param {string} groupKey
+     * @param {string} monitorId
+     * @returns {Promise<{ok: boolean, responseFromDevices: Object.<string, *>}>}
+     */
     async function moveAssociatedMonitorPtzTargets(groupKey, monitorId){
         const response = { ok: true, responseFromDevices: {} };
         const triggerMonitorsPtzTargets = getAssociatedMonitorPtzTargets(groupKey, monitorId);

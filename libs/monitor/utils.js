@@ -43,13 +43,14 @@ module.exports = (s,config,lang) => {
     } = require('../childNode/utils.js')(s,config,lang)
     s.mp4FragMemoryFreed = {}
     const isMasterNode = (
-        (
-            config.childNodes.enabled === true &&
-            config.childNodes.mode === 'master'
-        ) ||
-        config.childNodes.enabled === false
+      (
+        config.childNodes.enabled === true &&
+        config.childNodes.mode === 'master'
+      ) ||
+      config.childNodes.enabled === false
     );
-    const getUpdateableFields = require('./updatedFields.js')
+    const getUpdatableFields = require('./updatedFields.js')
+
     const processKill = (proc) => {
         const response = {ok: true}
         const processPID = proc && proc.pid ? parseInt(`${proc.pid}`) : null
@@ -127,9 +128,9 @@ module.exports = (s,config,lang) => {
         const monitorId = e.mid || e.id
         const theGroup = s.group[groupKey]
         if(
-            theGroup &&
-            theGroup.activeMonitors[e.id] &&
-            theGroup.activeMonitors[e.id].spawn !== undefined
+          theGroup &&
+          theGroup.activeMonitors[e.id] &&
+          theGroup.activeMonitors[e.id].spawn !== undefined
         ){
             const activeMonitor = s.group[groupKey].activeMonitors[e.id];
             const proc = s.group[groupKey].activeMonitors[e.id].spawn;
@@ -140,7 +141,7 @@ module.exports = (s,config,lang) => {
                     ke : groupKey,
                     mid : e.id
                 },groupKey)
-    //            if(activeMonitor.p2pStream){activeMonitor.p2pStream.unpipe();}
+                //            if(activeMonitor.p2pStream){activeMonitor.p2pStream.unpipe();}
                 try{
                     proc.removeListener('end',activeMonitor.spawn_exit);
                     proc.removeListener('exit',activeMonitor.spawn_exit);
@@ -150,8 +151,8 @@ module.exports = (s,config,lang) => {
                 }
             }
             if(activeMonitor.audioDetector){
-              activeMonitor.audioDetector.stop()
-              delete(activeMonitor.audioDetector)
+                activeMonitor.audioDetector.stop()
+                delete(activeMonitor.audioDetector)
             }
             activeMonitor.firstStreamChunk = {}
             clearTimeout(activeMonitor.recordingChecker);
@@ -191,11 +192,11 @@ module.exports = (s,config,lang) => {
             }
             try{
                 activeMonitor.spawn.stdio.forEach(function(stdio){
-                  try{
-                    stdio.unpipe()
-                  }catch(err){
-                    console.log(err)
-                  }
+                    try{
+                        stdio.unpipe()
+                    }catch(err){
+                        console.log(err)
+                    }
                 })
             }catch(err){
                 // s.debugLog(err)
@@ -288,7 +289,7 @@ module.exports = (s,config,lang) => {
     }
     const monitorConfigurationMigrator = (monitor) => {
         // converts the old style to the new style.
-        const updatedFields = getUpdateableFields()
+        const updatedFields = getUpdatableFields()
         const fieldKeys = Object.keys(updatedFields)
         fieldKeys.forEach((oldKey) => {
             if(oldKey === 'details'){
@@ -371,16 +372,16 @@ module.exports = (s,config,lang) => {
             const ffmpegCommandParsed = splitForFFMPEG(ffmpegCommandString)
             activeMonitor.subStreamChannel = channelNumber;
             s.userLog({
-                ke: groupKey,
-                mid: monitorId,
-            },
-            {
-                type: lang["Substream Process"],
-                msg: {
-                    msg: lang["Process Started"],
-                    cmd: ffmpegCommandString,
-                },
-            });
+                  ke: groupKey,
+                  mid: monitorId,
+              },
+              {
+                  type: lang["Substream Process"],
+                  msg: {
+                      msg: lang["Process Started"],
+                      cmd: ffmpegCommandString,
+                  },
+              });
             const subStreamProcess = spawn(config.ffmpegDir,ffmpegCommandParsed,{detached: true,stdio: stdioPipes})
             attachStreamChannelHandlers({
                 ke: groupKey,
@@ -482,34 +483,34 @@ module.exports = (s,config,lang) => {
         if(!activeMonitor.emitterChannel[pipeNumber]){
             activeMonitor.emitterChannel[pipeNumber] = new events.EventEmitter().setMaxListeners(0);
         }
-       let frameToStreamAdded
-       switch(fields.stream_type){
-           case'mp4':
-               if(activeMonitor.mp4frag[pipeNumber]){
-                   activeMonitor.mp4frag[pipeNumber].resetCache()
-                   activeMonitor.mp4frag[pipeNumber].removeAllListeners()
-                   activeMonitor.mp4frag[pipeNumber].destroy()
-                   activeMonitor.mp4frag[pipeNumber] = null
-               }
-               if(!activeMonitor.mp4frag[pipeNumber]){
-                   const debugOutputPrefix = `${groupKey}, ${monitorId}, ${monitorConfig.name}, pipe: ${pipeNumber}`;
-                   activeMonitor.mp4frag[pipeNumber] = new Mp4Frag({ segmentCount: 2, cacheInterval: 60000, debug: config.debugMp4Frag || false, debugOutputPrefix });
-                   if(config.debugMp4Frag){
-                       activeMonitor.mp4frag[pipeNumber].on('memoryfreed',function(freed){
-                           s.mp4FragMemoryFreed[debugOutputPrefix] = [freed, new Date()]
-                       })
-                   }
-               }
-               ffmpegProcess.stdio[pipeNumber].pipe(activeMonitor.mp4frag[pipeNumber],{ end: false })
-           break;
-           case'mjpeg':
-               frameToStreamAdded = function (d) {
+        let frameToStreamAdded
+        switch(fields.stream_type){
+            case'mp4':
+                if(activeMonitor.mp4frag[pipeNumber]){
+                    activeMonitor.mp4frag[pipeNumber].resetCache()
+                    activeMonitor.mp4frag[pipeNumber].removeAllListeners()
+                    activeMonitor.mp4frag[pipeNumber].destroy()
+                    activeMonitor.mp4frag[pipeNumber] = null
+                }
+                if(!activeMonitor.mp4frag[pipeNumber]){
+                    const debugOutputPrefix = `${groupKey}, ${monitorId}, ${monitorConfig.name}, pipe: ${pipeNumber}`;
+                    activeMonitor.mp4frag[pipeNumber] = new Mp4Frag({ segmentCount: 2, cacheInterval: 60000, debug: config.debugMp4Frag || false, debugOutputPrefix });
+                    if(config.debugMp4Frag){
+                        activeMonitor.mp4frag[pipeNumber].on('memoryfreed',function(freed){
+                            s.mp4FragMemoryFreed[debugOutputPrefix] = [freed, new Date()]
+                        })
+                    }
+                }
+                ffmpegProcess.stdio[pipeNumber].pipe(activeMonitor.mp4frag[pipeNumber],{ end: false })
+                break;
+            case'mjpeg':
+                frameToStreamAdded = function (d) {
                     activeMonitor.emitterChannel[pipeNumber].emit('data', d)
-               }
-           break;
-           case'b64':
-               var buffer
-               frameToStreamAdded = function(d){
+                }
+                break;
+            case'b64':
+                var buffer
+                frameToStreamAdded = function(d){
                     if(!buffer){
                         buffer=[d]
                     }else{
@@ -519,22 +520,22 @@ module.exports = (s,config,lang) => {
                         activeMonitor.emitterChannel[pipeNumber].emit('data',Buffer.concat(buffer))
                         buffer = null
                     }
-               }
-           break;
-           case'flv':
-               frameToStreamAdded = function(d){
-                   if(!activeMonitor.firstStreamChunk[pipeNumber])activeMonitor.firstStreamChunk[pipeNumber] = d;
-                   frameToStreamAdded = function(d){
-                       activeMonitor.emitterChannel[pipeNumber].emit('data',d)
-                   }
-                   frameToStreamAdded(d)
-               }
-           break;
-           case'h264':
-               frameToStreamAdded = function(d){
-                   activeMonitor.emitterChannel[pipeNumber].emit('data',d)
-               }
-           break;
+                }
+                break;
+            case'flv':
+                frameToStreamAdded = function(d){
+                    if(!activeMonitor.firstStreamChunk[pipeNumber])activeMonitor.firstStreamChunk[pipeNumber] = d;
+                    frameToStreamAdded = function(d){
+                        activeMonitor.emitterChannel[pipeNumber].emit('data',d)
+                    }
+                    frameToStreamAdded(d)
+                }
+                break;
+            case'h264':
+                frameToStreamAdded = function(d){
+                    activeMonitor.emitterChannel[pipeNumber].emit('data',d)
+                }
+                break;
         }
         if(frameToStreamAdded){
             ffmpegProcess.stdio[pipeNumber].on('data',frameToStreamAdded)
@@ -1236,8 +1237,8 @@ module.exports = (s,config,lang) => {
         activeMonitor.emitter = (new events.EventEmitter()).setMaxListeners(e.details.stream_mjpeg_clients);
         if(detectorEnabled && e.details.detector_audio === '1'){
             if(activeMonitor.audioDetector){
-              activeMonitor.audioDetector.stop()
-              delete(activeMonitor.audioDetector)
+                activeMonitor.audioDetector.stop()
+                delete(activeMonitor.audioDetector)
             }
             var triggerLevel
             var triggerLevelMax
@@ -1310,18 +1311,18 @@ module.exports = (s,config,lang) => {
         if(e.details.detector === '1'){
             //frames from motion detect
             if(e.details.detector_pam === '1'){
-               // activeMonitor.spawn.stdio[3].pipe(activeMonitor.p2p).pipe(activeMonitor.pamDiff)
-               // spawn.stdio[3] is deprecated and now motion events are handled by dataPort
+                // activeMonitor.spawn.stdio[3].pipe(activeMonitor.p2p).pipe(activeMonitor.pamDiff)
+                // spawn.stdio[3] is deprecated and now motion events are handled by dataPort
                 if(e.details.detector_use_detect_object === '1' && e.details.detector_use_motion === '1' ){
                     activeMonitor.spawn.stdio[4].on('data',function(data){
                         onDetectorJpegOutputSecondary(e,data)
                     })
                 }else{
                     setUpChosenDetector(e)
-		            activeMonitor.spawn.stdio[4].on('data',function(data){
+                    activeMonitor.spawn.stdio[4].on('data',function(data){
                         onDetectorJpegOutputAlone(e,data)
                     })
-		        }
+                }
             }else if(e.details.detector_use_detect_object === '1' && e.details.detector_send_frames !== '1'){
                 activeMonitor.spawn.stdio[4].on('data',function(data){
                     onDetectorJpegOutputSecondary(e,data)
@@ -1334,61 +1335,61 @@ module.exports = (s,config,lang) => {
             }
         }
         //frames to stream
-       var frameToStreamPrimary;
-       const streamType = e.details.stream_type;
-       switch(streamType){
-           case'mp4':
-               if(activeMonitor.mp4frag['MAIN']){
-                   activeMonitor.mp4frag['MAIN'].resetCache()
-                   activeMonitor.mp4frag['MAIN'].removeAllListeners()
-                   activeMonitor.mp4frag['MAIN'].destroy()
-                   activeMonitor.mp4frag['MAIN'] = null
-               }
-               if(!activeMonitor.mp4frag['MAIN']){
-                   const debugOutputPrefix = `${groupKey}, ${monitorId}, ${monitorConfig.name}, pipe: MAIN`;
-                   activeMonitor.mp4frag['MAIN'] = new Mp4Frag({ segmentCount: 2, cacheInterval: 60000, debug: config.debugMp4Frag || false, debugOutputPrefix });
-                   if(config.debugMp4Frag){
-                       activeMonitor.mp4frag['MAIN'].on('memoryfreed',function(freed){
-                           s.mp4FragMemoryFreed[debugOutputPrefix] = [freed, new Date()]
-                       })
-                   }
-               }
-               activeMonitor.mp4frag['MAIN'].on('error',function(error){
-                   s.userLog(e,{type:lang['Mp4Frag'],msg:{error:error}})
-               })
-               activeMonitor.spawn.stdio[1].pipe(activeMonitor.mp4frag['MAIN'],{ end: false })
-           break;
-           case'flv':
-               frameToStreamPrimary = function(d){
-                   if(!activeMonitor.firstStreamChunk['MAIN'])activeMonitor.firstStreamChunk['MAIN'] = d;
-                   frameToStreamPrimary = function(d){
-                       resetStreamCheck(e)
-                       activeMonitor.emitter.emit('data',d)
-                   }
-                   frameToStreamPrimary(d)
-               }
-           break;
-           case'mjpeg':
-               frameToStreamPrimary = function(d){
-                   resetStreamCheck(e)
-                   activeMonitor.emitter.emit('data',d)
-               }
-           break;
-           case'b64':case undefined:case null:case'':
-               var buffer
-               frameToStreamPrimary = function(d){
-                  resetStreamCheck(e)
-                  if(!buffer){
-                      buffer=[d]
-                  }else{
-                      buffer.push(d)
-                  }
-                  if((d[d.length-2] === 0xFF && d[d.length-1] === 0xD9)){
-                      activeMonitor.emitter.emit('data',Buffer.concat(buffer))
-                      buffer = null
-                  }
-               }
-           break;
+        var frameToStreamPrimary;
+        const streamType = e.details.stream_type;
+        switch(streamType){
+            case'mp4':
+                if(activeMonitor.mp4frag['MAIN']){
+                    activeMonitor.mp4frag['MAIN'].resetCache()
+                    activeMonitor.mp4frag['MAIN'].removeAllListeners()
+                    activeMonitor.mp4frag['MAIN'].destroy()
+                    activeMonitor.mp4frag['MAIN'] = null
+                }
+                if(!activeMonitor.mp4frag['MAIN']){
+                    const debugOutputPrefix = `${groupKey}, ${monitorId}, ${monitorConfig.name}, pipe: MAIN`;
+                    activeMonitor.mp4frag['MAIN'] = new Mp4Frag({ segmentCount: 2, cacheInterval: 60000, debug: config.debugMp4Frag || false, debugOutputPrefix });
+                    if(config.debugMp4Frag){
+                        activeMonitor.mp4frag['MAIN'].on('memoryfreed',function(freed){
+                            s.mp4FragMemoryFreed[debugOutputPrefix] = [freed, new Date()]
+                        })
+                    }
+                }
+                activeMonitor.mp4frag['MAIN'].on('error',function(error){
+                    s.userLog(e,{type:lang['Mp4Frag'],msg:{error:error}})
+                })
+                activeMonitor.spawn.stdio[1].pipe(activeMonitor.mp4frag['MAIN'],{ end: false })
+                break;
+            case'flv':
+                frameToStreamPrimary = function(d){
+                    if(!activeMonitor.firstStreamChunk['MAIN'])activeMonitor.firstStreamChunk['MAIN'] = d;
+                    frameToStreamPrimary = function(d){
+                        resetStreamCheck(e)
+                        activeMonitor.emitter.emit('data',d)
+                    }
+                    frameToStreamPrimary(d)
+                }
+                break;
+            case'mjpeg':
+                frameToStreamPrimary = function(d){
+                    resetStreamCheck(e)
+                    activeMonitor.emitter.emit('data',d)
+                }
+                break;
+            case'b64':case undefined:case null:case'':
+                var buffer
+                frameToStreamPrimary = function(d){
+                    resetStreamCheck(e)
+                    if(!buffer){
+                        buffer=[d]
+                    }else{
+                        buffer.push(d)
+                    }
+                    if((d[d.length-2] === 0xFF && d[d.length-1] === 0xD9)){
+                        activeMonitor.emitter.emit('data',Buffer.concat(buffer))
+                        buffer = null
+                    }
+                }
+                break;
         }
         s.onMonitorCreateStreamPipeExtensions.forEach(function(extender){
             if(!frameToStreamPrimary)frameToStreamPrimary = extender(streamType,e,resetStreamCheck)
@@ -1426,12 +1427,12 @@ module.exports = (s,config,lang) => {
                 },function(err,response){
                     s.userLog(e,{type:lang['Video Finished'],msg:{filename:d}})
                     if(
-                        e.details.detector === '1' &&
-                        activeMonitor.isStarted === true &&
-                        e.details &&
-                        e.details.detector_record_method === 'del'&&
-                        e.details.detector_delete_motionless_videos === '1'&&
-                        activeMonitor.detector_motion_count.length === 0
+                      e.details.detector === '1' &&
+                      activeMonitor.isStarted === true &&
+                      e.details &&
+                      e.details.detector_record_method === 'del'&&
+                      e.details.detector_delete_motionless_videos === '1'&&
+                      activeMonitor.detector_motion_count.length === 0
                     ){
                         if(e.details.loglevel !== 'quiet'){
                             s.userLog(e,{type:lang['Delete Motionless Video'],msg:filename})
@@ -1483,17 +1484,17 @@ module.exports = (s,config,lang) => {
             switch(true){
                 case checkLog(d,'Not Enough Bandwidth'):
                     activeMonitor.criticalErrors['453'] = true
-                break;
+                    break;
                 case checkLog(d,'No space left on device'):
                     s.checkUserPurgeLock(groupKey)
                     s.purgeDiskForGroup(groupKey)
-                break;
+                    break;
                 case checkLog(d,'error parsing AU headers'):
                     s.userLog(e,{type:lang['Error While Decoding'],msg:lang.ErrorWhileDecodingTextAudio});
-                break;
+                    break;
                 case checkLog(d,'error while decoding'):
                     s.userLog(e,{type:lang['Error While Decoding'],msg:lang.ErrorWhileDecodingText});
-                break;
+                    break;
                 case d.startsWith('DTS'):
                 case checkLog(d,'pkt->duration = 0'):
                 case checkLog(d,'[hls @'):
@@ -1506,12 +1507,12 @@ module.exports = (s,config,lang) => {
                 case checkLog(d,'RTP: missed'):
                 case checkLog(d,'deprecated pixel format used'):
                     return
-                break;
+                    break;
                 case checkLog(d,'Could not find tag for vp8'):
                 case checkLog(d,'Only VP8 or VP9 Video'):
                 case checkLog(d,'Could not write header'):
                     return s.userLog(e,{type:lang['Incorrect Settings Chosen'],msg:{msg:d}})
-                break;
+                    break;
                 case checkLog(d,'Connection refused'):
                 case checkLog(d,'Connection timed out'):
                 case checkLog(d,'Immediate exit requested'):
@@ -1522,13 +1523,13 @@ module.exports = (s,config,lang) => {
                     // activeMonitor.timeoutToRestart = setTimeout(() => {
                     //     doFatalErrorCatch(e,d)
                     // },15000)
-                break;
+                    break;
                 case checkLog(d,'Could not find codec parameters'):
                 case checkLog(d,'No route to host'):
                     activeMonitor.timeoutToRestart = setTimeout(async () => {
                         doFatalErrorCatch(e,d)
                     },60000)
-                break;
+                    break;
             }
             s.userLog(e,{type:"FFMPEG STDERR",msg:d})
         })
@@ -1633,20 +1634,20 @@ module.exports = (s,config,lang) => {
                 }
                 if(config.childNodes.mode !== 'child' && s.platform!=='darwin' && (e.functionMode === 'record' || (e.functionMode === 'start'&&e.details.detector_record_method==='sip'))){
                     if(activeMonitor.fswatch && activeMonitor.fswatch.close){
-                      activeMonitor.fswatch.close()
+                        activeMonitor.fswatch.close()
                     }
                     activeMonitor.fswatch = fs.watch(e.dir, {encoding : 'utf8'}, (event, filename) => {
                         switch(event){
                             case'change':
                                 resetRecordingCheck(e)
-                            break;
+                                break;
                         }
                     });
                 }
                 if(
-                    isMacOS &&
-                    isWatchOnlyOrRecord &&
-                    (streamTypeIsJPEG || streamTypeIsHLS || jpegApiEnabled)
+                  isMacOS &&
+                  isWatchOnlyOrRecord &&
+                  (streamTypeIsJPEG || streamTypeIsHLS || jpegApiEnabled)
                 ){
                     if(activeMonitor.fswatchStream && activeMonitor.fswatchStream.close){
                         activeMonitor.fswatchStream.close()
@@ -1684,10 +1685,10 @@ module.exports = (s,config,lang) => {
                                             },30000)
                                         }
                                         if(
-                                            isRecord ||
-                                            typeIsMjpeg ||
-                                            typeIsH264 ||
-                                            typeIsLocal
+                                          isRecord ||
+                                          typeIsMjpeg ||
+                                          typeIsH264 ||
+                                          typeIsLocal
                                         ){
                                             catchNewSegmentNames(e)
                                             cameraFilterFfmpegLog(e)
@@ -1718,15 +1719,15 @@ module.exports = (s,config,lang) => {
                                 console.log(err)
                                 resolve()
                             }
-                          }else{
-                              s.onMonitorPingFailedExtensions.forEach(function(extender){
-                                  extender(Object.assign(theGroup.rawMonitorConfigurations[monitorId],{}),e)
-                              })
-                              s.userLog(e,{type:lang["Ping Failed"],msg:lang.skipPingText1});
-                              fatalError(e,"Ping Failed").then(() => {
-                                  resolve();
-                              });
-                          }
+                        }else{
+                            s.onMonitorPingFailedExtensions.forEach(function(extender){
+                                extender(Object.assign(theGroup.rawMonitorConfigurations[monitorId],{}),e)
+                            })
+                            s.userLog(e,{type:lang["Ping Failed"],msg:lang.skipPingText1});
+                            fatalError(e,"Ping Failed").then(() => {
+                                resolve();
+                            });
+                        }
                     })
                 }
                 if(doPingTest){
@@ -1876,9 +1877,9 @@ module.exports = (s,config,lang) => {
             moveToHomePosition(e)
         }
         if(!isApplicableVideosDirectory(e.details.dir, false)){
-             e.details.dir = ''
-             activeMonitor.details.dir = ''
-             monitorConfig.details.dir = ''
+            e.details.dir = ''
+            activeMonitor.details.dir = ''
+            monitorConfig.details.dir = ''
         }
         try{
             await launchMonitorProcesses(e)
@@ -1913,10 +1914,28 @@ module.exports = (s,config,lang) => {
                                 toHeight,
                             });
                             activeMonitor.parsedObjects.cords = theCords
-                        break;
+                            break;
+                        case'detector_filters':
+                            // Fix filters not having strings as it breaks comparisons
+                            Object.values(e.details[v]).forEach(function(dFilter){
+                                if(typeof dFilter.enabled === 'number')dFilter.enabled = String(dFilter.enabled)
+                                if(dFilter.actions){
+                                    Object.keys(dFilter.actions).forEach(function(k){
+                                        if(typeof dFilter.actions[k] === 'number')dFilter.actions[k] = String(dFilter.actions[k])
+                                    })
+                                }
+                                if(dFilter.where){
+                                    dFilter.where.forEach(function(condition){
+                                        if(typeof condition.openBracket === 'number')condition.openBracket = String(condition.openBracket)
+                                        if(typeof condition.closeBracket === 'number')condition.closeBracket = String(condition.closeBracket)
+                                    })
+                                }
+                            })
+                            activeMonitor.parsedObjects[v] = e.details[v]
+                            break;
                         default:
                             activeMonitor.parsedObjects[v] = s.parseJSON(e.details[v])
-                        break;
+                            break;
                     }
                 }catch(err){
 
@@ -1991,8 +2010,8 @@ module.exports = (s,config,lang) => {
                 for(item of searchQuery){
                     if(item){
                         whereQuerySearch.push(
-                            whereQuerySearch.length === 0 ? ['name','LIKE',`%${item.trim()}%`] : ['or', 'name','LIKE',`%${item}%`],
-                            ['or','mid','LIKE',`%${item.trim()}%`]
+                          whereQuerySearch.length === 0 ? ['name','LIKE',`%${item.trim()}%`] : ['or', 'name','LIKE',`%${item}%`],
+                          ['or','mid','LIKE',`%${item.trim()}%`]
                         );
                     }
                 }
@@ -2030,19 +2049,19 @@ module.exports = (s,config,lang) => {
                             switch(type){
                                 case'mjpeg':
                                     streamURL='/'+authKey+'/mjpeg/'+v.ke+'/'+v.mid+channelNumber
-                                break;
+                                    break;
                                 case'hls':
                                     streamURL='/'+authKey+'/hls/'+v.ke+'/'+v.mid+channelNumber+'/s.m3u8'
-                                break;
+                                    break;
                                 case'h264':
                                     streamURL='/'+authKey+'/h264/'+v.ke+'/'+v.mid+channelNumber
-                                break;
+                                    break;
                                 case'flv':
                                     streamURL='/'+authKey+'/flv/'+v.ke+'/'+v.mid+channelNumber+'/s.flv'
-                                break;
+                                    break;
                                 case'mp4':
                                     streamURL='/'+authKey+'/mp4/'+v.ke+'/'+v.mid+channelNumber+'/s.mp4'
-                                break;
+                                    break;
                                 case'useSubstream':
                                     try{
                                         const monitorConfig = s.group[v.ke].rawMonitorConfigurations[v.mid]
@@ -2053,7 +2072,7 @@ module.exports = (s,config,lang) => {
                                     }catch(err){
                                         s.debugLog(err)
                                     }
-                                break;
+                                    break;
                             }
                             return streamURL
                         }

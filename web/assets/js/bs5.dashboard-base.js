@@ -21,24 +21,24 @@ var chartColors = {
 var userAgent = navigator.userAgent;
 var isAppleDevice = userAgent.match(/(iPod|iPhone|iPad)/)||(navigator.userAgent.match(/(Safari)/)&&!navigator.userAgent.match('Chrome'));
 var isMobile = /(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|ipad|iris|kindle|Android|Silk|lge |maemo|midp|mmp|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino/i.test(navigator.userAgent)
-    || /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(navigator.userAgent.substr(0,4))
+  || /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(navigator.userAgent.substr(0,4))
 var isChromiumBased = userAgent.includes('Chrome') && !userAgent.includes('Edg') && !userAgent.includes('OPR') || userAgent.includes('Brave');
 var keyShortcuts = {}
 var shinobiUtils = new ShinobiUtils()
 function base64ArrayBuffer(arrayBuffer) {
-      var base64    = ''
-      var encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+    var base64    = ''
+    var encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 
-      var bytes         = new Uint8Array(arrayBuffer)
-      var byteLength    = bytes.byteLength
-      var byteRemainder = byteLength % 3
-      var mainLength    = byteLength - byteRemainder
+    var bytes         = new Uint8Array(arrayBuffer)
+    var byteLength    = bytes.byteLength
+    var byteRemainder = byteLength % 3
+    var mainLength    = byteLength - byteRemainder
 
-      var a, b, c, d
-      var chunk
+    var a, b, c, d
+    var chunk
 
-      // Main loop deals with bytes in chunks of 3
-      for (var i = 0; i < mainLength; i = i + 3) {
+    // Main loop deals with bytes in chunks of 3
+    for (var i = 0; i < mainLength; i = i + 3) {
         // Combine the three bytes into a single integer
         chunk = (bytes[i] << 16) | (bytes[i + 1] << 8) | bytes[i + 2]
 
@@ -50,10 +50,10 @@ function base64ArrayBuffer(arrayBuffer) {
 
         // Convert the raw binary segments to the appropriate ASCII encoding
         base64 += encodings[a] + encodings[b] + encodings[c] + encodings[d]
-      }
+    }
 
-      // Deal with the remaining bytes and padding
-      if (byteRemainder == 1) {
+    // Deal with the remaining bytes and padding
+    if (byteRemainder == 1) {
         chunk = bytes[mainLength]
 
         a = (chunk & 252) >> 2 // 252 = (2^6 - 1) << 2
@@ -62,7 +62,7 @@ function base64ArrayBuffer(arrayBuffer) {
         b = (chunk & 3)   << 4 // 3   = 2^2 - 1
 
         base64 += encodings[a] + encodings[b] + '=='
-      } else if (byteRemainder == 2) {
+    } else if (byteRemainder == 2) {
         chunk = (bytes[mainLength] << 8) | bytes[mainLength + 1]
 
         a = (chunk & 64512) >> 10 // 64512 = (2^6 - 1) << 10
@@ -72,9 +72,9 @@ function base64ArrayBuffer(arrayBuffer) {
         c = (chunk & 15)    <<  2 // 15    = 2^4 - 1
 
         base64 += encodings[a] + encodings[b] + encodings[c] + '='
-      }
+    }
 
-      return base64
+    return base64
 }
 function timeAgo(date) {
     const now = new Date();
@@ -91,8 +91,8 @@ function timeAgo(date) {
     return parseInt(secondsPast / 86400) + ' days ago';
 }
 function getDayOfWeek(date) {
-  const days = [lang.Sunday, lang.Monday, lang.Tuesday, lang.Wednesday, lang.Thursday, lang.Friday, lang.Saturday];
-  return days[date.getDay()];
+    const days = [lang.Sunday, lang.Monday, lang.Tuesday, lang.Wednesday, lang.Thursday, lang.Friday, lang.Saturday];
+    return days[date.getDay()];
 }
 function stringToColor(str) {
     let blueColors = [
@@ -185,26 +185,26 @@ function removeSpecialCharacters(stringToReplace){
     return stringToReplace.replace(/[^\w\s]/gi, '').replace(/\s+/g, '');
 }
 const mergeDeep = function(...objects) {
-  const isObject = obj => obj && typeof obj === 'object';
+    const isObject = obj => obj && typeof obj === 'object';
 
-  return objects.reduce((prev, obj) => {
-    Object.keys(obj).forEach(key => {
-      const pVal = prev[key];
-      const oVal = obj[key];
+    return objects.reduce((prev, obj) => {
+        Object.keys(obj).forEach(key => {
+            const pVal = prev[key];
+            const oVal = obj[key];
 
-      if (Array.isArray(pVal) && Array.isArray(oVal)) {
-        prev[key] = pVal.concat(...oVal);
-      }
-      else if (isObject(pVal) && isObject(oVal)) {
-        prev[key] = mergeDeep(pVal, oVal);
-      }
-      else {
-        prev[key] = oVal;
-      }
-    });
+            if (Array.isArray(pVal) && Array.isArray(oVal)) {
+                prev[key] = pVal.concat(...oVal);
+            }
+            else if (isObject(pVal) && isObject(oVal)) {
+                prev[key] = mergeDeep(pVal, oVal);
+            }
+            else {
+                prev[key] = oVal;
+            }
+        });
 
-    return prev;
-  }, {});
+        return prev;
+    }, {});
 }
 function dashboardOptions(r,rr,rrr){
     if(!rrr){rrr={};};if(typeof rrr === 'string'){rrr={n:rrr}};if(!rrr.n){rrr.n='ShinobiOptions_'+location.host+'_'+$user.ke+$user.uid}
@@ -216,10 +216,10 @@ function dashboardOptions(r,rr,rrr){
     switch(rrr.x){
         case 0:
             delete(ii.o[r])
-        break;
+            break;
         case 1:
             delete(ii.o[r][rr])
-        break;
+            break;
     }
     localStorage.setItem(rrr.n,JSON.stringify(ii.o))
     return ii.o
@@ -303,8 +303,8 @@ function liveStamp(){
             return
         };
         el.toggleClass('livestamp livestamped')
-            .attr('title',formattedTime(time))
-            .livestamp(time);
+          .attr('title',formattedTime(time))
+          .livestamp(time);
     })
     return allLiveStampable
 }
@@ -346,11 +346,11 @@ function jsonToHtmlBlock(target){
 
 function fullScreenInit(target){
     if (target.requestFullscreen) {
-      target.requestFullscreen();
+        target.requestFullscreen();
     } else if (target.mozRequestFullScreen) {
-      target.mozRequestFullScreen();
+        target.mozRequestFullScreen();
     } else if (target.webkitRequestFullscreen) {
-      target.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+        target.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
     }
 }
 
@@ -450,13 +450,13 @@ function createNewTab(tabName,tabLabel,baseHtml,loadData,backAction,type){
         switch(type){
             case'videoPlayer':
                 tabIcon = 'play-circle'
-            break;
+                break;
             case'livePlayer':
                 tabIcon = 'eye'
-            break;
+                break;
             case'videosList':
                 tabIcon = 'film'
-            break;
+                break;
         }
         existAlready = false
         pageTabContainer.append(baseHtml)
@@ -490,9 +490,9 @@ function onTabAway(tabId){
     switch(type){
         case'videoPlayer':
             pauseVideoPlayer(tabId)
-        break;
+            break;
         case'livePlayer':
-        break;
+            break;
     }
     if(addedOnTabAway[tabId]){
         addedOnTabAway[tabId].forEach(function(theAction){
@@ -520,9 +520,9 @@ function onTabReopen(tabId){
     switch(type){
         case'videoPlayer':
             resumeVideoPlayer(tabId)
-        break;
+            break;
         case'livePlayer':
-        break;
+            break;
     }
     if(addedOnTabReopen[tabId]){
         addedOnTabReopen[tabId].forEach(function(theAction){
@@ -567,10 +567,10 @@ function onTabClose(tabId){
     switch(type){
         case'videoPlayer':
             closeVideoPlayer(tabId)
-        break;
+            break;
         case'livePlayer':
             closeLivePlayer(tabId)
-        break;
+            break;
     }
     if(addedOnTabClose[tabId])addedOnTabClose[tabId](loadedTab)
 }
@@ -626,15 +626,15 @@ function createOptionListHtml(list){
 }
 
 function copyToClipboard(str){
-  const el = document.createElement('textarea');
-  el.value = str;
-  el.setAttribute('readonly', '');
-  el.style.position = 'absolute';
-  el.style.left = '-9999px';
-  document.body.appendChild(el);
-  el.select();
-  document.execCommand('copy');
-  document.body.removeChild(el);
+    const el = document.createElement('textarea');
+    el.value = str;
+    el.setAttribute('readonly', '');
+    el.style.position = 'absolute';
+    el.style.left = '-9999px';
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
 };
 
 function diffObject(obj1, obj2) {
@@ -816,11 +816,11 @@ function drawMonitorListToSelector(jqTarget,selectFirst,showId,addAllMonitorsOpt
     `) : jqTarget.html(html);
     if(selectFirst){
         jqTarget
-        .find('option')
-        .first()
-        .prop('selected',true)
-        .parent()
-        .change()
+          .find('option')
+          .first()
+          .prop('selected',true)
+          .parent()
+          .change()
     }
 }
 var logWriterIconIndicator = $('#side-menu-link-logViewer i')
@@ -942,24 +942,27 @@ function dashboardSwitch(systemSwitch){
 }
 
 function downloadJSON(jsonData,filename){
-    var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(jsonData,null,3));
+    var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(jsonData,function(_key,value){
+        // Strings are expected for the values; not numbers
+        return typeof value === 'number' ? String(value) : value
+    },2));
     $('#temp').html('<a></a>')
-        .find('a')
-        .attr('href',dataStr)
-        .attr('download',filename)
-        [0].click()
+              .find('a')
+              .attr('href',dataStr)
+              .attr('download',filename)
+      [0].click()
 }
 function downloadFile(url,filename) {
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 function getFilenameFromUrl(url) {
-  const parts = url.split("/");
-  return parts[parts.length - 1];
+    const parts = url.split("/");
+    return parts[parts.length - 1];
 }
 function notifyIfActionFailed(data){
     if(data.ok === false){
