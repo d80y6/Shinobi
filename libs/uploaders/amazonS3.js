@@ -82,149 +82,317 @@ module.exports = function(s,config,lang){
     function unloadGroupApp(user){
         s.group[user.ke].aws_s3 = null
     }
-    function deleteVideo(e,video,callback){
+    async function deleteVideo(e, video, callback){
         // e = user
-        try{
-            var videoDetails = JSON.parse(video.details)
-        }catch(err){
-            var videoDetails = video.details
+        //retryCount = max attempts (default 10, 0 = infinite)
+        const retryValue = parseInt(s.group[e.ke].init.aws_s3_retryCount)
+        const retryCount = isNaN(retryValue) ? 10 : retryValue
+        var videoDetails;
+        try {
+            videoDetails = JSON.parse(video.details);
+        } catch(err){
+            videoDetails = video.details;
         }
+
         if(!videoDetails.location){
-            videoDetails.location = video.href.split('.amazonaws.com')[1]
+            videoDetails.location = video.href.split('.amazonaws.com')[1];
         }
+
         if(video.type !== 's3'){
-            callback()
-            return
+            if(callback) callback();
+            return { ok: true, skipped: true };
         }
-        deleteObject(video.ke,{
-            Bucket: s.group[video.ke].init.aws_s3_bucket,
-            Key: videoDetails.location,
-        }).then((response) => {
-            if (response.err){
-                console.error('Amazon S3 DELETE Error')
-                console.error(err);
-            }
-            callback()
-        });
-    }
-    function uploadVideo(e,k,insertQuery){
-        //e = video object
-        //k = temporary values
-        if(!k)k={};
-        //cloud saver - amazon s3
-        const groupKey = insertQuery.ke
-        if(s.group[groupKey].aws_s3 && s.group[groupKey].init.use_aws_s3 !== '0' && s.group[groupKey].init.aws_s3_save === '1'){
-            const filename = `${s.formattedTime(insertQuery.time)}.${insertQuery.ext}`
-            var fileStream = fs.createReadStream(k.dir+filename);
-            fileStream.on('error', function (err) {
-                console.error(err)
-            })
-            var saveLocation = s.group[groupKey].init.aws_s3_dir+groupKey+'/'+e.mid+'/'+filename
-            uploadObject(groupKey,{
-                Bucket: s.group[groupKey].init.aws_s3_bucket,
-                Key: saveLocation,
-                Body: fileStream,
-                ContentType: 'video/'+e.ext,
-                StorageClass: s.group[groupKey].init.aws_storage_class || StorageClass.STANDARD
-            }).then((response) => {
-                if(response.err){
-                    s.userLog(e,{type:lang['Amazon S3 Upload Error'],msg:response.err})
-                }
-                if(s.group[groupKey].init.aws_s3_log === '1' && response.ok){
-                    s.knexQuery({
-                        action: "insert",
-                        table: "Cloud Videos",
-                        insert: {
-                            mid: e.mid,
-                            ke: groupKey,
-                            ext: insertQuery.ext,
-                            time: insertQuery.time,
-                            status: 1,
-                            type : 's3',
-                            details: s.s({
-                                location : saveLocation
-                            }),
-                            size: k.filesize,
-                            end: k.endTime,
-                            href: ''
-                        }
-                    })
-                    s.setCloudDiskUsedForGroup(groupKey,{
-                        amount: k.filesizeMB,
-                        storageType: 's3'
-                    })
-                    s.purgeCloudDiskForGroup(e,'s3')
-                }
+
+        const infiniteRetry = retryCount === 0;
+
+        function attemptDelete(){
+            return new Promise((resolve) => {
+                deleteObject(video.ke, {
+                    Bucket: s.group[video.ke].init.aws_s3_bucket,
+                    Key: videoDetails.location,
+                }).then((response) => {
+                    resolve(response || { ok: false, err: 'No response from deleteObject' });
+                }).catch((err) => {
+                    resolve({ ok: false, err: err });
+                });
             });
         }
-    }
-    function onInsertTimelapseFrame(monitorObject,queryInfo,filePath){
-        var e = monitorObject
-        if(s.group[e.ke].aws_s3 && s.group[e.ke].init.use_aws_s3 !== '0' && s.group[e.ke].init.aws_s3_save === '1'){
-            var fileStream = fs.createReadStream(filePath)
-            fileStream.on('error', function (err) {
-                console.error(err)
-            })
-            var saveLocation = s.group[e.ke].init.aws_s3_dir + e.ke + '/' + e.mid + '_timelapse/' + queryInfo.filename
-            uploadObject(e.ke,{
-                Bucket: s.group[e.ke].init.aws_s3_bucket,
-                Key: saveLocation,
-                Body: fileStream,
-                ContentType:'image/jpeg'
-            }).then((response) => {
-                if(response.err){
-                    s.userLog(e,{type:lang['Wasabi Hot Cloud Storage Upload Error'],msg:response.err})
-                }
-                if(s.group[e.ke].init.aws_s3_log === '1' && response.ok){
-                    s.knexQuery({
-                        action: "insert",
-                        table: "Cloud Timelapse Frames",
-                        insert: {
-                            mid: queryInfo.mid,
-                            ke: queryInfo.ke,
-                            time: queryInfo.time,
-                            filename: queryInfo.filename,
-                            type : 's3',
-                            details: s.s({
-                                location : saveLocation
-                            }),
-                            size: queryInfo.size,
-                            href: ''
-                        }
-                    })
-                    s.setCloudDiskUsedForGroup(e.ke,{
-                        amount : s.kilobyteToMegabyte(queryInfo.size),
-                        storageType : 's3'
-                    },'timelapseFrames')
-                    s.purgeCloudDiskForGroup(e,'s3','timelapseFrames')
-                }
-            })
+
+        let attempt = 0;
+        let response = { ok: false, err: 'No delete attempt was made' };
+
+        while(infiniteRetry || attempt < retryCount){
+            attempt++;
+            response = await attemptDelete();
+            if(response.ok) break;
+
+            const willRetry = infiniteRetry || attempt < retryCount;
+            if(willRetry){
+                // exponential backoff, capped at 60s
+                const delayMs = Math.min(1000 * Math.pow(2, Math.min(attempt - 1, 6)), 60000);
+                console.log(`S3 video delete failed (attempt ${attempt}${infiniteRetry ? '' : '/' + retryCount}), retrying in ${delayMs}ms:`, response.err);
+                await new Promise(r => setTimeout(r, delayMs));
+            }
         }
+
+        if(response.err){
+            console.error('Amazon S3 DELETE Error');
+            console.error(response.err);
+        }
+
+        if(callback) callback(response);
+        return response;
     }
-    function onDeleteTimelapseFrameFromCloud(e,frame,callback){
-        // e = user
+    async function uploadVideo(e, k, insertQuery){
+        //e = video object
+        //k = temporary values
+        //retryCount = max attempts (default 10, 0 = infinite)
+        if(!k) k = {};
+        //cloud saver - amazon s3
+        const groupKey = insertQuery.ke;
+        if(!(s.group[groupKey].aws_s3 && s.group[groupKey].init.use_aws_s3 !== '0' && s.group[groupKey].init.aws_s3_save === '1')){
+            return;
+        }
+        const retryValue = parseInt(s.group[groupKey].init.aws_s3_retryCount)
+        const retryCount = isNaN(retryValue) ? 10 : retryValue
+        const filename = `${s.formattedTime(insertQuery.time)}.${insertQuery.ext}`;
+        const filePath = k.dir + filename;
+        const saveLocation = s.group[groupKey].init.aws_s3_dir + groupKey + '/' + e.mid + '/' + filename;
+        const infiniteRetry = retryCount === 0;
+
+        // Single attempt: builds a *fresh* stream each call and always tears it down.
+        function attemptUpload(){
+            return new Promise((resolve) => {
+                let fileStream = fs.createReadStream(filePath);
+                let settled = false;
+
+                const finish = (result) => {
+                    if(settled) return;
+                    settled = true;
+                    try {
+                        if(fileStream && !fileStream.destroyed){
+                            fileStream.destroy();
+                        }
+                    } catch(_) {}
+                    fileStream = null; // drop reference so GC can collect SDK-side buffers
+                    resolve(result);
+                };
+
+                fileStream.on('error', function(err){
+                    console.error(err);
+                    finish({ ok: false, err: err });
+                });
+
+                uploadObject(groupKey, {
+                    Bucket: s.group[groupKey].init.aws_s3_bucket,
+                    Key: saveLocation,
+                    Body: fileStream,
+                    ContentType: 'video/' + e.ext,
+                    StorageClass: s.group[groupKey].init.aws_storage_class || StorageClass.STANDARD
+                }).then((response) => {
+                    finish(response || { ok: false, err: 'No response from uploadObject' });
+                }).catch((err) => {
+                    finish({ ok: false, err: err });
+                });
+            });
+        }
+
+        let attempt = 0;
+        let response = { ok: false, err: 'No upload attempt was made' };
+
         try{
-            var frameDetails = JSON.parse(frame.details)
+            while(infiniteRetry || attempt < retryCount){
+                attempt++;
+                response = await attemptUpload();
+                if(response.ok) break;
+
+                const willRetry = infiniteRetry || attempt < retryCount;
+                if(willRetry){
+                    // exponential backoff, capped at 60s
+                    const delayMs = Math.min(1000 * Math.pow(2, Math.min(attempt - 1, 6)), 60000);
+                    console.log(`S3 upload failed (attempt ${attempt}${infiniteRetry ? '' : '/' + retryCount}), retrying in ${delayMs}ms:`, response.err);
+                    await new Promise(r => setTimeout(r, delayMs));
+                }
+            }
+
+            if(response.err){
+                s.userLog(e, { type: lang['Amazon S3 Upload Error'], msg: response.err });
+            }
+            if(s.group[groupKey].init.aws_s3_log === '1' && response.ok){
+                await s.knexQuery({
+                    action: "insert",
+                    table: "Cloud Videos",
+                    insert: {
+                        mid: e.mid,
+                        ke: groupKey,
+                        ext: insertQuery.ext,
+                        time: insertQuery.time,
+                        status: 1,
+                        type: 's3',
+                        details: s.s({ location: saveLocation }),
+                        size: k.filesize,
+                        end: k.endTime,
+                        href: ''
+                    }
+                });
+                s.setCloudDiskUsedForGroup(groupKey, {
+                    amount: k.filesizeMB,
+                    storageType: 's3'
+                });
+                s.purgeCloudDiskForGroup(e, 's3');
+            }
         }catch(err){
-            var frameDetails = frame.details
+            response.err = err.toString()
+        }
+        return response;
+    }
+    async function onInsertTimelapseFrame(monitorObject, queryInfo, filePath){
+        //retryCount = max attempts (default 10, 0 = infinite)
+        var e = monitorObject;
+        if(!(s.group[e.ke].aws_s3 && s.group[e.ke].init.use_aws_s3 !== '0' && s.group[e.ke].init.aws_s3_save === '1')){
+            return;
+        }
+        const retryValue = parseInt(s.group[e.ke].init.aws_s3_retryCount)
+        const retryCount = isNaN(retryValue) ? 10 : retryValue
+        const saveLocation = s.group[e.ke].init.aws_s3_dir + e.ke + '/' + e.mid + '_timelapse/' + queryInfo.filename;
+        const infiniteRetry = retryCount === 0;
+
+        // Single attempt: builds a *fresh* stream each call and always tears it down.
+        function attemptUpload(){
+            return new Promise((resolve) => {
+                let fileStream = fs.createReadStream(filePath);
+                let settled = false;
+
+                const finish = (result) => {
+                    if(settled) return;
+                    settled = true;
+                    try {
+                        if(fileStream && !fileStream.destroyed){
+                            fileStream.destroy();
+                        }
+                    } catch(_) {}
+                    fileStream = null; // drop reference so GC can collect SDK-side buffers
+                    resolve(result);
+                };
+
+                fileStream.on('error', function(err){
+                    console.error(err);
+                    finish({ ok: false, err: err });
+                });
+
+                uploadObject(e.ke, {
+                    Bucket: s.group[e.ke].init.aws_s3_bucket,
+                    Key: saveLocation,
+                    Body: fileStream,
+                    ContentType: 'image/jpeg'
+                }).then((response) => {
+                    finish(response || { ok: false, err: 'No response from uploadObject' });
+                }).catch((err) => {
+                    finish({ ok: false, err: err });
+                });
+            });
+        }
+
+        let attempt = 0;
+        let response = { ok: false, err: 'No upload attempt was made' };
+
+        while(infiniteRetry || attempt < retryCount){
+            attempt++;
+            response = await attemptUpload();
+            if(response.ok) break;
+
+            const willRetry = infiniteRetry || attempt < retryCount;
+            if(willRetry){
+                // exponential backoff, capped at 60s
+                const delayMs = Math.min(1000 * Math.pow(2, Math.min(attempt - 1, 6)), 60000);
+                console.log(`S3 timelapse upload failed (attempt ${attempt}${infiniteRetry ? '' : '/' + retryCount}), retrying in ${delayMs}ms:`, response.err);
+                await new Promise(r => setTimeout(r, delayMs));
+            }
+        }
+
+        if(response.err){
+            s.userLog(e, { type: lang['Wasabi Hot Cloud Storage Upload Error'], msg: response.err });
+        }
+        if(s.group[e.ke].init.aws_s3_log === '1' && response.ok){
+            await s.knexQuery({
+                action: "insert",
+                table: "Cloud Timelapse Frames",
+                insert: {
+                    mid: queryInfo.mid,
+                    ke: queryInfo.ke,
+                    time: queryInfo.time,
+                    filename: queryInfo.filename,
+                    type: 's3',
+                    details: s.s({ location: saveLocation }),
+                    size: queryInfo.size,
+                    href: ''
+                }
+            });
+            s.setCloudDiskUsedForGroup(e.ke, {
+                amount: s.kilobyteToMegabyte(queryInfo.size),
+                storageType: 's3'
+            }, 'timelapseFrames');
+            s.purgeCloudDiskForGroup(e, 's3', 'timelapseFrames');
+        }
+
+        return response;
+    }
+    async function onDeleteTimelapseFrameFromCloud(e, frame, callback, retryCount){
+        // e = user
+        //retryCount = max attempts (default 10, 0 = infinite)
+        const retryValue = parseInt(s.group[e.ke].init.aws_s3_retryCount)
+        const retryCount = isNaN(retryValue) ? 10 : retryValue
+        var frameDetails;
+        try {
+            frameDetails = JSON.parse(frame.details);
+        } catch(err){
+            frameDetails = frame.details;
         }
         if(video.type !== 's3'){
-            callback()
-            return
+            if(callback) callback();
+            return { ok: true, skipped: true };
         }
         if(!frameDetails.location){
-            frameDetails.location = frame.href.split(locationUrl)[1]
+            frameDetails.location = frame.href.split(locationUrl)[1];
         }
-        deleteObject(e.ke,{
-            Bucket: s.group[e.ke].init.aws_s3_bucket,
-            Key: frameDetails.location,
-        }).then((response) => {
-            if (response.err){
-                console.error('Amazon S3 DELETE Error')
-                console.error(err);
+        const infiniteRetry = retryCount === 0;
+        function attemptDelete(){
+            return new Promise((resolve) => {
+                deleteObject(e.ke, {
+                    Bucket: s.group[e.ke].init.aws_s3_bucket,
+                    Key: frameDetails.location,
+                }).then((response) => {
+                    resolve(response || { ok: false, err: 'No response from deleteObject' });
+                }).catch((err) => {
+                    resolve({ ok: false, err: err });
+                });
+            });
+        }
+
+        let attempt = 0;
+        let response = { ok: false, err: 'No delete attempt was made' };
+
+        while(infiniteRetry || attempt < retryCount){
+            attempt++;
+            response = await attemptDelete();
+            if(response.ok) break;
+
+            const willRetry = infiniteRetry || attempt < retryCount;
+            if(willRetry){
+                // exponential backoff, capped at 60s
+                const delayMs = Math.min(1000 * Math.pow(2, Math.min(attempt - 1, 6)), 60000);
+                console.log(`S3 delete failed (attempt ${attempt}${infiniteRetry ? '' : '/' + retryCount}), retrying in ${delayMs}ms:`, response.err);
+                await new Promise(r => setTimeout(r, delayMs));
             }
-            callback()
-        });
+        }
+
+        if(response.err){
+            console.error('Amazon S3 DELETE Error');
+            console.error(response.err);
+        }
+
+        if(callback) callback(response);
+        return response;
     }
     async function onGetVideoData(video){
         const videoDetails = s.parseJSON(video.details)
@@ -522,6 +690,15 @@ module.exports = function(s,config,lang){
             "example": "",
             "possible": ""
          },
+         {
+            "hidden": true,
+            "field": lang['Retry Count'],
+            "description": lang.uploaderRetryCountText,
+            "name": "detail=aws_s3_retryCount",
+            "placeholder": "10 is Default, 0 is Infinite",
+            "form-group-class": "autosave_aws_s3_input autosave_aws_s3_1",
+            "default": "10",
+         }
        ]
     }
 }
