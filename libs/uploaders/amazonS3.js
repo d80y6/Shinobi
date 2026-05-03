@@ -208,7 +208,6 @@ module.exports = function(s,config,lang){
 
                 const willRetry = infiniteRetry || attempt < retryCount;
                 if(willRetry){
-                    // exponential backoff, capped at 60s
                     const delayMs = Math.min(1000 * Math.pow(2, Math.min(attempt - 1, 6)), 60000);
                     console.log(`S3 upload failed (attempt ${attempt}${infiniteRetry ? '' : '/' + retryCount}), retrying in ${delayMs}ms:`, response.err);
                     await new Promise(r => setTimeout(r, delayMs));
@@ -337,7 +336,7 @@ module.exports = function(s,config,lang){
 
         return response;
     }
-    async function onDeleteTimelapseFrameFromCloud(e, frame, callback, retryCount){
+    async function onDeleteTimelapseFrameFromCloud(e, frame, callback){
         // e = user
         //retryCount = max attempts (default 10, 0 = infinite)
         const retryValue = parseInt(s.group[e.ke].init.aws_s3_retryCount)
