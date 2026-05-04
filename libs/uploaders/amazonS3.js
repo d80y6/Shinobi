@@ -218,7 +218,7 @@ module.exports = function(s,config,lang){
                 s.userLog(e, { type: lang['Amazon S3 Upload Error'], msg: response.err });
             }
             if(s.group[groupKey].init.aws_s3_log === '1' && response.ok){
-                await s.knexQuery({
+                await s.knexQueryPromise({
                     action: "insert",
                     table: "Cloud Videos",
                     insert: {
@@ -313,7 +313,7 @@ module.exports = function(s,config,lang){
             s.userLog(e, { type: lang['Wasabi Hot Cloud Storage Upload Error'], msg: response.err });
         }
         if(s.group[e.ke].init.aws_s3_log === '1' && response.ok){
-            await s.knexQuery({
+            await s.knexQueryPromise({
                 action: "insert",
                 table: "Cloud Timelapse Frames",
                 insert: {
