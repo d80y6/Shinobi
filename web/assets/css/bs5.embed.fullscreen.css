@@ -11,7 +11,7 @@ html {
 }
 
 .stream-element,
-.shinobi_stream {
+.dam-vms_stream {
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -19,6 +19,6 @@ html {
 	width: 100%;
 }
 
-.shinobi_stream video {
+.dam-vms_stream video {
 	object-fit: fill
 }

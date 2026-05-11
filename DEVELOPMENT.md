@@ -1,14 +1,14 @@
-Shinobi Developer Guide
+DAM VMS Developer Guide
 =======================
 
 >Thanks to @Kagetsuki for taking the time to write this!
 
 General Devlopment Outline
 --------------------------
-Shinobi [currently] runs directly out of the repository rather than from a package you install.
-A full Shinobi install will try to embed itself into the system, so ideally a machine running
-Shinobi would only be running Shinobi; but when developing Shinobi that would be fairly
-inconvenient. This guide is going to outline a development process where Shinobi will be fairly
+DAM VMS [currently] runs directly out of the repository rather than from a package you install.
+A full DAM VMS install will try to embed itself into the system, so ideally a machine running
+DAM VMS would only be running DAM VMS; but when developing DAM VMS that would be fairly
+inconvenient. This guide is going to outline a development process where DAM VMS will be fairly
 contained, and development won't have any wide reaching effects on the system or generally require
 any sort of super user access.  
 
@@ -29,17 +29,17 @@ easy to develop with as clearing the DB is as simple as deleting a file and you 
 instance you're working with by copying it. It is recommended to use at least version 15.1.
 
 - *FFmpeg* :
-You'll also need FFmpeg. This is the video processing engine at the core of Shinobi. You will
+You'll also need FFmpeg. This is the video processing engine at the core of DAM VMS. You will
 need at least version 3.3.3.
 
 ### Installing prerequisites automatically
-To get all of Shinobi at once you can use the Ninja Way. Learn more about that here
-https://shinobi.video/docs/start#content-the-ninja-way
-However this will download the repository to /home/Shinobi and start Shinobi. Once you have finished the installation using the ninja way, ensure that you stop Shinobi othewise it will confilict with your dev instance. To stop Shinobi run `sudo pm2 stop camera.js` and `sudo pm2 stop cron.js`
+To get all of DAM VMS at once you can use the Ninja Way. Learn more about that here
+https://dam-vms.video/docs/start#content-the-ninja-way
+However this will download the repository to /home/DAM VMS and start DAM VMS. Once you have finished the installation using the ninja way, ensure that you stop DAM VMS othewise it will confilict with your dev instance. To stop DAM VMS run `sudo pm2 stop camera.js` and `sudo pm2 stop cron.js`
 
 Development
 ===========
-First off you need to clone the Shinobi repository. Either the regular Shinobi repository or the
+First off you need to clone the DAM VMS repository. Either the regular DAM VMS repository or the
 CE repository should work, but the regular will likely have more updates (but has a different
 license). If you're specifically concerned about OSS then just clone the CE edition, but if
 you're more concerned about fixing an issue or adding a feature then go for the regular
@@ -48,16 +48,16 @@ request.
 
 Obtaining the repository
 ------------------------
-To clone Shinobi:
+To clone DAM VMS:
 ```sh
-git clone https://gitlab.com/Shinobi-Systems/Shinobi.git
+git clone https://gitlab.com/DAM VMS-Systems/DAM VMS.git
 ```
 
-or to clone Shinobi CE:
+or to clone DAM VMS CE:
 ```sh
-git clone https://gitlab.com/Shinobi-Systems/ShinobiCE.git
+git clone https://gitlab.com/DAM VMS-Systems/DAM VMSCE.git
 ```
-Then cd into either the "Shinobi" or "ShinobiCE" directory.
+Then cd into either the "DAM VMS" or "DAM VMSCE" directory.
 
 Make sure to add your fork as a remote so you can send Merge requests
 
@@ -72,9 +72,9 @@ to change how you installed Node/NPM or change your installation method.
 
 Setting your cloned repository for quick development
 ----------------------------------------------------
-First we need a base conf.json to modify. Shinobi doesn't have a conf.json by default as
+First we need a base conf.json to modify. DAM VMS doesn't have a conf.json by default as
 adding it to the repository would end up conflicting or altering the configuration on running
-instances of Shinobi whenever someone updated.
+instances of DAM VMS whenever someone updated.
 ```sh
 cp conf.sample.json conf.json
 ```
@@ -88,15 +88,15 @@ copy the super.sample.json file to super.json:
 cp super.sample.json super.json
 ```
 And that's it! As long as that file exists we can access the Super User Interface. The default
-login information is user: 'admin@shinobi.video' password: 'admin'. This can of course be changed;
+login information is user: 'admin@dam-vms.video' password: 'admin'. This can of course be changed;
 but for development we advise leaving it as the default.
 
-Running Shinobi
+Running DAM VMS
 ---------------
-Shinobi is usually run with the PM2 process manager, but for development we'll run the "camera"
+DAM VMS is usually run with the PM2 process manager, but for development we'll run the "camera"
 and "cron" processes directy. To monitor output, we recommend you use a terminal multiplexer like
 byobu, tmux, or screen. In one terminal window, run ```node cron.js``` and in another run
-```node camera.js```. Shinobi should now be running on port 8080 on your local machine (you can
+```node camera.js```. DAM VMS should now be running on port 8080 on your local machine (you can
 change the port in conf.json) and accessable at http://localhost:8080 in your browser. Any source
 code changes you make will require restarting either the camera or cron process [or both]. To avoid manually restarting, use the npm package `nodemon`. Run these commands in two separate terminals.
 ```sh  

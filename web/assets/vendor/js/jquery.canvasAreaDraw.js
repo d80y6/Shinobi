@@ -1,7 +1,7 @@
 // http://iakob.com/canvas-area-draw/demo.html
 // https://gitlab.com/fahrenheit/community/jquery-canvas-area-draw
 // Authored by Jacob Williams (https://gitlab.com/singlow)
-// updated by Moe Alam, Shinobi Systems for jQuery 3.5.1
+// updated by Moe Alam, DAM VMS Systems for jQuery 3.5.1
 (function ($) {
 
     $.fn.canvasAreaDraw = function (options) {

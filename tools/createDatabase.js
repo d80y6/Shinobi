@@ -1,11 +1,11 @@
-// run these inside the Shinobi folder to use the script.
+// run these inside the DAM VMS folder to use the script.
 //// npm install git+https://github.com/SoakDigital/knex-db-manager.git#feature/mysql2-lib-support
 //// npm install mysql2
 //
 // Usage : node tools/createDatabase.js
 //
 // it throws a "ER_DBACCESS_DENIED_ERROR" error
-// but Shinobi still seems to run when I start it right after running this script.
+// but DAM VMS still seems to run when I start it right after running this script.
 
 
 const config = require('../conf.json')

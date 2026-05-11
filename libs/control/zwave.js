@@ -1,4 +1,4 @@
-const zWaveAPI = require('shinobi-zwave')
+const zWaveAPI = require('dam-vms-zwave')
 module.exports = async (s,config,lang,app,io) => {
     const addCredentialsToHostLink = (url,username,password) => {
         if(url.indexOf('@') > -1){

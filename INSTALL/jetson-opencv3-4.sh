@@ -17,7 +17,7 @@
 #
 # JK Jung, jkjung13@gmail.com
 #
-# Also modified by moeiscool of Shinobi Systems to find the patch file in the directory of the script
+# Also modified by moeiscool of DAM VMS Systems to find the patch file in the directory of the script
 
 set -e
 

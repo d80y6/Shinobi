@@ -17,9 +17,9 @@ sudo apt-get update -y
 sudo apt-get -o Dpkg::Options::="--force-overwrite" install cuda-toolkit-9-0 -y --no-install-recommends
 sudo apt-get -o Dpkg::Options::="--force-overwrite" install --fix-broken -y
 # Install CUDA DNN
-wget https://cdn.shinobi.video/installers/libcudnn7_7.6.3.30-1+cuda9.0_amd64.deb -O cuda-dnn.deb
+wget https://cdn.dam-vms.video/installers/libcudnn7_7.6.3.30-1+cuda9.0_amd64.deb -O cuda-dnn.deb
 sudo dpkg -i cuda-dnn.deb
-wget https://cdn.shinobi.video/installers/libcudnn7-dev_7.6.3.30-1+cuda9.0_amd64.deb -O cuda-dnn-dev.deb
+wget https://cdn.dam-vms.video/installers/libcudnn7-dev_7.6.3.30-1+cuda9.0_amd64.deb -O cuda-dnn-dev.deb
 sudo dpkg -i cuda-dnn-dev.deb
 echo "-- Cleaning Up --"
 # Cleanup

@@ -71,13 +71,13 @@ module.exports = function(s,config,lang,app,io){
                         if(err)return;
                         var startTime = stats.ctime
                         var endTime = stats.mtime
-                        var shinobiFilename = s.formattedTime(startTime) + '.mp4'
-                        var recordingPath = s.getVideoDirectory(monitorConfig) + shinobiFilename
+                        var dam-vmsFilename = s.formattedTime(startTime) + '.mp4'
+                        var recordingPath = s.getVideoDirectory(monitorConfig) + dam-vmsFilename
                         var writeStream = fs.createWriteStream(recordingPath)
                         fs.createReadStream(filePath).pipe(writeStream)
                         writeStream.on('finish', () => {
                             s.insertCompletedVideo(s.group[monitorConfig.ke].rawMonitorConfigurations[monitorConfig.mid],{
-                                file: shinobiFilename,
+                                file: dam-vmsFilename,
                                 events: [
                                     {
                                       id: mid,
@@ -224,7 +224,7 @@ module.exports = function(s,config,lang,app,io){
                 pasv_url: config.ftpServerPasvUrl,
                 pasv_min: config.ftpServerPasvMinPort,
                 pasv_max: config.ftpServerPasvMaxPort,
-                greeting: "Shinobi FTP dropInEvent Server says hello!",
+                greeting: "DAM VMS FTP dropInEvent Server says hello!",
                 log: require('bunyan').createLogger({
                   name: 'ftp-srv',
                   level: 100

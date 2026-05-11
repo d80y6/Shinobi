@@ -22,7 +22,7 @@ $(document).ready(function(){
             case'update':
                 var html = lang.updateNotice1
                 $.confirm.create({
-                    title: `${lang.Update} Shinobi?`,
+                    title: `${lang.Update} DAM VMS?`,
                     body: html,
                     clickOptions: {
                         class: 'btn-danger',
@@ -43,7 +43,7 @@ $(document).ready(function(){
         target.forEach(function(v){
             switch(v){
                 case'system':
-                    html += '<p>Do you want to restart the core (camera.js)? plugins will not be restarted. They will reconnect when Shinobi is back online.</p>'
+                    html += '<p>Do you want to restart the core (camera.js)? plugins will not be restarted. They will reconnect when DAM VMS is back online.</p>'
                 break;
                 case'cron':
                     html += '<p>Do you want to restart the CRON (cron.js)?</p>'

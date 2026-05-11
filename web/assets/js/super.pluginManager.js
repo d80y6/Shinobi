@@ -9,7 +9,7 @@ $(document).ready(function(){
     }
     function getDownloadableModules(callback) {
         return new Promise((resolve,reject) => {
-            const pluginListUrl = `https://cdn.shinobi.video/plugins/list.json`
+            const pluginListUrl = `https://cdn.dam-vms.video/plugins/list.json`
             $.getJSON(pluginListUrl,function(data){
                 var html = ''
                 $.each(data,function(n,plugin){

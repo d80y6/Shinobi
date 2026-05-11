@@ -1,5 +1,5 @@
 //
-// Shinobi - Plugin Base
+// DAM VMS - Plugin Base
 // Copyright (C) 2016-2025 Moe Alam, moeiscool
 //
 // # Donate

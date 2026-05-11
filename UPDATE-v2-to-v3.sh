@@ -13,7 +13,7 @@ echo "Updating PM2..."
 npm install pm2@latest -g
 
 echo "============="
-echo "Updating Shinobi dependencies..."
+echo "Updating DAM VMS dependencies..."
 git reset --hard
 git pull
 rm -rf node_modules

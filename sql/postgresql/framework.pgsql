@@ -1,5 +1,5 @@
 /*
- * As of 2022-10-19 Shinobi will create the tables during the startup process.
+ * As of 2022-10-19 DAM VMS will create the tables during the startup process.
  * Only a blank database needs to exist with access provided to the sql user.
  *
  *
@@ -26,12 +26,12 @@
  * Here's my DB create flow:
  *    1) become the account that controls pgsql (pgsql superuser)
  *    2) from that shell prompt, say:
- *          createuser -p shinobi
+ *          createuser -p dam-vms
  *       Enter a secure password after this, twice.
  *    3) from same shell prompt say:
- *          createdb --owner shinobi --encoding='utf-8' shinobi
+ *          createdb --owner dam-vms --encoding='utf-8' dam-vms
  *    4) now from same shell prompt you can do
- *          psql shinobi <framework.psql
+ *          psql dam-vms <framework.psql
  *    Your database is created.
  *
  * Extra issues:

@@ -1,12 +1,12 @@
 $(document).ready(function(){
     var loadedConfigs = {}
-    var shinobiHubWindow = $('#tab-configFinder')
-    var shinobiHubWindowTableBody = $('#shinobihub-results')
-    var shinobiHubWindowSearch = $('#shinobihub-search')
-    var shinobiHubWindowSortBy = $('#shinobihub-sort-by')
-    var shinobiHubWindowExplore = $('#shinobihub-explore')
-    var shinobiHubWindowSortDirection = $('#shinobihub-sort-direction')
-    var shinobiHubWindowPages = $('#shinobihub-pages')
+    var dam-vmsHubWindow = $('#tab-configFinder')
+    var dam-vmsHubWindowTableBody = $('#dam-vmshub-results')
+    var dam-vmsHubWindowSearch = $('#dam-vmshub-search')
+    var dam-vmsHubWindowSortBy = $('#dam-vmshub-sort-by')
+    var dam-vmsHubWindowExplore = $('#dam-vmshub-explore')
+    var dam-vmsHubWindowSortDirection = $('#dam-vmshub-sort-direction')
+    var dam-vmsHubWindowPages = $('#dam-vmshub-pages')
     var sideMenuList = $(`#side-menu-link-configFinder  ul`)
     var pageLimit = 15
     function drawFoundConfigsSubMenu(){
@@ -25,9 +25,9 @@ $(document).ready(function(){
     }
     var getConfigurationsFromHub = function(rowLimit,skipOver,explore,searchQuery,sortBy,sortDirection,callback){
         // $.get(,callback)
-        $.getJSON(`https://hub.shinobi.video/searchConfiguration?skipOver=${skipOver}&rowLimit=${rowLimit}&sortBy=${sortBy}&sortDirection=${sortDirection}${searchQuery ? `&text=${searchQuery}` : ''}`,function(data){
+        $.getJSON(`https://hub.dam-vms.video/searchConfiguration?skipOver=${skipOver}&rowLimit=${rowLimit}&sortBy=${sortBy}&sortDirection=${sortDirection}${searchQuery ? `&text=${searchQuery}` : ''}`,function(data){
             callback(data)
-            // $.get(getApiPrefix() + `/getShinobiHubConfigurations/${$user.ke}/cam?rowLimit=${rowLimit}&skipOver=${skipOver}&explore=${explore ? explore : "0"}&search=${searchQuery}&sortDirection=${sortDirection}&sortBy=${sortBy}`,function(privateData){
+            // $.get(getApiPrefix() + `/getDAM VMSHubConfigurations/${$user.ke}/cam?rowLimit=${rowLimit}&skipOver=${skipOver}&explore=${explore ? explore : "0"}&search=${searchQuery}&sortDirection=${sortDirection}&sortBy=${sortBy}`,function(privateData){
             //     callback(data.concat(privateData || []))
             // })
         })
@@ -55,14 +55,14 @@ $(document).ready(function(){
                 </div>`
     }
     var loadRows = function(skipOver,rowLimit,explore){
-        shinobiHubWindowTableBody.empty()
+        dam-vmsHubWindowTableBody.empty()
         if(!skipOver)skipOver = 0
         if(!rowLimit)rowLimit = pageLimit
         loadedConfigs = {}
-        var searchQuery = shinobiHubWindowSearch.val()
-        var sortBy = shinobiHubWindowSortBy.val()
-        var sortDirection = shinobiHubWindowSortDirection.val()
-        var explore = shinobiHubWindowExplore.val() || '0'
+        var searchQuery = dam-vmsHubWindowSearch.val()
+        var sortBy = dam-vmsHubWindowSortBy.val()
+        var sortDirection = dam-vmsHubWindowSortDirection.val()
+        var explore = dam-vmsHubWindowExplore.val() || '0'
         getConfigurationsFromHub(rowLimit,skipOver,explore,searchQuery,sortBy,sortDirection,function(data){
             var html = ''
             $.each(data.configs,function(n,row){
@@ -73,7 +73,7 @@ $(document).ready(function(){
                     console.log(err,row)
                 }
             })
-            shinobiHubWindowTableBody.html(html)
+            dam-vmsHubWindowTableBody.html(html)
             html = ''
             if(data.pages > 10){
                 for (i = 1; i < 3 + 1; i++) {
@@ -88,7 +88,7 @@ $(document).ready(function(){
                     html += `<button type="button" class="page-select btn btn-default btn-sm ${i === data.currentPage ? 'active' : ''}" page="${i}">${i}</button>`
                 }
             }
-            shinobiHubWindowPages.html(html)
+            dam-vmsHubWindowPages.html(html)
             drawFoundConfigsSubMenu()
         })
     }
@@ -98,24 +98,24 @@ $(document).ready(function(){
     addOnTabReopen('configFinder', function () {
         // loadRows()
     })
-    shinobiHubWindow.on('click','.copy',function(){
+    dam-vmsHubWindow.on('click','.copy',function(){
         openMonitorEditorPage()
         var configId = $(this).parents(`[drawn-id]`).attr('drawn-id')
         var json = loadedConfigs[configId].json
         writeToMonitorSettingsWindow(json)
     })
-    shinobiHubWindowPages.on('click','.page-select',function(){
+    dam-vmsHubWindowPages.on('click','.page-select',function(){
         var pageSelect = parseInt($(this).attr('page')) - 1
         loadRows(pageSelect * pageLimit, pageLimit,'0')
     })
-    shinobiHubWindow.on('change','.page-number-input',function(){
+    dam-vmsHubWindow.on('change','.page-number-input',function(){
         var pageSelect = parseInt($(this).val()) - 1
         loadRows(pageSelect * pageLimit, pageLimit,'0')
     })
-    shinobiHubWindowSearch.change(function(){
+    dam-vmsHubWindowSearch.change(function(){
         loadRows(0, pageLimit, '0')
     })
-    shinobiHubWindowSortBy.change(function(){
+    dam-vmsHubWindowSortBy.change(function(){
         var descText
         var ascText
         switch($(this).val()){
@@ -130,14 +130,14 @@ $(document).ready(function(){
                 ascText = '# - Z'
             break;
         }
-        shinobiHubWindowSortDirection.find('[value="DESC"]').html(descText)
-        shinobiHubWindowSortDirection.find('[value="ASC"]').html(ascText)
+        dam-vmsHubWindowSortDirection.find('[value="DESC"]').html(descText)
+        dam-vmsHubWindowSortDirection.find('[value="ASC"]').html(ascText)
         loadRows(0, pageLimit, '0')
     })
-    shinobiHubWindowSortDirection.change(function(){
+    dam-vmsHubWindowSortDirection.change(function(){
         loadRows(0, pageLimit, '0')
     })
-    shinobiHubWindowExplore.change(function(){
+    dam-vmsHubWindowExplore.change(function(){
         loadRows(0, pageLimit, '0')
     })
 })

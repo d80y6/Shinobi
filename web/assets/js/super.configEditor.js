@@ -366,7 +366,7 @@ $(document).ready(function () {
     console.log(errors)
     if (errors.length === 0) {
       var newConfiguration = JSON.stringify(configurationEditor.getValue(), null, 3)
-      var html = '<p>This is a change being applied to the configuration file (conf.json). Are you sure you want to do this? You must restart Shinobi for these changes to take effect. <b>The JSON below is what you are about to save.</b></p>'
+      var html = '<p>This is a change being applied to the configuration file (conf.json). Are you sure you want to do this? You must restart DAM VMS for these changes to take effect. <b>The JSON below is what you are about to save.</b></p>'
       html += `<pre>${newConfiguration}</pre>`
       $.confirm.create({
         title: 'Save Configuration',

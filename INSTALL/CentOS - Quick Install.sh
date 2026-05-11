@@ -31,9 +31,9 @@ fi
 clear
 
 echo "========================================================="
-echo "==   Shinobi : The Open Source CCTV and NVR Solution   =="
+echo "==   DAM VMS : The Open Source CCTV and NVR Solution   =="
 echo "========================================================="
-echo "This script will install Shinobi CCTV on CentOS $version with"
+echo "This script will install DAM VMS CCTV on CentOS $version with"
 echo "minimal user intervention."
 echo
 echo "You may skip any components you already have or do not"
@@ -59,20 +59,20 @@ sudo "$pkgmgr" update -y -q -e 0
 #Skip if running from the Ninja installer
 if [ "$1" != 1 ]; then
 	#Clone git repo and change directory
-	if sudo git clone -q https://gitlab.com/Shinobi-Systems/Shinobi.git Shinobi &> /dev/null; then
-		echo "Successfully cloned Shinobi repository."
+	if sudo git clone -q https://gitlab.com/DAM VMS-Systems/DAM VMS.git DAM VMS &> /dev/null; then
+		echo "Successfully cloned DAM VMS repository."
 	else
-		echo "Failed to clone Shinobi repository!"
+		echo "Failed to clone DAM VMS repository!"
 	fi
-	if cd Shinobi; then
-		echo "Changed to the Shinobi Directory."
+	if cd DAM VMS; then
+		echo "Changed to the DAM VMS Directory."
 	else
-		echo "Failed to change to the Shinobi directory!";
+		echo "Failed to change to the DAM VMS directory!";
 		exit 1
 	fi
 
 	echo "========================================================="
-	read -p "Do you want to use the Development branch of Shinobi? Y/N " gitbranch
+	read -p "Do you want to use the Development branch of DAM VMS? Y/N " gitbranch
 
 	if [ "${gitbranch^}" = "Y" ]; then
 		#Change to dev branch
@@ -257,8 +257,8 @@ sudo npm install pm2@latest -g
 
 sudo chmod -R 755 .
 touch INSTALL/installed.txt
-dos2unix INSTALL/shinobi
-ln -s INSTALL/shinobi /usr/bin/shinobi
+dos2unix INSTALL/dam-vms
+ln -s INSTALL/dam-vms /usr/bin/dam-vms
 
 echo "========================================================="
 read -p "Automatically create firewall rules? Y/N " createfirewallrules
@@ -292,18 +292,18 @@ if [ ! -e "./super.json" ]; then
 fi
 
 echo "========================================================="
-read -p "Start Shinobi on boot? Y/N " startupShinobi
+read -p "Start DAM VMS on boot? Y/N " startupDAM VMS
 
-if [ "${startupShinobi^}" = "Y" ]; then
+if [ "${startupDAM VMS^}" = "Y" ]; then
     sudo pm2 startup
     sudo pm2 save
     sudo pm2 list
 fi
 
 echo "========================================================="
-read -p "Start Shinobi now? Y/N " startShinobi
+read -p "Start DAM VMS now? Y/N " startDAM VMS
 
-if [ "${startShinobi^}" = "Y" ]; then
+if [ "${startDAM VMS^}" = "Y" ]; then
     sudo pm2 start camera.js
     #sudo pm2 start cron.js
 fi
@@ -319,9 +319,9 @@ echo "========================================================="
 echo "|| Open http://${ipaddress// /}:8080/super in your browser. ||"
 echo "========================================================="
 if [ "${createSuperJson^}" = "Y" ]; then
-    echo "|| Default Superuser : admin@shinobi.video             ||"
+    echo "|| Default Superuser : admin@dam-vms.video             ||"
     echo "|| Default Password : admin                            ||"
 	echo "|| You can edit these settings in \"super.json\"         ||"
-	echo "|| located in the Shinobi directory.                   ||"
+	echo "|| located in the DAM VMS directory.                   ||"
     echo "========================================================="
 fi

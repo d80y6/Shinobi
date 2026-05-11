@@ -1,4 +1,4 @@
-const movingThings = require('shinobi-node-moving-things-tracker').Tracker
+const movingThings = require('dam-vms-node-moving-things-tracker').Tracker
 module.exports = (config) => {
     const objectTrackers = {}
     const objectTrackerTimeouts = {}

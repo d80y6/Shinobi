@@ -8,8 +8,8 @@ $(document).ready(function(){
     }
     function getDownloadableModules(callback) {
         return new Promise((resolve,reject) => {
-            const pluginListUrl = `https://gitlab.com/api/v4/projects/Shinobi-Systems%2FcustomAutoLoad-samples/repository/tree?path=samples`
-            const filePrefix = `https://gitlab.com/Shinobi-Systems/customAutoLoad-samples/-/`
+            const pluginListUrl = `https://gitlab.com/api/v4/projects/DAM VMS-Systems%2FcustomAutoLoad-samples/repository/tree?path=samples`
+            const filePrefix = `https://gitlab.com/DAM VMS-Systems/customAutoLoad-samples/-/`
             $.getJSON(pluginListUrl,function(data){
                 var html = ''
                 data.forEach(item => {

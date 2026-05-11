@@ -41,7 +41,7 @@ module.exports = function(s,config,lang,app,io){
         });
         const childNodeBindIP = config.childNodes.ip || config.bindip;
         childNodeServer.listen(config.childNodes.port,childNodeBindIP,function(){
-            console.log(lang.Shinobi+' - CHILD NODE SERVER : ' + config.childNodes.port);
+            console.log(lang.DAM VMS+' - CHILD NODE SERVER : ' + config.childNodes.port);
         });
         //send data to child node function
         s.cx = function(data,connectionId){
@@ -57,7 +57,7 @@ module.exports = function(s,config,lang,app,io){
             function onAuthenticate(d){
                 const data = JSON.parse(d);
                 const childNodeKeyAccepted = config.childNodes.key.indexOf(data.socketKey) > -1;
-                if(!client.shinobiChildAlreadyRegistered && data.f === 'init' && childNodeKeyAccepted){
+                if(!client.dam-vmsChildAlreadyRegistered && data.f === 'init' && childNodeKeyAccepted){
                     initiateDataConnection(client,req,data,connectionId);
                     childNodesConnectionIndex[connectionId] = client;
                     client.removeListener('message',onAuthenticate)

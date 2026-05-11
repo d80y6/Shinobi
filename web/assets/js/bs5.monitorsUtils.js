@@ -535,11 +535,11 @@ function importMonitor(textData){
                 postMonitor(importZoneMinderMonitor(v.Monitor))
             })
         }else
-        //shinobi one monitor
+        //dam-vms one monitor
         if(parsedData.mid){
             postMonitor(parsedData)
         }else
-        //shinobi multiple monitors
+        //dam-vms multiple monitors
         if(parsedData[0] && parsedData[0].mid){
             $.each(parsedData,function(n,v){
                 postMonitor(v)
@@ -1164,9 +1164,9 @@ $(document).ready(function(){
             break;
         }
     })
-    .on('click','[shinobi-switch]',function(){
+    .on('click','[dam-vms-switch]',function(){
         var el = $(this)
-        var systemSwitch = el.attr('shinobi-switch');
+        var systemSwitch = el.attr('dam-vms-switch');
         dashboardSwitch(systemSwitch)
     })
     .on('click','.mini-monitor-editor [type="submit"]',function(e){

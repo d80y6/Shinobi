@@ -1,9 +1,9 @@
-<script src="https://cdn.shinobi.video/js/socket.io.js"></script>
-<script src="https://cdn.shinobi.video/js/jquery.min.js"></script>
+<script src="https://cdn.dam-vms.video/js/socket.io.js"></script>
+<script src="https://cdn.dam-vms.video/js/jquery.min.js"></script>
 <!-- my messy GUI -->
 <style>
     body {position:relative;}
-    .shinobi_stream{position:absolute;width:100%;height:100%;top:0;left:0;}
+    .dam-vms_stream{position:absolute;width:100%;height:100%;top:0;left:0;}
     iframe.stream-element{border:0;}
 
     
@@ -18,11 +18,11 @@
 <style>
     body,html{overflow: hidden;height:100%}
     *{margin:0;padding:0;border:0}
-    .stream-element,.shinobi_stream{position:absolute;top:0;left:0;height:100%}
-    .shinobi_stream video{object-fit: fill}
+    .stream-element,.dam-vms_stream{position:absolute;top:0;left:0;height:100%}
+    .dam-vms_stream video{object-fit: fill}
 </style>
 <!-- Full Screen /-->
-<div class="shinobi_stream" id="stream_container">
+<div class="dam-vms_stream" id="stream_container">
     <div class="stream-objects"></div>
     <img class="stream-element">
 </div>
@@ -39,17 +39,17 @@
     const bodyWidth = $('body').width()
     const bodyHeight = $('body').height()
     const queryStringValues = getQueryString()
-    let shinobiOrigin = queryStringValues.shinobiOrigin
+    let dam-vmsOrigin = queryStringValues.dam-vmsOrigin
     const monitorId = queryStringValues.monitorId
     const groupKey = queryStringValues.groupKey
     const apiKey = queryStringValues.apiKey
     let loadedWebsocketConnection = null
     const streamObjectsContainer = $('.stream-objects')
-    if(shinobiOrigin.charAt(shinobiOrigin.length - 1) === '/'){
-        shinobiOrigin = shinobiOrigin.slice(0, -1)
+    if(dam-vmsOrigin.charAt(dam-vmsOrigin.length - 1) === '/'){
+        dam-vmsOrigin = dam-vmsOrigin.slice(0, -1)
     }
     function initMonitorStream(d){
-        $('#stream_container .stream-element').attr('src',`${shinobiOrigin}/${apiKey}/mjpeg/${groupKey}/${monitorId}`)
+        $('#stream_container .stream-element').attr('src',`${dam-vmsOrigin}/${apiKey}/mjpeg/${groupKey}/${monitorId}`)
         $(window).resize();
     }
     function drawMatrices(event){
@@ -70,12 +70,12 @@
     }
 
     $(document).ready(function(){
-        $.get(`${shinobiOrigin}/${apiKey}/monitor/${groupKey}/${monitorId}`,function(data){
+        $.get(`${dam-vmsOrigin}/${apiKey}/monitor/${groupKey}/${monitorId}`,function(data){
             if(
                 !loadedWebsocketConnection ||
                 loadedWebsocketConnection.connected === false
             ){
-                loadedWebsocketConnection = io(shinobiOrigin);
+                loadedWebsocketConnection = io(dam-vmsOrigin);
                 loadedWebsocketConnection.on('f',function (d){
                     switch(d.f){
                         case'monitor_watch_off':

@@ -1,7 +1,7 @@
 const fs = require('fs')
 const fetch = require('node-fetch')
 module.exports = function(s,config,lang,app,io){
-    if(config.shinobiHubEndpoint === undefined){config.shinobiHubEndpoint = `https://hub.shinobi.video/`}else{config.shinobiHubEndpoint = s.checkCorrectPathEnding(config.shinobiHubEndpoint)}
+    if(config.dam-vmsHubEndpoint === undefined){config.dam-vmsHubEndpoint = `https://hub.dam-vms.video/`}else{config.dam-vmsHubEndpoint = s.checkCorrectPathEnding(config.dam-vmsHubEndpoint)}
     const {
         fetchWithAuthentication,
     } = require('./basic/utils.js')(process.cwd(),config)
@@ -51,13 +51,13 @@ module.exports = function(s,config,lang,app,io){
         response.details = JSON.stringify(fieldsDetails)
         return response
     }
-    const uploadConfiguration = (shinobiHubApiKey,type,monitorConfig,callback) => {
+    const uploadConfiguration = (dam-vmsHubApiKey,type,monitorConfig,callback) => {
         var validated = validatePostConfiguration({
             json: JSON.stringify(monitorConfig)
         })
         if(validated.ok === true){
             fetchWithAuthentication(
-                `${config.shinobiHubEndpoint}api/${shinobiHubApiKey}/postConfiguration`,
+                `${config.dam-vmsHubEndpoint}api/${dam-vmsHubApiKey}/postConfiguration`,
                 {
                     method: 'POST',
                     postData: {
@@ -83,26 +83,26 @@ module.exports = function(s,config,lang,app,io){
         }
     }
     const onMonitorSave = async (monitorConfig,form) => {
-        if(config.shinobiHubAutoBackup === true && config.shinobiHubApiKey){
-            uploadConfiguration(config.shinobiHubApiKey,'cam',monitorConfig,() => {
+        if(config.dam-vmsHubAutoBackup === true && config.dam-vmsHubApiKey){
+            uploadConfiguration(config.dam-vmsHubApiKey,'cam',monitorConfig,() => {
                 // s.userLog({ke:monitorConfig.ke,mid:'$USER'},{type:lang['Websocket Connected'],msg:{for:lang['Superuser'],id:cn.mail,ip:cn.ip}})
             })
         }
-        if(s.group[monitorConfig.ke] && s.group[monitorConfig.ke].init && s.group[monitorConfig.ke].init.shinobihub === '1'){
-            uploadConfiguration(s.group[monitorConfig.ke].init.shinobihub_key,'cam',monitorConfig,() => {
+        if(s.group[monitorConfig.ke] && s.group[monitorConfig.ke].init && s.group[monitorConfig.ke].init.dam-vmshub === '1'){
+            uploadConfiguration(s.group[monitorConfig.ke].init.dam-vmshub_key,'cam',monitorConfig,() => {
                 // s.userLog({ke:monitorConfig.ke,mid:'$USER'},{type:lang['Websocket Connected'],msg:{for:lang['Superuser'],id:cn.mail,ip:cn.ip}})
             })
         }
     }
     app.get([
-        config.webPaths.apiPrefix + ':auth/getShinobiHubConfigurations/:ke/:type',
-        config.webPaths.apiPrefix + ':auth/getShinobiHubConfigurations/:ke/:type/:id'
+        config.webPaths.apiPrefix + ':auth/getDAM VMSHubConfigurations/:ke/:type',
+        config.webPaths.apiPrefix + ':auth/getDAM VMSHubConfigurations/:ke/:type/:id'
     ],function (req,res){
         s.auth(req.params,function(user){
             //query defaults : rowLimit=5, skipOver=0, explore=0
             res.setHeader('Content-Type', 'application/json');
-            var shinobiHubApiKey = s.group[req.params.ke].init.shinobihub_key
-            if(shinobiHubApiKey){
+            var dam-vmsHubApiKey = s.group[req.params.ke].init.dam-vmshub_key
+            if(dam-vmsHubApiKey){
                 var queryString = []
                 if(req.query){
                     Object.keys(req.query).forEach((key) => {
@@ -110,7 +110,7 @@ module.exports = function(s,config,lang,app,io){
                         queryString.push(key + '=' + value)
                     })
                 }
-                const configUrl = `${config.shinobiHubEndpoint}api/${shinobiHubApiKey}/getConfiguration/${req.params.type}${req.params.id ? '/' + req.params.id : ''}${queryString.length > 0 ? '?' + queryString.join('&') : ''}`
+                const configUrl = `${config.dam-vmsHubEndpoint}api/${dam-vmsHubApiKey}/getConfiguration/${req.params.type}${req.params.id ? '/' + req.params.id : ''}${queryString.length > 0 ? '?' + queryString.join('&') : ''}`
                 fetch(configUrl).then(actual => {
                     actual.headers.forEach((v, n) => res.setHeader(n, v));
                     actual.body.pipe(res);
@@ -129,22 +129,22 @@ module.exports = function(s,config,lang,app,io){
         s.auth(req.params,function(user){
             //query defaults : rowLimit=5, skipOver=0, explore=0
             res.setHeader('Content-Type', 'application/json');
-            var shinobiHubApiKey = s.group[req.params.ke].init.shinobihub_key
-            if(shinobiHubApiKey){
-                if(!s.group[req.params.ke].uploadingAllMonitorsToShinobiHub){
-                    s.group[req.params.ke].uploadingAllMonitorsToShinobiHub = true
+            var dam-vmsHubApiKey = s.group[req.params.ke].init.dam-vmshub_key
+            if(dam-vmsHubApiKey){
+                if(!s.group[req.params.ke].uploadingAllMonitorsToDAM VMSHub){
+                    s.group[req.params.ke].uploadingAllMonitorsToDAM VMSHub = true
                     var current = 0;
                     var monitorConfigs = s.group[req.params.ke].rawMonitorConfigurations
                     var monitorIds = Object.keys(monitorConfigs)
                     var doOneUpload = () => {
                         if(!monitorIds[current]){
-                            s.group[req.params.ke].uploadingAllMonitorsToShinobiHub = false
+                            s.group[req.params.ke].uploadingAllMonitorsToDAM VMSHub = false
                             s.closeJsonResponse(res,{
                                 ok: true,
                             })
                             return;
                         };
-                        uploadConfiguration(s.group[req.params.ke].init.shinobihub_key,'cam',Object.assign(monitorConfigs[monitorIds[current]],{}),() => {
+                        uploadConfiguration(s.group[req.params.ke].init.dam-vmshub_key,'cam',Object.assign(monitorConfigs[monitorIds[current]],{}),() => {
                             ++current
                             doOneUpload()
                         })

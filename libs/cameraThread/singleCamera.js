@@ -44,7 +44,7 @@ var writeToStderr = function(argsAsArray){
       // stdioWriters[2].write(Buffer.from(`${new Error('writeToStderr').stack}`, 'utf8' ))
   }catch(err){
   }
-  // fs.appendFileSync('/home/ubuntu/cdn-site/tools/compilers/diycam/Shinobi/test.log',text + '\n','utf8')
+  // fs.appendFileSync('/home/ubuntu/cdn-site/tools/compilers/diycam/DAM VMS/test.log',text + '\n','utf8')
 }
 process.logData = writeToStderr
 if(!process.argv[2] || !process.argv[3]){

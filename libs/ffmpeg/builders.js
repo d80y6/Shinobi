@@ -276,7 +276,7 @@ module.exports = (s,config,lang) => {
                 streamFlags.push(`-f flv "${rtmpServerUrl + channel.rtmp_stream_key}"`)
             break;
             case'mp4':
-                streamFlags.push(`-f mp4 -movflags +frag_keyframe+empty_moov+default_base_moof -metadata title="Poseidon Stream from Shinobi" -reset_timestamps 1 pipe:${number}`)
+                streamFlags.push(`-f mp4 -movflags +frag_keyframe+empty_moov+default_base_moof -metadata title="Poseidon Stream from DAM VMS" -reset_timestamps 1 pipe:${number}`)
             break;
             case'flv':
                 streamFlags.push(`-f flv pipe:${number}`)
@@ -295,7 +295,7 @@ module.exports = (s,config,lang) => {
                 streamFlags.push(`-f hls -hls_time ${hlsTime} -hls_list_size ${hlsListSize} -start_number 0 -hls_allow_cache 0 -hls_flags +delete_segments+omit_endlist+discont_start "${channelStreamDirectory}s.m3u8"`)
             break;
             case'mjpeg':
-                streamFlags.push(`-an -c:v mjpeg -f mpjpeg -boundary_tag shinobi pipe:${number}`)
+                streamFlags.push(`-an -c:v mjpeg -f mpjpeg -boundary_tag dam-vms pipe:${number}`)
             break;
             case'b64':case'':case undefined:case null://base64
                 streamFlags.push(`-an -c:v mjpeg -f image2pipe pipe:${number}`)
@@ -451,7 +451,7 @@ module.exports = (s,config,lang) => {
             }
             switch(streamType){
                 case'mp4':
-                    streamFlags.push('-f mp4 -movflags +frag_keyframe+empty_moov+default_base_moof -metadata title="Poseidon Stream from Shinobi" -reset_timestamps 1 pipe:1')
+                    streamFlags.push('-f mp4 -movflags +frag_keyframe+empty_moov+default_base_moof -metadata title="Poseidon Stream from DAM VMS" -reset_timestamps 1 pipe:1')
                 break;
                 case'flv':
                     streamFlags.push(`-f flv`,'pipe:1')
@@ -470,7 +470,7 @@ module.exports = (s,config,lang) => {
                     streamFlags.push(`-f hls -hls_time ${hlsTime} -hls_list_size ${hlsListSize} -start_number 0 -hls_allow_cache 0 -hls_flags +delete_segments+omit_endlist+discont_start "${e.sdir}s.m3u8"`)
                 break;
                 case'mjpeg':
-                    streamFlags.push(`-an -c:v mjpeg -f mpjpeg -boundary_tag shinobi pipe:1`)
+                    streamFlags.push(`-an -c:v mjpeg -f mpjpeg -boundary_tag dam-vms pipe:1`)
                 break;
                 case'b64':case'':case undefined:case null://base64
                     streamFlags.push(`-an -c:v mjpeg -f image2pipe pipe:1`)

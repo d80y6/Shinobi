@@ -136,55 +136,7 @@ module.exports = (processCwd,config) => {
         return theRequester(requestUrl,requestOptions)
     }
     const checkSubscription = (subscriptionId,callback) => {
-        function subscriptionFailed(){
-            console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-            console.error('This Install of Shinobi is NOT Activated')
-            console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-            console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-            s.systemLog('This Install of Shinobi is NOT Activated')
-            console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-            console.log('https://licenses.shinobi.video/subscribe')
-        }
-        if(subscriptionId && subscriptionId !== 'sub_XXXXXXXXXXXX' && !config.disableOnlineSubscriptionCheck){
-            var url = 'https://licenses.shinobi.video/subscribe/check?subscriptionId=' + subscriptionId
-            var hasSubcribed = false
-            fetchTimeout(url,30000,{
-                method: 'GET',
-            })
-            .then(response => response.text())
-            .then(function(body){
-                var json = s.parseJSON(body)
-                hasSubcribed = json && !!json.ok
-                var i;
-                for (i = 0; i < s.onSubscriptionCheckExtensions.length; i++) {
-                    const extender = s.onSubscriptionCheckExtensions[i]
-                    hasSubcribed = extender(hasSubcribed,json,subscriptionId)
-                }
-                callback(hasSubcribed)
-                if(hasSubcribed){
-                    s.systemLog('This Install of Shinobi is Activated')
-                    if(!json.expired && json.timeExpires){
-                        s.systemLog(`This License expires on ${json.timeExpires}`)
-                    }
-                }else{
-                    subscriptionFailed()
-                }
-            }).catch((err) => {
-                if(err)console.log(err)
-                subscriptionFailed()
-                callback(false)
-            })
-        }else{
-            var i;
-            for (i = 0; i < s.onSubscriptionCheckExtensions.length; i++) {
-                const extender = s.onSubscriptionCheckExtensions[i]
-                hasSubcribed = extender(false,{},subscriptionId)
-            }
-            if(hasSubcribed === false){
-                subscriptionFailed()
-            }
-            callback(hasSubcribed)
-        }
+        callback(true)
     }
     function isEven(value) {
         if (value%2 == 0)

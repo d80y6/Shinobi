@@ -11,7 +11,7 @@ var createTerminalCommands = function(callback){
         if(callback)callback()
     }
     if(!s.isWin){
-        var etcPath = '/etc/shinobisystems/'
+        var etcPath = '/etc/dam-vmssystems/'
         console.log('Creating "' + etcPath + '"...')
         var createPathFile = function(){
             var pathTxt = etcPath + 'cctv.txt'
@@ -20,9 +20,9 @@ var createTerminalCommands = function(callback){
                 if(err)console.log(err)
                 fs.chmod(pathTxt,0o777,function(err){
                     if(err)console.log(err)
-                    console.log('Linking "' + s.mainDirectory + '/INSTALL/shinobi" to "/usr/bin/shinobi"...')
-                    fs.symlink(s.mainDirectory + '/INSTALL/shinobi', '/usr/bin/shinobi', next)
-                    console.log('You can now use `shinobi` in terminal.')
+                    console.log('Linking "' + s.mainDirectory + '/INSTALL/dam-vms" to "/usr/bin/dam-vms"...')
+                    fs.symlink(s.mainDirectory + '/INSTALL/dam-vms', '/usr/bin/dam-vms', next)
+                    console.log('You can now use `dam-vms` in terminal.')
                 })
             })
         }

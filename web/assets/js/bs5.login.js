@@ -1,6 +1,6 @@
 var loginForm = $('#login-form')
-var cachedLoginInfo = localStorage.getItem('ShinobiLogin_'+location.host)
-var cachedMachineId = localStorage.getItem('ShinobiAuth_'+location.host)
+var cachedLoginInfo = localStorage.getItem('DAM VMSLogin_'+location.host)
+var cachedMachineId = localStorage.getItem('DAM VMSAuth_'+location.host)
 function generateId(x){
     if(!x){x=10};var t = "";var p = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     for( var i=0; i < x; i++ )
@@ -21,7 +21,7 @@ function onSelectorChange(el){
 }
 if(!cachedMachineId){
     cachedMachineId = generateId(20)
-    localStorage.setItem('ShinobiAuth_'+location.host,cachedMachineId)
+    localStorage.setItem('DAM VMSAuth_'+location.host,cachedMachineId)
 }
 $(document).ready(function(){
     $('#machineID').val(cachedMachineId)
@@ -34,13 +34,13 @@ loginForm.submit(function(e){
     $('#login-message').remove()
     var formValues = loginForm.serializeObject()
     if(formValues.remember){
-        localStorage.setItem('ShinobiLogin_'+location.host,JSON.stringify({
+        localStorage.setItem('DAM VMSLogin_'+location.host,JSON.stringify({
             mail: formValues.mail,
             pass: formValues.pass,
             function: formValues.function
         }))
     }else{
-        localStorage.removeItem('ShinobiLogin_'+location.host)
+        localStorage.removeItem('DAM VMSLogin_'+location.host)
     }
     if(googleSignIn)googleSignOut();
 })
