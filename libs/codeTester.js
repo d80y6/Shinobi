@@ -17,7 +17,7 @@ module.exports = function(s,config,lang){
     var onBeforeDatabaseLoad = function(ffmpeg){
         if(config.testMode === true){
             try{
-                execSync('rm ' + s.mainDirectory + '/shinobi-test.sqlite')
+                execSync('rm ' + s.mainDirectory + '/dam-vms-test.sqlite')
             }catch(err){
 
             }
@@ -26,10 +26,10 @@ module.exports = function(s,config,lang){
             }catch(err){
                 execSync('npm install sqlite3 --unsafe-perm')
             }
-            execSync('cp ' + s.mainDirectory + '/sql/shinobi.sample.sqlite ' + s.mainDirectory + '/shinobi-test.sqlite')
+            execSync('cp ' + s.mainDirectory + '/sql/dam-vms.sample.sqlite ' + s.mainDirectory + '/dam-vms-test.sqlite')
             config.databaseType = 'sqlite3'
             config.db = {
-                filename: s.mainDirectory + "/shinobi-test.sqlite"
+                filename: s.mainDirectory + "/dam-vms-test.sqlite"
             }
         }
     }
@@ -38,7 +38,7 @@ module.exports = function(s,config,lang){
             s.location.super =  s.mainDirectory + '/super-test.json'
             fs.writeFileSync(s.location.super,s.s([
                 {
-                    "mail":"admin@shinobi.video",
+                    "mail":"admin@dam-vms.video",
                     "pass":"21232f297a57a5a743894a0e4a801fc3",
                     "tokens":[
                         "111"
@@ -52,7 +52,7 @@ module.exports = function(s,config,lang){
     }
     var onProcessExit = function(){
         if(config.testMode === true){
-            execSync('rm ' + s.mainDirectory + '/shinobi-test.sqlite')
+            execSync('rm ' + s.mainDirectory + '/dam-vms-test.sqlite')
             execSync('rm ' + s.location.super)
             execSync('rm -rf ' + config.videosDir)
             console.log('---- Temporary Files Cleaned Up')

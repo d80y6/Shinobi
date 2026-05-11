@@ -6,7 +6,7 @@ const treekill = require('tree-kill');
 const exec = require('child_process').exec;
 const spawn = require('child_process').spawn;
 const connectionTester = require('connection-tester')
-const SoundDetection = require('shinobi-sound-detection')
+const SoundDetection = require('dam-vms-sound-detection')
 const streamViewerCountTimeouts = {}
 const { createQueueAwaited } = require('../common.js')
 module.exports = (s,config,lang) => {

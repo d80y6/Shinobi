@@ -106,7 +106,7 @@ module.exports = function(s,config,lang,io){
             }
             var serverHTTPS = https.createServer(sslInfo,app);
             serverHTTPS.listen(sslInfo.port,config.bindip,function(){
-                console.log('SSL '+lang.Shinobi+' : SSL Web Server Listening on '+sslInfo.port);
+                console.log('SSL '+lang.DAM VMS+' : SSL Web Server Listening on '+sslInfo.port);
             });
             if(config.webPaths.home !== '/'){
                 io.attach(serverHTTPS,{
@@ -143,7 +143,7 @@ module.exports = function(s,config,lang,io){
     const onHttpRequestUpgradeExtensions = s.onHttpRequestUpgradeExtensions;
     var server = http.createServer(app);
     server.listen(config.port,config.bindip,function(){
-        console.log(lang.Shinobi+' : Web Server Listening on '+config.port);
+        console.log(lang.DAM VMS+' : Web Server Listening on '+config.port);
     });
     server.on('upgrade', function upgrade(request, socket, head) {
         const pathname = url.parse(request.url).pathname;

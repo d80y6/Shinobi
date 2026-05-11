@@ -12,15 +12,15 @@ function initHelpNotice(){
             {
                 icon: 'share-square-o',
                 color: 'default',
-                text: 'ShinobiShop Subscriptions',
-                href: 'https://licenses.shinobi.video/subscribe',
+                text: 'DAM VMSShop Subscriptions',
+                href: 'https://licenses.dam-vms.video/subscribe',
                 class: ''
             },
             {
                 icon: 'paypal',
                 color: 'success',
                 text: 'Donate by PayPal',
-                href: 'https://www.paypal.me/ShinobiCCTV',
+                href: 'https://www.paypal.me/DAM VMSCCTV',
                 class: ''
             },
             {
@@ -74,8 +74,8 @@ function initHelpNotice(){
         dontShowForOneWeek()
         return false;
     })
-    console.log('Please support the Shinobi development.')
-    console.log('https://licenses.shinobi.video/subscribe')
+    console.log('Please support the DAM VMS development.')
+    console.log('https://licenses.dam-vms.video/subscribe')
 }
 $(document).ready(function(){
     var theEnclosure = $('#tab-helpWindow')

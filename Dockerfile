@@ -16,12 +16,12 @@ ENV DB_USER=majesticflame \
     SSL_COUNTRY='CA' \
     SSL_STATE='BC' \
     SSL_LOCATION='Vancouver' \
-    SSL_ORGANIZATION='Shinobi Systems' \
+    SSL_ORGANIZATION='DAM VMS Systems' \
     SSL_ORGANIZATION_UNIT='IT Department' \
     SSL_COMMON_NAME='nvr.ninja' \
     DB_DISABLE_INCLUDED=$EXCLUDE_DB
 
-WORKDIR /home/Shinobi
+WORKDIR /home/DAM VMS
 COPY . ./
 
 RUN apt-get update -y
@@ -50,25 +50,25 @@ RUN apt-get install -y \
         gcc \
         tar
 
-RUN sh /home/Shinobi/Docker/install_ffmpeg.sh
-RUN sh /home/Shinobi/Docker/install_mariadb.sh
-RUN sh /home/Shinobi/Docker/install_nodejs.sh
+RUN sh /home/DAM VMS/Docker/install_ffmpeg.sh
+RUN sh /home/DAM VMS/Docker/install_mariadb.sh
+RUN sh /home/DAM VMS/Docker/install_nodejs.sh
 
-RUN chmod 777 /home/Shinobi
-RUN chmod -R 777 /home/Shinobi/plugins
-RUN chmod -f +x /home/Shinobi/Docker/init.sh
+RUN chmod 777 /home/DAM VMS
+RUN chmod -R 777 /home/DAM VMS/plugins
+RUN chmod -f +x /home/DAM VMS/Docker/init.sh
 
-RUN sed -i -e 's/\r//g' /home/Shinobi/Docker/init.sh
+RUN sed -i -e 's/\r//g' /home/DAM VMS/Docker/init.sh
 
 RUN apt-get update -y --fix-missing
 RUN apt-get upgrade -y
 
-VOLUME ["/home/Shinobi/videos"]
-VOLUME ["/home/Shinobi/libs/customAutoLoad"]
+VOLUME ["/home/DAM VMS/videos"]
+VOLUME ["/home/DAM VMS/libs/customAutoLoad"]
 VOLUME ["/config"]
 
 EXPOSE 8080 443 21 25
 
-ENTRYPOINT ["/home/Shinobi/Docker/init.sh"]
+ENTRYPOINT ["/home/DAM VMS/Docker/init.sh"]
 
-CMD [ "pm2-docker", "/home/Shinobi/Docker/pm2.yml" ]
+CMD [ "pm2-docker", "/home/DAM VMS/Docker/pm2.yml" ]

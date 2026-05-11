@@ -1,4 +1,4 @@
 apps:
-  - script   : '/home/Shinobi/camera.js'
+  - script   : '/home/DAM VMS/camera.js'
     name     : 'camera'
     kill_timeout  : 5000

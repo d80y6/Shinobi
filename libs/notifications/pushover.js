@@ -26,7 +26,7 @@ module.exports = function (s, config, lang, getSnapshot) {
                             // These values correspond to the parameters detailed on https://pushover.net/api
                             // 'message' is required. All other values are optional.
                             message: sendBody.description, // required
-                            title: 'Shinobi: ' + sendBody.title,
+                            title: 'DAM VMS: ' + sendBody.title,
                             sound: 'siren',
                             //  we do not support devices here. use group identifiers instead.
                             //	device: 'devicename',
@@ -362,7 +362,7 @@ module.exports = function (s, config, lang, getSnapshot) {
         } catch (err) {
             console.log(err);
             console.log(
-                'Could not start pushover notifications, please run "npm install pushover-notifications" inside the Shinobi folder.'
+                'Could not start pushover notifications, please run "npm install pushover-notifications" inside the DAM VMS folder.'
             );
         }
     }

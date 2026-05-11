@@ -3,7 +3,7 @@ const moment = require('moment');
 
 const ENDPOINT_SECTION = "videoBrowser";
 
-module.exports = (s, shinobiConfig, lang, app, io) => {
+module.exports = (s, dam-vmsConfig, lang, app, io) => {
     const instance = {
         db: null,
         timeZoneOffest: 0
@@ -224,7 +224,7 @@ module.exports = (s, shinobiConfig, lang, app, io) => {
     };
 
     const initialize = () => {
-        const apiPrefix = `${shinobiConfig.webPaths.apiPrefix}:auth/${ENDPOINT_SECTION}`;
+        const apiPrefix = `${dam-vmsConfig.webPaths.apiPrefix}:auth/${ENDPOINT_SECTION}`;
 
         const apiSettings = [
             {
@@ -255,8 +255,8 @@ module.exports = (s, shinobiConfig, lang, app, io) => {
         });
     
         const dbConfig = {
-            client: shinobiConfig.databaseType,
-            connection: shinobiConfig.db
+            client: dam-vmsConfig.databaseType,
+            connection: dam-vmsConfig.db
         };
 
         if(dbConfig.client.indexOf('sqlite')>-1){
@@ -265,7 +265,7 @@ module.exports = (s, shinobiConfig, lang, app, io) => {
         }
     
         if(dbConfig.client === 'sqlite3' && dbConfig.connection.filename === undefined){
-            dbConfig.connection.filename = `${__dirname}/shinobi.sqlite`;
+            dbConfig.connection.filename = `${__dirname}/dam-vms.sqlite`;
         }
     
         instance.db = knex(dbConfig);

@@ -1,4 +1,4 @@
-<% var pageTitle = lang.Shinobi %>
+<% var pageTitle = lang.DAM VMS %>
 <%- include('blocks/header', {pageTitle: pageTitle}); %>
 <script>var $user=<%- JSON.stringify($user) %>;</script>
 <link rel="stylesheet" href="<%-window.libURL%>assets/vendor/bootstrap5/css/bootstrap.min.css">
@@ -75,7 +75,7 @@ function _base64ToArrayBuffer(base64) {
 $.ccio.framerate=2;
 
 $.ccio.stopSending=function(){
-    $.ls.setItem('Shinobi_Dashcam_Started','0')
+    $.ls.setItem('DamVms_Dashcam_Started','0')
     $('#main').removeClass('recording');
     clearInterval($.ccio.cutChunk);
     clearTimeout($.ccio.sendCheckTimeout);
@@ -91,7 +91,7 @@ $.ccio.startSending = function(){
     if($.ccio.selected === null){
         return false
     }
-    $.ls.setItem('Shinobi_Dashcam_Started',1)
+    $.ls.setItem('DamVms_Dashcam_Started',1)
     $('#main').addClass('recording');
     if($.ccio.mon[$.ccio.selected].allowStream === true){
         if (typeof MediaRecorder.isTypeSupported == 'function'){
@@ -211,9 +211,9 @@ function initVideoStream(){
         $.ccio.vid.element.srcObject = stream;
         $('[record]').click($.ccio.startSending)
         ////////
-        if(loadedMonitors.length>0&&$.ls.getItem('Shinobi_Dashcam')){
-            $('[monitor="'+$.ls.getItem('Shinobi_Dashcam')+'"]').click()
-            if($.ls.getItem('Shinobi_Dashcam_Started') === 1){
+        if(loadedMonitors.length>0&&$.ls.getItem('DamVms_Dashcam')){
+            $('[monitor="'+$.ls.getItem('DamVms_Dashcam')+'"]').click()
+            if($.ls.getItem('DamVms_Dashcam_Started') === 1){
                 setTimeout(function(){
                     $('[record]').click()
                 },3000)
@@ -260,14 +260,14 @@ $('body').on('click','[monitor]',function(e){
     e.e=$(this);e.a=e.e.attr('monitor'),e.m=$.ccio.mon[e.a];
     $.ccio.selected=e.a;$('#selected').html(e.a);
     if(e.m.details.sfps&&e.m.details.sfps!==''){$.ccio.framerate=e.m.details.sfps}else{$.ccio.framerate=1;}
-    $.ls.setItem('Shinobi_Dashcam',e.a)
+    $.ls.setItem('DamVms_Dashcam',e.a)
     $('[monitor]').removeClass('active'),e.e.addClass('active');
 })
 
 
 $('body')
 .on('click','.logout',function(e){
-    localStorage.removeItem('ShinobiLogin_'+location.host);location.href='/';
+    localStorage.removeItem('DamVmsLogin_'+location.host);location.href='/';
 })
     function getBrowser(){
 	var nVer = navigator.appVersion;

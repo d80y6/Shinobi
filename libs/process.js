@@ -11,10 +11,10 @@ module.exports = function(process,__dirname){
         s.onProcessExitExtensions.forEach(function(extender){
             extender()
         })
-        console.log('Shinobi is Exiting...')
+        console.log('DAM VMS is Exiting...')
         process.exit();
     });
-    // s = Shinobi
+    // s = DAM VMS
     s = {
         //Total Memory
         coreCount : os.cpus().length,

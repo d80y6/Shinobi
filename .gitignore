@@ -8,7 +8,7 @@ conf.json
 super.json
 dbdata
 npm-debug.log
-shinobi.sqlite
+dam-vms.sqlite
 dist
 ._*
 generatedLanguageFiles

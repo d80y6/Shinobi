@@ -19,7 +19,7 @@ module.exports = function(s,config,lang,app){
         config.p2pServerList = {
             "vancouver-1-v2": {
                 name: 'Vancouver-1',
-                host: 'p2p-vancouver-1.shinobi.cloud',
+                host: 'p2p-vancouver-1.dam-vms.cloud',
                 v2: true,
                 p2pPort: '80',
                 webPort: '80',
@@ -36,7 +36,7 @@ module.exports = function(s,config,lang,app){
             },
             "toronto-1-v2": {
                 name: 'Toronto-1',
-                host: 'p2p-toronto-1.shinobi.cloud',
+                host: 'p2p-toronto-1.dam-vms.cloud',
                 v2: true,
                 p2pPort: '80',
                 webPort: '80',
@@ -53,7 +53,7 @@ module.exports = function(s,config,lang,app){
             },
             "paris-1-v2": {
                 name: 'Paris-1',
-                host: 'p2p-paris-1.shinobi.cloud',
+                host: 'p2p-paris-1.dam-vms.cloud',
                 v2: true,
                 p2pPort: '80',
                 webPort: '80',
@@ -70,7 +70,7 @@ module.exports = function(s,config,lang,app){
             }
         }
         // get latest
-        fetch('https://cdn.shinobi.video/configs/p2pServers.js')
+        fetch('https://cdn.dam-vms.video/configs/p2pServers.js')
             .then(res => res.text())
             .then((text) => {
                 try{

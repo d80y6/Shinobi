@@ -15,7 +15,7 @@ module.exports = function(s,config,lang,getSnapshot){
         try{
             const messageFooter = {
                 icon_url: config.iconURL,
-                text: config.notifyFooterText || "Shinobi Systems"
+                text: config.notifyFooterText || "DAM VMS Systems"
             };
             const sendMessage = function(data,files,groupKey){
                 if(!data)data = {};
@@ -26,7 +26,7 @@ module.exports = function(s,config,lang,getSnapshot){
                 }
                 const sendBody = Object.assign({
                     color: 3447003,
-                    title: 'Alert from Shinobi',
+                    title: 'Alert from DAM VMS',
                     description: "",
                     fields: [],
                     timestamp: new Date(),
@@ -271,7 +271,7 @@ module.exports = function(s,config,lang,getSnapshot){
                         timestamp: currentTime,
                         footer: {
                             icon_url: config.iconURL,
-                            text: "Shinobi Systems"
+                            text: "DAM VMS Systems"
                         }
                     },[], groupKey)
                 }
@@ -291,7 +291,7 @@ module.exports = function(s,config,lang,getSnapshot){
                         timestamp: currentTime,
                         footer: {
                             icon_url: config.iconURL,
-                            text: "Shinobi Systems"
+                            text: "DAM VMS Systems"
                         }
                     },[
                         {
@@ -317,7 +317,7 @@ module.exports = function(s,config,lang,getSnapshot){
                             timestamp: currentTime,
                             footer: {
                                 icon_url: config.iconURL,
-                                text: "Shinobi Systems"
+                                text: "DAM VMS Systems"
                             }
                         },[
                             {
@@ -505,7 +505,7 @@ module.exports = function(s,config,lang,getSnapshot){
             }
         }catch(err){
             console.log(err)
-            console.log('Could not start Discord bot, please run "npm install discord.js" inside the Shinobi folder.')
+            console.log('Could not start Discord bot, please run "npm install discord.js" inside the DAM VMS folder.')
         }
     }
 }

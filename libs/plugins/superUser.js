@@ -44,7 +44,7 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
                 moduleConfig = getModuleProperties(moduleName,'conf.sample')
             }else{
                 moduleConfig = {
-                    plug: moduleName.replace('shinobi-',''),
+                    plug: moduleName.replace('dam-vms-',''),
                     type: 'detector'
                 }
             }
@@ -286,12 +286,12 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
             break;
         }
     }
-    const loadModule = (shinobiModule) => {
-        const moduleName = shinobiModule.name
-        const moduleConfig = shinobiModule.config
+    const loadModule = (dam-vmsModule) => {
+        const moduleName = dam-vmsModule.name
+        const moduleConfig = dam-vmsModule.config
         const modulePlugName = moduleConfig.plug
         const customModulePath = modulesBasePath + '/' + moduleName
-        const worker = new Worker(customModulePath + '/' + shinobiModule.properties.main,{
+        const worker = new Worker(customModulePath + '/' + dam-vmsModule.properties.main,{
             workerData: {ok: true}
         });
         initializeClientPlugin(moduleConfig)
@@ -332,11 +332,11 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
         fs.readdir(modulesBasePath,function(err,folderContents){
             if(!err && folderContents.length > 0){
                 var moduleList = getModules(true)
-                moduleList.forEach((shinobiModule) => {
-                    if(!shinobiModule || !shinobiModule.config.enabled){
+                moduleList.forEach((dam-vmsModule) => {
+                    if(!dam-vmsModule || !dam-vmsModule.config.enabled){
                         return;
                     }
-                    loadModule(shinobiModule)
+                    loadModule(dam-vmsModule)
                 })
             }else{
                 fs.mkdir(modulesBasePath,() => {})
@@ -516,8 +516,8 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
             const packageName = req.query.packageName
             const modulePath = modulesBasePath + packageName
             try{
-                const shinobiModule = getModule(packageName)
-                response.config = shinobiModule.config
+                const dam-vmsModule = getModule(packageName)
+                response.config = dam-vmsModule.config
             }catch(err){
                 response.ok = false
                 response.msg = err

@@ -29,23 +29,23 @@ mariadb_setup_abort () {
 }
 
 user_create_abort () {
-	echo '\n!!! Creation of system user "_shinobi" failed. Exiting...' ; exit 1
+	echo '\n!!! Creation of system user "_dam-vms" failed. Exiting...' ; exit 1
 }
 
 source_dl_abort () {
-	echo "\n!!! Failed to download Shinobi source code from GitLab. Please check your internet connection. Exiting..." ; exit 1
+	echo "\n!!! Failed to download DAM VMS source code from GitLab. Please check your internet connection. Exiting..." ; exit 1
 }
 
 source_extract_abort () {
-	echo "\n!!! Failed to extract Shinobi source code. Exiting..." ; exit 1
+	echo "\n!!! Failed to extract DAM VMS source code. Exiting..." ; exit 1
 }
 
 schema_install_abort () {
-	echo "\n!!! Failed to install Shinobi Database Schema. Exiting..." ; exit 1
+	echo "\n!!! Failed to install DAM VMS Database Schema. Exiting..." ; exit 1
 }
 
 npm_abort () {
-	echo "\n!!! Failed to install Shinobi Node.js dependencies. Exiting..." ; exit 1
+	echo "\n!!! Failed to install DAM VMS Node.js dependencies. Exiting..." ; exit 1
 }
 
 package_install () {
@@ -55,7 +55,7 @@ package_install () {
     	    read -r pkg_perm
     	    case $pkg_perm in
     	        [Yy]* ) doas pkg_add node mariadb-server ffmpeg || package_install_abort ; break;;
-    	        [Nn]* ) echo "Packages are required to install Shinobi. Exiting..."; exit 0;;
+	        [Nn]* ) echo "Packages are required to install DAM VMS. Exiting..."; exit 0;;
     	        * ) echo "Please answer yes or no.";;
     	    esac
 	done
@@ -80,7 +80,7 @@ mariadb_setup () {
     	    read -r mariadb_setup
     	    case $mariadb_setup in
     	        [Yy]* ) mariadb_enable || mariadb_setup_abort ; break;;
-    	        [Nn]* ) echo "MariaDB is required to install Shinobi. Exiting..."; exit 0;;
+	        [Nn]* ) echo "MariaDB is required to install DAM VMS. Exiting..."; exit 0;;
     	        * ) echo "Please answer yes or no.";;
     	    esac
 	done
@@ -90,23 +90,23 @@ schema_install () {
 	echo "\nWhat is the MariaDB root password?"
 	printf "Password? : "
 	read -r sqlpass
-	cd /home/_shinobi/shinobi || schema_install_abort
-	doas -u _shinobi mysql -u root -p"$sqlpass" -e "source /home/_shinobi/shinobi/sql/user.sql" || schema_install_abort
+	cd /home/_dam-vms/dam-vms || schema_install_abort
+	doas -u _dam-vms mysql -u root -p"$sqlpass" -e "source /home/_dam-vms/dam-vms/sql/user.sql" || schema_install_abort
 }
 
 pro_download () {
-	echo "\n### Grabbing Shinobi Pro from master branch\n"
-	doas -u _shinobi ftp -o /home/_shinobi/shinobi.tar.gz https://gitlab.com/Shinobi-Systems/Shinobi/-/archive/master/Shinobi-master.tar.gz
+	echo "\n### Grabbing DAM VMS Pro from master branch\n"
+	doas -u _dam-vms ftp -o /home/_dam-vms/dam-vms.tar.gz https://gitlab.com/DAM VMS-Systems/DAM VMS/-/archive/master/DAM VMS-master.tar.gz
 }
 
 gpl_download () {
-	echo "\n### Grabbing Shinobi CE from master branch\n"
-	doas -u _shinobi ftp -o /home/_shinobi/shinobi.tar.gz https://gitlab.com/Shinobi-Systems/ShinobiCE/-/archive/master/ShinobiCE-master.tar.gz
+	echo "\n### Grabbing DAM VMS CE from master branch\n"
+	doas -u _dam-vms ftp -o /home/_dam-vms/dam-vms.tar.gz https://gitlab.com/DAM VMS-Systems/DAM VMSCE/-/archive/master/DAM VMSCE-master.tar.gz
 }
 
 dev_download () {
-	echo "\n### Grabbing latest Shinobi from development branch\n"
-	doas -u _shinobi ftp -o /home/_shinobi/shinobi.tar.gz https://gitlab.com/Shinobi-Systems/Shinobi/-/archive/dev/Shinobi-dev.tar.gz
+	echo "\n### Grabbing latest DAM VMS from development branch\n"
+	doas -u _dam-vms ftp -o /home/_dam-vms/dam-vms.tar.gz https://gitlab.com/DAM VMS-Systems/DAM VMS/-/archive/dev/DAM VMS-dev.tar.gz
 }
 
 # Script Start
@@ -147,13 +147,13 @@ printf "(Yes/no) : "
     esac
 done
 
-# Shinobi unpriv user creation
-echo '\n### Creating "_shinobi" System User\n'
-doas useradd -s /sbin/nologin -m -d /home/_shinobi _shinobi || user_create_abort
+# DAM VMS unpriv user creation
+echo '\n### Creating "_dam-vms" System User\n'
+doas useradd -s /sbin/nologin -m -d /home/_dam-vms _dam-vms || user_create_abort
 
 # Pro vs Community choice
 while true ; do
-echo "\nWhich version of Shinobi would you like to install?"
+echo "\nWhich version of DAM VMS would you like to install?"
 echo "[D]evelopment, [P]ro or [C]ommunity Edition"
 printf "(Dev/Pro/Community) : "
     read -r pro_ce
@@ -166,13 +166,13 @@ printf "(Dev/Pro/Community) : "
 done
 
 echo "\n### Extracting to install directory\n"
-doas -u _shinobi tar -xzf /home/_shinobi/shinobi.tar.gz -C /home/_shinobi/ || source_extract_abort
-doas -u _shinobi find /home/_shinobi/ -type d -name "Shinobi*" -exec mv {} /home/_shinobi/shinobi \; >/dev/null 2>&1
+doas -u _dam-vms tar -xzf /home/_dam-vms/dam-vms.tar.gz -C /home/_dam-vms/ || source_extract_abort
+doas -u _dam-vms find /home/_dam-vms/ -type d -name "DAM VMS*" -exec mv {} /home/_dam-vms/dam-vms \; >/dev/null 2>&1
 
 
 # MariaDB DB schema install
 while true ; do
-echo '\nInstall Shinobi Database schema? (Answer "No" only if you have already installed it manually)'
+echo '\nInstall DAM VMS Database schema? (Answer "No" only if you have already installed it manually)'
 printf "(Yes/no) : "
     read -r schema_yn
     case $schema_yn in
@@ -184,27 +184,27 @@ done
 
 # NPM Node Module Installation
 echo "\n### Installing required Node modules\n"
-cd /home/_shinobi/shinobi || npm_abort
-doas -u _shinobi npm install --unsafe-perm
-doas -u _shinobi cp /home/_shinobi/shinobi/conf.sample.json /home/_shinobi/shinobi/conf.json
-doas -u _shinobi cp /home/_shinobi/shinobi/super.sample.json /home/_shinobi/shinobi/super.json
+cd /home/_dam-vms/dam-vms || npm_abort
+doas -u _dam-vms npm install --unsafe-perm
+doas -u _dam-vms cp /home/_dam-vms/dam-vms/conf.sample.json /home/_dam-vms/dam-vms/conf.json
+doas -u _dam-vms cp /home/_dam-vms/dam-vms/super.sample.json /home/_dam-vms/dam-vms/super.json
 doas npm install -g pm2
 
 # Post-Install Info
-echo "\nCongratulations, Shinobi is now installed!\n"
+echo "\nCongratulations, DAM VMS is now installed!\n"
 
-echo 'To start Shinobi at boot, add a crontab entry for the user "_shinobi" with something like this:\n'
+echo 'To start DAM VMS at boot, add a crontab entry for the user "_dam-vms" with something like this:\n'
 
-echo '$ doas crontab -u _shinobi -e'
+echo '$ doas crontab -u _dam-vms -e'
 
-echo '@reboot /bin/sh -c "cd /home/_shinobi/Shinobi && pm2 start camera.js cron.js"'
+echo '@reboot /bin/sh -c "cd /home/_dam-vms/DAM VMS && pm2 start camera.js cron.js"'
 
-echo "\nYou can access Shinobi at http://$(ifconfig | grep 'inet ' | awk '!/127.0.0.1/ {print $2}'):8080"
+echo "\nYou can access DAM VMS at http://$(ifconfig | grep 'inet ' | awk '!/127.0.0.1/ {print $2}'):8080"
 
 echo "\nPlease create a user by logging in to the admin panel at http://$(ifconfig | grep 'inet ' | awk '!/127.0.0.1/ {print $2}'):8080/super"
 
 echo "\nThe default login credentials are:
-	username: admin@shinobi.video
+	username: admin@dam-vms.video
 	password: admin"
 
-echo "\nThe official Shinobi Documentation can be found at: https://shinobi.video/docs/"
+echo "\nThe official DAM VMS Documentation can be found at: https://dam-vms.video/docs/"

@@ -1,4 +1,4 @@
-// Shinobi (http://shinobi.video) - FFMPEG H.264 over HTTP Test
+// DAM VMS (http://dam-vms.video) - FFMPEG H.264 over HTTP Test
 // How to Use
 // 1. Start with `node ffmpegToWeb.js`
 // 2. Get the IP address of the computer where you did step 1. Example : 127.0.0.1
@@ -41,7 +41,7 @@ app.get('/', function (req, res) {
         'Cache-Control': 'no-cache',
         'Pragma': 'no-cache',
         'Content-Type': 'video/mp4',
-        'Server': 'Shinobi H.264 Test Stream',
+        'Server': 'DAM VMS H.264 Test Stream',
     });
     Emitter.on('data',contentWriter=function(buffer){
         res.write(buffer)

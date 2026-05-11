@@ -1,4 +1,4 @@
-// relies on https://gitlab.com/Shinobi-Systems/shinobi-onvif
+// relies on https://gitlab.com/DAM VMS-Systems/dam-vms-onvif
 const {
     mergeDeep
 } = require('../common.js')
@@ -51,7 +51,7 @@ const runOnvifMethod = async (onvifOptions) => {
                 response.repsonseFromDevice = command
                 resolve(response)
             }else{
-                response.error = 'Big Errors, Please report it to Shinobi Development'
+                response.error = 'Big Errors, Please report it to DAM VMS Development'
                 resolve(response)
             }
         }
@@ -61,7 +61,7 @@ const runOnvifMethod = async (onvifOptions) => {
                 return errorMessage('This is not an available service. Please use one of the following : '+Object.keys(onvifDevice.services).join(', '))
             }
             if(onvifDevice.services[onvifOptions.service] === null){
-                return errorMessage('This service is not activated. Maybe you are not connected through ONVIF. You can test by attempting to use the "Control" feature with ONVIF in Shinobi.')
+                return errorMessage('This service is not activated. Maybe you are not connected through ONVIF. You can test by attempting to use the "Control" feature with ONVIF in DAM VMS.')
             }
             action = onvifDevice.services[onvifOptions.service][onvifOptions.action]
         }else{

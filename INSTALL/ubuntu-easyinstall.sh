@@ -1,6 +1,6 @@
 #!/bin/bash
 DIR=$(dirname $0)
-echo "Shinobi - Do you want to Install Node.js?"
+echo "DAM VMS - Do you want to Install Node.js?"
 echo "(y)es or (N)o"
 read -r nodejsinstall
 if [ "$nodejsinstall" = "y" ]; then
@@ -17,23 +17,23 @@ echo " Ubuntu Version: $getubuntuversion"
 echo "============="
 if [[ "$getubuntuversion" == "16" || "$getubuntuversion" -le "16" ]]; then
     echo "============="
-    echo "Shinobi - Get FFMPEG 3.x from ppa:jonathonf/ffmpeg-3"
+    echo "DAM VMS - Get FFMPEG 3.x from ppa:jonathonf/ffmpeg-3"
     sudo add-apt-repository ppa:jonathonf/ffmpeg-3 -y
     sudo apt update -y && sudo apt install ffmpeg x264 x265 -y
     echo "============="
 else
     echo "============="
-    echo "Shinobi - Installing FFMPEG"
+    echo "DAM VMS - Installing FFMPEG"
     sudo apt install ffmpeg x264 x265 -y
     echo "============="
 fi
 
 # Install MariaDB
-echo "Shinobi - Do you want to Install MariaDB? Choose No if you have MySQL."
+echo "DAM VMS - Do you want to Install MariaDB? Choose No if you have MySQL."
 echo "(y)es or (N)o"
 read -r mysqlagree
 if [ "$mysqlagree" = "y" ]; then
-    echo "Shinobi - Installing MariaDB"
+    echo "DAM VMS - Installing MariaDB"
     echo "Password for root SQL user, If you are installing SQL now then you may put anything:"
     read -r sqlpass
     echo "mariadb-server mariadb-server/root_password password $sqlpass" | debconf-set-selections
@@ -59,7 +59,7 @@ if [ $? -eq 0 ]; then
     echo "|  DO YOU WANT TO INSTALL MariaDB?   |"
     echo "|  This will remove MYSQL-Server!    |"
     echo "+====================================+"
-    echo "Shinobi - Do you want to Install MariaDB?"
+    echo "DAM VMS - Do you want to Install MariaDB?"
     echo "(y)es or (N)o"
     read -r installmariadb
     if [ "$installmariadb" = "y" ]; then
@@ -70,7 +70,7 @@ if [ $? -eq 0 ]; then
         echo "DESTORY!"
         read -r mysqlagree
         if [ "$mysqlagree" = "DESTORY!" ]; then
-            echo "Shinobi - Installing MariaDB"
+            echo "DAM VMS - Installing MariaDB"
             echo "Password for root SQL user, If you are installing SQL now then you may put anything:"
             read -r sqlpass
             echo "mariadb-server mariadb-server/root_password password $sqlpass" | debconf-set-selections
@@ -85,11 +85,11 @@ if [ $? -eq 0 ]; then
         fi
     fi
 else
-    echo "Shinobi - Do you want to Install MariaDB?"
+    echo "DAM VMS - Do you want to Install MariaDB?"
     echo "(y)es or (N)o"
     read -r mysqlagree
     if [ "$mysqlagree" = "y" ]; then
-        echo "Shinobi - Installing MariaDB"
+        echo "DAM VMS - Installing MariaDB"
         echo "Password for root SQL user, If you are installing SQL now then you may put anything:"
         read -r sqlpass
         echo "mariadb-server mariadb-server/root_password password $sqlpass" | debconf-set-selections
@@ -104,12 +104,12 @@ else
 fi
 
 chmod -R 755 .
-echo "Shinobi - Database Installation"
+echo "DAM VMS - Database Installation"
 echo "(y)es or (N)o"
 read -r mysqlagreeData
 if [ "$mysqlagreeData" = "y" ]; then
     mysql -e "source sql/user.sql" || true
-    echo "Shinobi - Do you want to Install Default Data (default_data.sql)?"
+    echo "DAM VMS - Do you want to Install Default Data (default_data.sql)?"
     echo "(y)es or (N)o"
     read -r mysqlDefaultData
     if [ "$mysqlDefaultData" = "y" ]; then
@@ -142,14 +142,14 @@ fi
 
 # Install NPM Libraries
 echo "============="
-echo "Shinobi - Install NPM Libraries"
+echo "DAM VMS - Install NPM Libraries"
 sudo npm i npm -g
 sudo npm install --unsafe-perm
 # sudo npm audit fix --unsafe-perm
 echo "============="
 
 #Install PM2
-echo "Shinobi - Install PM2"
+echo "DAM VMS - Install PM2"
 sudo npm install pm2@latest -g
 if [ ! -e "./conf.json" ]; then
     cp conf.sample.json conf.json
@@ -157,16 +157,16 @@ fi
 if [ ! -e "./super.json" ]; then
     getip=$(ip route get 8.8.8.8 | awk '{print $NF; exit}')
     echo "Admin panel default url: http://$getip:8080/super"
-    echo "Default Superuser : admin@shinobi.video"
+    echo "Default Superuser : admin@dam-vms.video"
     echo "Default Password : admin"
     cp super.sample.json super.json
 fi
-echo "Shinobi - Finished"
+echo "DAM VMS - Finished"
 touch INSTALL/installed.txt
-echo "Shinobi - Start Shinobi?"
+echo "DAM VMS - Start DAM VMS?"
 echo "(y)es or (N)o"
-read -r startShinobi
-if [ "$startShinobi" = "y" ]; then
+read -r startDAM VMS
+if [ "$startDAM VMS" = "y" ]; then
     pm2 start camera.js
     #pm2 start cron.js
     pm2 list

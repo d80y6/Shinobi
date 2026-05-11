@@ -1,11 +1,11 @@
 //
-// Shinobi - Open Source Video Management System
+// DAM VMS - Open Source Video Management System
 // Copyright (C) 2020 Moe Alam, moeiscool
 //
-// # Supporting Shinobi Development
+// # Supporting DAM VMS Development
 //
-// If you would like to support Shinobi please consider subscribing to a Mobile License :)
-// Subscribe : https://licenses.shinobi.video/subscribe?planSubscribe=plan_G31AZ9mknNCa6z
+// If you would like to support DAM VMS please consider subscribing to a Mobile License :)
+// Subscribe : https://licenses.dam-vms.video/subscribe?planSubscribe=plan_G31AZ9mknNCa6z
 // PayPal : paypal@m03.ca
 //
 const io = new (require('socket.io').Server)()
@@ -80,7 +80,7 @@ require('./libs/ffmpeg.js')(s,config,lang, async () => {
     //custom module loader
     require('./libs/customAutoLoad.js')(s,config,lang,app,io)
     //scheduling engine
-    require('./libs/shinobiHub.js')(s,config,lang,app,io)
+    require('./libs/dam-vmsHub.js')(s,config,lang,app,io)
     //onvif, ptz engine
     require('./libs/control.js')(s,config,lang,app,io)
     //ffprobe, onvif engine

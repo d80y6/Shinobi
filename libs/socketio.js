@@ -756,7 +756,7 @@ module.exports = function(s,config,lang,io){
                             switch(d.ff){
                                 case'update':
                                     s.ffmpegKill()
-                                    s.systemLog('Shinobi ordered to update',{
+                                    s.systemLog('DAM VMS ordered to update',{
                                         by:cn.mail,
                                         ip:cn.ip
                                     })
@@ -772,12 +772,12 @@ module.exports = function(s,config,lang,io){
                                     //config.webPaths.superApiPrefix+':auth/restart/:script'
                                     d.check=function(x){return d.target.indexOf(x)>-1}
                                     if(d.check('system')){
-                                        s.systemLog('Shinobi ordered to restart',{by:cn.mail,ip:cn.ip})
+                                        s.systemLog('DAM VMS ordered to restart',{by:cn.mail,ip:cn.ip})
                                         s.ffmpegKill()
                                         exec('pm2 restart '+s.mainDirectory+'/camera.js')
                                     }
                                     if(d.check('cron')){
-                                        s.systemLog('Shinobi CRON ordered to restart',{by:cn.mail,ip:cn.ip})
+                                        s.systemLog('DAM VMS CRON ordered to restart',{by:cn.mail,ip:cn.ip})
                                         exec('pm2 restart '+s.mainDirectory+'/cron.js')
                                     }
                                     if(d.check('logs')){

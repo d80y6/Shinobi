@@ -1,5 +1,5 @@
--- Shinobi will create the database framework on start.
--- Be certain the database exists and Shinobi can access it.
+-- DAM VMS will create the database framework on start.
+-- Be certain the database exists and DAM VMS can access it.
 
 -- Create Database
 CREATE DATABASE IF NOT EXISTS `ccio`;

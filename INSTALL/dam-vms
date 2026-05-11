@@ -1,8 +1,8 @@
 #!/bin/bash
-if [ ! -e "/etc/shinobisystems/path.txt" ]; then
-    installationDirectory="/home/Shinobi"
+if [ ! -e "/etc/dam-vmssystems/path.txt" ]; then
+    installationDirectory="/home/DAM VMS"
 else
-    installationDirectory=$(cat /etc/shinobisystems/cctv.txt)
+    installationDirectory=$(cat /etc/dam-vmssystems/cctv.txt)
 fi
 cd "$installationDirectory" || exit
 currentBuild=$(git show --oneline -s)
@@ -12,15 +12,15 @@ currentCommitNumber=${splitBuildString[0]}
 repo="Pro"
 if [[ $@ == *'help'* ]] || [ ! "$1" ]; then
     echo "========================================================="
-    echo "==!! Shinobi : The Open Source CCTV and NVR Solution !!=="
+    echo "==!! DAM VMS : The Open Source CCTV and NVR Solution !!=="
     echo "========================================================="
     if [ ! "$1" ]; then
         echo "You are missing function parameters."
-        echo "Example : shinobi [command] .."
-        echo "Example : shinobi flush restart logs"
+        echo "Example : dam-vms [command] .."
+        echo "Example : dam-vms flush restart logs"
     else
         echo "Hello there! if you need support come on over"
-        echo "to the Shinobi Community Chat! :)"
+        echo "to the DAM VMS Community Chat! :)"
         echo "https://discordapp.com/invite/mdhmvuH/"
     fi
     echo "========================================================="
@@ -54,10 +54,10 @@ if [[ $@ == *'help'* ]] || [ ! "$1" ]; then
     echo "|--> Clear all PM2 logs."
     echo "-"
     echo "| bootupEnable :"
-    echo "|--> Start Shinobi on OS reboot."
+    echo "|--> Start DAM VMS on OS reboot."
     echo "-"
     echo "| bootupDisable :"
-    echo "|--> Disable starting Shinobi on OS reboot."
+    echo "|--> Disable starting DAM VMS on OS reboot."
     echo "-"
     echo "| kill :"
     echo "|--> Stop the entire PM2 daemon."
@@ -69,7 +69,7 @@ if [[ $@ == *'restart'* ]]; then
     pm2 restart camera
 else
     if [[ $@ == *'start'* ]] || [[ $@ == *'now'* ]]; then
-        echo "Starting Shinobi"
+        echo "Starting DAM VMS"
         pm2 start camera
     fi
 fi
@@ -78,15 +78,15 @@ if [[ $@ == *'stop'* ]] || [[ $@ == *'exit'* ]]; then
     if [ "$proccessAlive" ]; then
         pm2 stop camera
     else
-        echo "Shinobi process is not running."
+        echo "DAM VMS process is not running."
     fi
 fi
 if [[ $@ == *'version'* ]]; then
     echo "Build ID : $currentCommitNumber"
     if [[ $repo == "Pro" ]]; then
-        echo "Repository : Shinobi Pro"
+        echo "Repository : DAM VMS Pro"
     else
-        echo "Repository : Shinobi CE"
+        echo "Repository : DAM VMS CE"
     fi
     echo "$currentBuild"
 fi
@@ -100,18 +100,18 @@ if [[ $@ == *'bootupDisable'* ]] || [[ $@ == *'bootupdisable'* ]]; then
 fi
 if [[ $@ == *'getDev'* ]] || [[ $@ == *'getdev'* ]]; then
     git checkout dev
-    echo "Shinobi - Restart Shinobi to make the changes take affect."
+    echo "DAM VMS - Restart DAM VMS to make the changes take affect."
 fi
 if [[ $@ == *'getMaster'* ]] || [[ $@ == *'getmaster'* ]]; then
     git checkout master
-    echo "Shinobi - Restart Shinobi to make the changes take affect."
+    echo "DAM VMS - Restart DAM VMS to make the changes take affect."
 fi
 if [[ $@ == *'update'* ]]; then
     echo "============="
-    echo "Shinobi - Are you sure you want to update? This will restart Shinobi."
+    echo "DAM VMS - Are you sure you want to update? This will restart DAM VMS."
     echo "(y)es or (N)o"
-    read -r updateshinobi
-    if [ "$updateshinobi" = "y" ] || [ "$updateshinobi" = "Y" ]; then
+    read -r updatedam-vms
+    if [ "$updatedam-vms" = "y" ] || [ "$updatedam-vms" = "Y" ]; then
         echo "Beginning Update Process..."
         pm2 stop camera.js
         rm -rf node_modules

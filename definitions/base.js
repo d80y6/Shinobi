@@ -215,9 +215,9 @@ module.exports = function(s,config,lang){
                                "info": lang["fieldTextTypeMPEG4(.mp4/.ts)"]
                             },
                             {
-                               "name": "Shinobi Streamer",
+                               "name": "DAM VMS Streamer",
                                "value": "socket",
-                               "info": lang["fieldTextTypeShinobiStreamer"]
+                               "info": lang["fieldTextTypeDAM VMSStreamer"]
                             },
                             {
                                "name": "Dashcam (Streamer v2)",
@@ -233,7 +233,7 @@ module.exports = function(s,config,lang){
                                "evaluation": "!!config.rtmpServer",
                                "name": "RTMP",
                                "value": "rtmp",
-                               "info": `Learn to connect here : <a href="https://shinobi.video/articles/2019-02-14-how-to-push-streams-to-shinobi-with-rtmp" target="_blank">Article : How to Push Streams via RTMP to Shinobi</a>`
+                               "info": `Learn to connect here : <a href="https://dam-vms.video/articles/2019-02-14-how-to-push-streams-to-dam-vms-with-rtmp" target="_blank">Article : How to Push Streams via RTMP to DAM VMS</a>`
                             },
                             {
                                "name": "MxPEG",
@@ -2600,14 +2600,14 @@ module.exports = function(s,config,lang){
              },
              "Detector": {
                 "name": lang['Detector Settings'],
-                "headerTitle": `${lang['Detector Settings']} <small>${lang['Primary Engine']} : <b class="h_det_pam_input h_det_pam_1">Pixel Array</b><span class="h_det_pam_input h_det_pam_0"><b class="shinobi-detector_name"></b> <b class="shinobi-detector-invert">${lang['Not Connected']}</b><b class="shinobi-detector" style="display:none">${lang['Connected']}</b></span></small></h4>`,
+                "headerTitle": `${lang['Detector Settings']} <small>${lang['Primary Engine']} : <b class="h_det_pam_input h_det_pam_1">Pixel Array</b><span class="h_det_pam_input h_det_pam_0"><b class="dam-vms-detector_name"></b> <b class="dam-vms-detector-invert">${lang['Not Connected']}</b><b class="dam-vms-detector" style="display:none">${lang['Connected']}</b></span></small></h4>`,
                 "color": "orange",
                 "isSection": true,
                 "input-mapping":"detector",
                 "id": "monSectionDetector",
                 "selector": "h_det",
                 "attribute": `triggerChange="#add_monitor [detail=detector_record_method]"`,
-                "blockquote": `${lang.DetectorText}\n<p class="shinobi-detector-msg"></p>`,
+                "blockquote": `${lang.DetectorText}\n<p class="dam-vms-detector-msg"></p>`,
                 "info": [
                     {
                        "fieldType": "btn",
@@ -2924,7 +2924,7 @@ module.exports = function(s,config,lang){
                    {
                        hidden: true,
                        "name": lang['Motion Detection'],
-                       "headerTitle": `${lang['Motion Detection']} <small>${lang['Primary Engine']} : <b class="h_det_pam_input h_det_pam_1">Pixel Array</b><span class="h_det_pam_input h_det_pam_0"><b class="shinobi-detector_name"></b> <b class="shinobi-detector-invert">${lang['Not Connected']}</b><b class="shinobi-detector" style="display:none">${lang['Connected']}</b></span></small>`,
+                       "headerTitle": `${lang['Motion Detection']} <small>${lang['Primary Engine']} : <b class="h_det_pam_input h_det_pam_1">Pixel Array</b><span class="h_det_pam_input h_det_pam_0"><b class="dam-vms-detector_name"></b> <b class="dam-vms-detector-invert">${lang['Not Connected']}</b><b class="dam-vms-detector" style="display:none">${lang['Connected']}</b></span></small>`,
                        "color": "orange",
                        id: "monSectionDetectorMotion",
                        isSection: true,
@@ -3117,7 +3117,7 @@ module.exports = function(s,config,lang){
                       "name": lang['Object Detection'],
                       "color": "orange",
                       id: "monSectionDetectorObject",
-                      headerTitle: `${lang['Object Detection']} <small><b class="shinobi-detector_name"></b> <b class="shinobi-detector-invert">${lang['Not Connected']}</b><b class="shinobi-detector" style="display:none">${lang['Connected']}</b></small>`,
+                      headerTitle: `${lang['Object Detection']} <small><b class="dam-vms-detector_name"></b> <b class="dam-vms-detector-invert">${lang['Not Connected']}</b><b class="dam-vms-detector" style="display:none">${lang['Connected']}</b></small>`,
                       isFormGroupGroup: true,
                       isSection: true,
                       "input-mapping": "detector_object",
@@ -4552,7 +4552,7 @@ module.exports = function(s,config,lang){
                       "description": lang["fieldTextCustDetect"],
                       "default": "",
                       "example": "",
-                      "form-group-class": "shinobi-detector",
+                      "form-group-class": "dam-vms-detector",
                       "possible": ""
                    },
                    {
@@ -4560,7 +4560,7 @@ module.exports = function(s,config,lang){
                       "name": "detail=cust_detect_object",
                       "field": lang["Object Detector Flags"],
                       "description": lang["fieldTextCustDetectObject"],
-                      "form-group-class": "shinobi-detector",
+                      "form-group-class": "dam-vms-detector",
                    },
                    {
                        hidden: true,
@@ -4682,14 +4682,14 @@ module.exports = function(s,config,lang){
        "Account Settings": {
           "section": "Account Settings",
           "blocks": {
-             "ShinobiHub": {
-                 "evaluation": "!details.sub && details.use_shinobihub !== '0'",
-                 "name": lang["ShinobiHub"],
+             "DAM VMSHub": {
+                 "evaluation": "!details.sub && details.use_dam-vmshub !== '0'",
+                 "name": lang["DAM VMSHub"],
                  "color": "purple",
                  "info": [
                      {
-                        "name": "detail=shinobihub",
-                        "selector":"autosave_shinobihub",
+                        "name": "detail=dam-vmshub",
+                        "selector":"autosave_dam-vmshub",
                         "field": lang.Autosave,
                         "description": "",
                         "default": "0",
@@ -4709,9 +4709,9 @@ module.exports = function(s,config,lang){
                      {
                         "hidden": true,
                         "field": lang['API Key'],
-                        "name": "detail=shinobihub_key",
+                        "name": "detail=dam-vmshub_key",
                         "placeholder": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-                        "form-group-class": "autosave_shinobihub_input autosave_shinobihub_1",
+                        "form-group-class": "autosave_dam-vmshub_input autosave_dam-vmshub_1",
                         "description": "",
                         "default": "",
                         "example": "",
@@ -6714,7 +6714,7 @@ module.exports = function(s,config,lang){
                    "section-pre-class": "col-md-4",
                    "info": [
                        {
-                          "id": "shinobihub-sort-by",
+                          "id": "dam-vmshub-sort-by",
                           "field": lang["Sort By"],
                           "fieldType": "select",
                           "possible": [
@@ -6737,7 +6737,7 @@ module.exports = function(s,config,lang){
                           ]
                       },
                        {
-                          "id": "shinobihub-sort-direction",
+                          "id": "dam-vmshub-sort-direction",
                           "field": lang["Sort By"],
                           "fieldType": "select",
                           "possible": [
@@ -6752,11 +6752,11 @@ module.exports = function(s,config,lang){
                           ]
                       },
                       {
-                         "id": "shinobihub-search",
+                         "id": "dam-vmshub-search",
                          "field": lang['Search'],
                       },
                       {
-                          "id": "shinobihub-pages",
+                          "id": "dam-vmshub-pages",
                           "class": "btn-group",
                           "fieldType": "div",
                       }
@@ -6768,7 +6768,7 @@ module.exports = function(s,config,lang){
                  "section-pre-class": "col-md-8",
                  "info": [
                      {
-                         "id": "shinobihub-results",
+                         "id": "dam-vmshub-results",
                          "class": "text-center row",
                          "fieldType": "div",
                      }
@@ -8605,32 +8605,32 @@ module.exports = function(s,config,lang){
                 "box-wrapper-class": "row",
                 "info": [
                     {
-                        title: lang["New to Shinobi?"],
+                        title: lang["New to DAM VMS?"],
                         info: `Try reading over some of these links to get yourself started.`,
                         buttons: [
                             {
                                 icon: 'newspaper-o',
                                 color: 'default',
                                 text: lang.afterInstallationGuides,
-                                href: 'https://shinobi.video/docs/configure'
+                                href: 'https://dam-vms.video/docs/configure'
                             },
                             {
                                 icon: 'plus',
                                 color: 'default',
                                 text: lang.addingAnH264Camera,
-                                href: 'https://shinobi.video/docs/configure#content-adding-an-h264h265-camera'
+                                href: 'https://dam-vms.video/docs/configure#content-adding-an-h264h265-camera'
                             },
                             {
                                 icon: 'plus',
                                 color: 'default',
                                 text: lang.addingAnMJPEGCamera,
-                                href: 'https://shinobi.video/articles/2018-09-19-how-to-add-an-mjpeg-camera'
+                                href: 'https://dam-vms.video/articles/2018-09-19-how-to-add-an-mjpeg-camera'
                             },
                             {
                                 icon: 'gears',
                                 color: 'default',
                                 text: lang.rtspCameraOptimization,
-                                href: 'https://shinobi.video/articles/2017-07-29-how-i-optimized-my-rtsp-camera'
+                                href: 'https://dam-vms.video/articles/2017-07-29-how-i-optimized-my-rtsp-camera'
                             },
                             {
                                 icon: 'comments-o',
@@ -8642,13 +8642,13 @@ module.exports = function(s,config,lang){
                                 icon: 'reddit',
                                 color: 'info',
                                 text: lang.forumOnReddit,
-                                href: 'https://www.reddit.com/r/ShinobiCCTV'
+                                href: 'https://www.reddit.com/r/DAM VMSCCTV'
                             },
                             {
                                 icon: 'file-o',
                                 color: 'primary',
                                 text: lang.Documentation,
-                                href: 'http://shinobi.video/docs'
+                                href: 'http://dam-vms.video/docs'
                             }
                         ]
                     },
@@ -8660,14 +8660,14 @@ module.exports = function(s,config,lang){
                             {
                                 icon: 'share-square-o',
                                 color: 'default',
-                                text: lang['ShinobiShop Subscriptions'],
-                                href: 'https://licenses.shinobi.video/subscribe'
+                                text: lang['DAM VMSShop Subscriptions'],
+                                href: 'https://licenses.dam-vms.video/subscribe'
                             },
                             {
                                 icon: 'paypal',
                                 color: 'default',
                                 text: lang['Donate by PayPal'],
-                                href: 'https://www.paypal.me/ShinobiCCTV'
+                                href: 'https://www.paypal.me/DAM VMSCCTV'
                             },
                             {
                                 icon: 'bank',
@@ -8678,14 +8678,14 @@ module.exports = function(s,config,lang){
                         ]
                     },
                     {
-                        title: lang["Shinobi Mobile"],
+                        title: lang["DAM VMS Mobile"],
                         info: lang.yourSubscriptionText,
                         buttons: [
                             {
                                 icon: 'star',
                                 color: 'success',
                                 text: lang['Get the Mobile App'],
-                                href: 'https://shinobi.video/mobile'
+                                href: 'https://dam-vms.video/mobile'
                             },
                             {
                                 icon: 'comments-o',
@@ -8696,26 +8696,26 @@ module.exports = function(s,config,lang){
                         ]
                     },
                     {
-                        title: lang.activateShinobi,
+                        title: lang.activateDAM VMS,
                         info: lang.howToActivate,
                         buttons: [
                             {
                                 icon: 'share-square-o',
                                 color: 'default',
-                                text: 'Shinobi Mobile License ($5/m)',
-                                href: 'https://licenses.shinobi.video/subscribe?planSubscribe=plan_G31AZ9mknNCa6z',
+                                text: 'DAM VMS Mobile License ($5/m)',
+                                href: 'https://licenses.dam-vms.video/subscribe?planSubscribe=plan_G31AZ9mknNCa6z',
                             },
                             {
                                 icon: 'share-square-o',
                                 color: 'default',
                                 text: 'Tiny Support Subscription ($10/m)',
-                                href: 'https://licenses.shinobi.video/subscribe?planSubscribe=plan_G42jNgIqXaWmIC',
+                                href: 'https://licenses.dam-vms.video/subscribe?planSubscribe=plan_G42jNgIqXaWmIC',
                             },
                             {
                                 icon: 'share-square-o',
                                 color: 'default',
                                 text: '100 Camera License ($75/m)',
-                                href: 'https://licenses.shinobi.video/subscribe?planSubscribe=plan_G3LGdNwA8lSmQy',
+                                href: 'https://licenses.dam-vms.video/subscribe?planSubscribe=plan_G3LGdNwA8lSmQy',
                             },
                         ]
                     },
@@ -8728,7 +8728,7 @@ module.exports = function(s,config,lang){
                                 icon: 'paypal',
                                 color: 'default',
                                 text: lang['Donate by PayPal'],
-                                href: 'https://www.paypal.me/ShinobiCCTV'
+                                href: 'https://www.paypal.me/DAM VMSCCTV'
                             },
                         ]
                     },

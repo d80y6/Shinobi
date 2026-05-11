@@ -9,7 +9,7 @@ module.exports = (s,config,databaseOptions) => {
         databaseOptions.useNullAsDefault = true;
     }
     if(databaseOptions.client === 'sqlite3' && databaseOptions.connection.filename === undefined){
-        databaseOptions.connection.filename = __dirname+"/shinobi.sqlite"
+        databaseOptions.connection.filename = __dirname+"/dam-vms.sqlite"
     }
     const dateSubtract = function(date, interval, units){
       var ret = date

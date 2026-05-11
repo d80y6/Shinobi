@@ -384,7 +384,7 @@ module.exports = function(s,config,lang,getSnapshot){
             })
         }catch(err){
             console.log(err)
-            console.log('Could not start Matrix bot, please run "npm install matrix-js-sdk" inside the Shinobi folder.')
+            console.log('Could not start Matrix bot, please run "npm install matrix-js-sdk" inside the DAM VMS folder.')
         }
     }
 }

@@ -11,12 +11,12 @@ echo "============="
 echo " Ubuntu Version: $getubuntuversion"
 echo "============="
 if [ "$getubuntuversion" = "17" ] || [ "$getubuntuversion" > "17" ]; then
-    wget https://cdn.shinobi.video/installers/cuda-repo-ubuntu1710_9.2.148-1_amd64.deb -O cuda.deb
+    wget https://cdn.dam-vms.video/installers/cuda-repo-ubuntu1710_9.2.148-1_amd64.deb -O cuda.deb
     sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1710/x86_64/7fa2af80.pub
     sudo dpkg -i --force-overwrite cuda.deb
 fi
 if [ "$getubuntuversion" = "16" ]; then
-    wget https://cdn.shinobi.video/installers/cuda-repo-ubuntu1604_9.2.148-1_amd64.deb -O cuda.deb
+    wget https://cdn.dam-vms.video/installers/cuda-repo-ubuntu1604_9.2.148-1_amd64.deb -O cuda.deb
     sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/7fa2af80.pub
     sudo dpkg -i --force-overwrite cuda.deb
 fi
@@ -30,9 +30,9 @@ if [ "$getubuntuversion" = "16" ]; then
     sudo apt-get install nvidia-cuda-toolkit -y
 fi
 # Install CUDA DNN
-wget https://cdn.shinobi.video/installers/libcudnn7_7.2.1.38-1+cuda9.2_amd64.deb -O cuda-dnn.deb
+wget https://cdn.dam-vms.video/installers/libcudnn7_7.2.1.38-1+cuda9.2_amd64.deb -O cuda-dnn.deb
 sudo dpkg -i cuda-dnn.deb
-wget https://cdn.shinobi.video/installers/libcudnn7-dev_7.2.1.38-1+cuda9.2_amd64.deb -O cuda-dnn-dev.deb
+wget https://cdn.dam-vms.video/installers/libcudnn7-dev_7.2.1.38-1+cuda9.2_amd64.deb -O cuda-dnn-dev.deb
 sudo dpkg -i cuda-dnn-dev.deb
 echo "-- Cleaning Up --"
 # Cleanup

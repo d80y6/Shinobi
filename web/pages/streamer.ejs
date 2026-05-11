@@ -1,4 +1,4 @@
-<% var pageTitle = lang.Shinobi %>
+<% var pageTitle = lang.DAM VMS %>
 <%- include('blocks/header', {pageTitle: pageTitle}); %>
 <script>var $user=<%- JSON.stringify($user) %>;</script>
 <link rel="stylesheet" href="<%-window.libURL%>assets/vendor/bootstrap5/css/bootstrap.min.css">
@@ -123,8 +123,8 @@ function drawMonitorList(callback){
 $(document).ready(function(){
     drawMonitorList(function(){
         initVideoStream()
-        if(loadedMonitors.length > 0 && $.ls.getItem('Shinobi_socket_camera')){
-            $('[monitor="'+$.ls.getItem('Shinobi_socket_camera')+'"]').click()
+        if(loadedMonitors.length > 0 && $.ls.getItem('DamVms_socket_camera')){
+            $('[monitor="'+$.ls.getItem('DamVms_socket_camera')+'"]').click()
         }else{
             $.ccio.selected=null;
         }
@@ -134,7 +134,7 @@ $('body').on('click','[monitor]',function(e){
     e.e=$(this);e.a=e.e.attr('monitor'),e.m=$.ccio.mon[e.a];
     $.ccio.selected=e.a;$('#selected').html(e.a);
     if(e.m.details.sfps&&e.m.details.sfps!==''){$.ccio.framerate=e.m.details.sfps}else{$.ccio.framerate=1;}
-    $.ls.setItem('Shinobi_socket_camera',e.a)
+    $.ls.setItem('DamVms_socket_camera',e.a)
     $('[monitor]').removeClass('active'),e.e.addClass('active');
 })
 
@@ -142,7 +142,7 @@ $('body').on('click','[monitor]',function(e){
 
 $('body')
 .on('click','.logout',function(e){
-    localStorage.removeItem('ShinobiLogin_'+location.host);location.href='/';
+    localStorage.removeItem('DamVmsLogin_'+location.host);location.href='/';
 })
 </script>
 <style>
