@@ -58,11 +58,11 @@ module.exports = function(s,config,lang,app){
         },res,req)
     })
     /**
-    * API : Superuser : Update Shinobi
+    * API : Superuser : Update DAM VMS
     */
     app.all(config.webPaths.superApiPrefix+':auth/system/update', function (req,res){
         s.superAuth(req.params,async (resp) => {
-            s.systemLog(lang['Shinobi Ordered to Update'],{
+            s.systemLog(lang['DAM VMS Ordered to Update'],{
                 by: resp.$user.mail,
                 ip: resp.ip
             })
@@ -78,7 +78,7 @@ module.exports = function(s,config,lang,app){
         },res,req)
     })
     /**
-    * API : Superuser : Restart Shinobi
+    * API : Superuser : Restart DAM VMS
     */
     app.all(config.webPaths.superApiPrefix+':auth/system/restart/:script', function (req,res){
         s.superAuth(req.params,function(resp){
@@ -87,12 +87,12 @@ module.exports = function(s,config,lang,app){
                 ok : true
             }
             if(check('system')){
-                s.systemLog('Shinobi ordered to restart',{by:resp.$user.mail,ip:resp.ip})
+                s.systemLog('DAM VMS ordered to restart',{by:resp.$user.mail,ip:resp.ip})
                 s.ffmpegKill()
                 endData.systemOuput = execSync('pm2 restart '+s.mainDirectory+'/camera.js')
             }
             if(check('cron')){
-                s.systemLog('Shinobi CRON ordered to restart',{by:resp.$user.mail,ip:resp.ip})
+                s.systemLog('DAM VMS CRON ordered to restart',{by:resp.$user.mail,ip:resp.ip})
                 endData.cronOuput = execSync('pm2 restart '+s.mainDirectory+'/cron.js')
             }
             if(check('logs')){

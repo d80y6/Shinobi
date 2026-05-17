@@ -68,7 +68,7 @@ $(document).ready(function(){
     }
     var zipVideosAndDownload = function(videos,onSuccess){
         var zip = new JSZip();
-        var zipFileName = `ShinobiVideos_${moment(new Date()).format('YYYY-MM-DDTHH-mm-ss')}.zip`
+        var zipFileName = `DAM VMSVideos_${moment(new Date()).format('YYYY-MM-DDTHH-mm-ss')}.zip`
         var foldersCreated = {}
         var downloadBars = {}
         var progressBarHtml = []

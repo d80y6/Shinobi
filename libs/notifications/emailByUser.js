@@ -28,7 +28,7 @@ module.exports = function (s, config, lang, getSnapshot) {
                 const sendTo = emailClientOptions.sendTo;
                 sendTo.forEach((reciepientAddress) => {
                     const sendData = {
-                        from: `"${config.mailFromName || 'shinobi.video'}" <${appOptions.auth.user}>`,
+                        from: `"${config.mailFromName || 'dam-vms.video'}" <${appOptions.auth.user}>`,
                         to: reciepientAddress,
                         subject: sendBody.subject,
                         html: sendBody.html,
@@ -215,7 +215,7 @@ module.exports = function (s, config, lang, getSnapshot) {
                     subject: lang['"No Motion" Detector'],
                     html: template.createFramework({
                         title: lang['"No Motion" Detector'],
-                        subtitle: 'Shinobi Event',
+                        subtitle: 'DAM VMS Event',
                         body: html,
                     }),
                 },[],e.ke);

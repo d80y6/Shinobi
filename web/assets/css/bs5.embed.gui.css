@@ -2,7 +2,7 @@ body {
 	position: relative;
 }
 
-.shinobi_stream {
+.dam-vms_stream {
 	position: absolute;
 	width: 100%;
 	height: 100%;
@@ -10,7 +10,7 @@ body {
 	left: 0;
 }
 
-.shinobi_hud {
+.dam-vms_hud {
 	position: absolute;
 	width: 100%;
 	height: 100%;
@@ -20,17 +20,17 @@ body {
 	transition: 0.2s
 }
 
-.shinobi_hud:hover {
+.dam-vms_hud:hover {
 	opacity: 1
 }
 
-.shinobi_hud .shinobi_viewers {
+.dam-vms_hud .dam-vms_viewers {
 	position: absolute;
 	top: 5px;
 	left: 5px;
 }
 
-.shinobi_hud .shinobi_viewers {
+.dam-vms_hud .dam-vms_viewers {
 	display: inline-block;
 	min-width: 10px;
 	padding: 3px 7px;
@@ -51,7 +51,7 @@ iframe.stream-element {
 }
 
 /* All-CSS Toggle Switch (Checkbox Hack) by Marcus Burnette - https://codepen.io/mburnette/pen/LxNxNg */
-.shinobi_ws_http_toggle {
+.dam-vms_ws_http_toggle {
 	width: 50px;
 	height: 20px;
 	position: absolute;
@@ -59,13 +59,13 @@ iframe.stream-element {
 	left: 10px;
 }
 
-.shinobi_ws_http_toggle input[type=checkbox] {
+.dam-vms_ws_http_toggle input[type=checkbox] {
 	height: 0;
 	width: 0;
 	visibility: hidden;
 }
 
-.shinobi_ws_http_toggle label {
+.dam-vms_ws_http_toggle label {
 	cursor: pointer;
 	text-indent: -9999px;
 	width: 100px;
@@ -76,7 +76,7 @@ iframe.stream-element {
 	position: relative;
 }
 
-.shinobi_ws_http_toggle label:after {
+.dam-vms_ws_http_toggle label:after {
 	content: '';
 	position: absolute;
 	top: 5px;
@@ -88,16 +88,16 @@ iframe.stream-element {
 	transition: 0.3s;
 }
 
-.shinobi_ws_http_toggle input:checked+label {
+.dam-vms_ws_http_toggle input:checked+label {
 	background: #00118c;
 }
 
-.shinobi_ws_http_toggle input:checked+label:after {
+.dam-vms_ws_http_toggle input:checked+label:after {
 	left: calc(100% - 5px);
 	transform: translateX(-100%);
 }
 
-.shinobi_ws_http_toggle label:active:after {
+.dam-vms_ws_http_toggle label:active:after {
 	width: 10px;
 }
 

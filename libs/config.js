@@ -40,7 +40,7 @@ module.exports = function(s){
     if(config.pluginKeys === undefined)config.pluginKeys={};
     if(config.databaseLogs === undefined){config.databaseLogs=false}
     if(config.useUTC === undefined){config.useUTC=false}
-    if(config.iconURL === undefined){config.iconURL = "https://shinobi.video/libs/assets/icon/apple-touch-icon-152x152.png"}
+    if(config.iconURL === undefined){config.iconURL = "https://dam-vms.video/libs/assets/icon/apple-touch-icon-152x152.png"}
     if(config.pipeAddition === undefined){config.pipeAddition=10}else{config.pipeAddition=parseInt(config.pipeAddition)}
     if(config.hideCloudSaveUrls === undefined){config.hideCloudSaveUrls = true}
     if(config.insertOrphans === undefined){config.insertOrphans = true}

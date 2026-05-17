@@ -1,6 +1,6 @@
 #!/bin/bash
 if [ -e "INSTALL/installed.txt" ]; then
-    echo "Starting Shinobi"
+    echo "Starting DAM VMS"
     pm2 start camera.js
     #pm2 start cron.js
     pm2 logs

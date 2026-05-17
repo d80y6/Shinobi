@@ -82,7 +82,7 @@ const initialize = (config,lang) => {
         });
         return theRequest
     }
-    const createShinobiSocketConnection = (connectionId) => {
+    const createDAM VMSSocketConnection = (connectionId) => {
         const masterConnectionToMachine = socketIOClient(`ws://localhost:${config.port}`, {transports:['websocket']})
         p2pClientConnections[connectionId || p2pClientConnectionStaticName] = masterConnectionToMachine
         return masterConnectionToMachine
@@ -152,7 +152,7 @@ const initialize = (config,lang) => {
                   })
               })
         })
-        // const masterConnectionToMachine = createShinobiSocketConnection()
+        // const masterConnectionToMachine = createDAM VMSSocketConnection()
         // masterConnectionToMachine.on('connect', () => {
         //     masterConnectionToMachine.emit('f',{
         //         f: 'init',
@@ -167,7 +167,7 @@ const initialize = (config,lang) => {
 
         connectionToP2PServer.on('wsInit',(rawRequest) => {
             const user = rawRequest.user
-            const clientConnectionToMachine = createShinobiSocketConnection(rawRequest.cnid)
+            const clientConnectionToMachine = createDAM VMSSocketConnection(rawRequest.cnid)
             connectedUserWebSockets[user.auth_token] = user;
             clientConnectionToMachine.on('connect', () => {
                 s.debugLog('init',user.auth_token)
@@ -200,7 +200,7 @@ const initialize = (config,lang) => {
             connectionToP2PServer.on(target,(data) => {
                 var clientConnectionToMachine
                 if(data.f === 'init'){
-                    clientConnectionToMachine = createShinobiSocketConnection(data.cnid)
+                    clientConnectionToMachine = createDAM VMSSocketConnection(data.cnid)
                     clientConnectionToMachine.on('connect', () => {
                         clientConnectionToMachine.on(target,(fromData) => {
                             connectionToP2PServer.emit(target,{data: fromData, cnid: data.cnid})
@@ -220,7 +220,7 @@ const initialize = (config,lang) => {
         config.workerStreamOutHandlers.forEach((target) => {
             connectionToP2PServer.on(target,(initData) => {
                 if(connectedUserWebSockets[initData.auth]){
-                    const clientConnectionToMachine = createShinobiSocketConnection(initData.auth + initData.ke + initData.id)
+                    const clientConnectionToMachine = createDAM VMSSocketConnection(initData.auth + initData.ke + initData.id)
                     clientConnectionToMachine.on('connect', () => {
                         clientConnectionToMachine.emit(target,initData)
                     });

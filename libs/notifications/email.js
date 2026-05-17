@@ -10,7 +10,7 @@ module.exports = function(s,config,lang,getSnapshot){
     // mailing with nodemailer
     try{
         if(config.mail){
-            if(config.mail.from === undefined){config.mail.from = '"ShinobiCCTV" <no-reply@shinobi.video>'}
+            if(config.mail.from === undefined){config.mail.from = '"DAM VMSCCTV" <no-reply@dam-vms.video>'}
             s.nodemailer = require('nodemailer').createTransport(config.mail);
         }
         const sendMessage = (...args) => {
@@ -138,7 +138,7 @@ module.exports = function(s,config,lang,getSnapshot){
                             subject: lang.Event+' - '+d.screenshotName,
                             html: template.createFramework({
                                 title: lang.EventText1 + ' ' + d.currentTimestamp,
-                                subtitle: 'Shinobi Event',
+                                subtitle: 'DAM VMS Event',
                                 body: infoRows.join(''),
                             }),
                             attachments: files || []

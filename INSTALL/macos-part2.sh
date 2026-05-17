@@ -1,35 +1,35 @@
 #!/bin/bash
 echo "========================================================="
-echo "==!! Shinobi : The Open Source CCTV and NVR Solution !!=="
+echo "==!! DAM VMS : The Open Source CCTV and NVR Solution !!=="
 echo "=================== Mac OS Install Part 2 ==============="
 echo "========================================================="
-echo "Shinobi - Database Installation"
+echo "DAM VMS - Database Installation"
 echo "(y)es or (N)o"
 read -r mysqlagreeData
 if [ "$mysqlagreeData" = "y" ]; then
-    echo "Shinobi will now use root for database installation..."
+    echo "DAM VMS will now use root for database installation..."
     sudo mysql -e "source sql/user.sql" || true
 fi
 echo "============="
-echo "Shinobi - Install NPM Libraries"
+echo "DAM VMS - Install NPM Libraries"
 sudo npm i npm -g
 sudo npm install --unsafe-perm
 # sudo npm audit fix --unsafe-perm
 echo "============="
-echo "Shinobi - Install PM2"
+echo "DAM VMS - Install PM2"
 sudo npm install pm2@latest -g
 if [ ! -e "./conf.json" ]; then
     sudo cp conf.sample.json conf.json
 fi
 if [ ! -e "./super.json" ]; then
-    echo "Default Superuser : admin@shinobi.video"
+    echo "Default Superuser : admin@dam-vms.video"
     echo "Default Password : admin"
     sudo cp super.sample.json super.json
 fi
-echo "Shinobi - Finished"
+echo "DAM VMS - Finished"
 touch INSTALL/installed.txt
-dos2unix /home/Shinobi/INSTALL/shinobi
-ln -s /home/Shinobi/INSTALL/shinobi /usr/bin/shinobi
+dos2unix /home/DAM VMS/INSTALL/dam-vms
+ln -s /home/DAM VMS/INSTALL/dam-vms /usr/bin/dam-vms
 sudo chmod -R 755 .
 echo "=====================================" > INSTALL/installed.txt
 echo "=======   Login Credentials   =======" >> INSTALL/installed.txt
@@ -38,10 +38,10 @@ echo "|| Password : $userPasswordPlain" >> INSTALL/installed.txt
 echo "|| API Key : $apiKey" >> INSTALL/installed.txt
 echo "=====================================" >> INSTALL/installed.txt
 echo "=====================================" >> INSTALL/installed.txt
-echo "Shinobi - Start Shinobi and set to start on boot?"
+echo "DAM VMS - Start DAM VMS and set to start on boot?"
 echo "(y)es or (N)o"
-read -r startShinobi
-if [ "$startShinobi" = "y" ]; then
+read -r startDAM VMS
+if [ "$startDAM VMS" = "y" ]; then
     sudo pm2 start camera.js
     sudo pm2 startup
     sudo pm2 save

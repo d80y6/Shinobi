@@ -1,21 +1,21 @@
-SHINOBI OPEN SOURCE SOFTWARE LICENSE AGREEMENT
+DAM VMS OPEN SOURCE SOFTWARE LICENSE AGREEMENT
 ==============================================
 
-Copyright (C) 2023 [Shinobi Systems](https://shinobi.systems)
+Copyright (C) 2023 [DAM VMS Systems](https://dam-vms.systems)
 
-*We'll try to keep it simple. Thanks for using Shinobi Software!*
+*We'll try to keep it simple. Thanks for using DAM VMS Software!*
 
 Definitions.
 -----------
 In this license, which also serves as a general End User License Agreement [EULA], the following
 terms shall be interpreted by these definitions:
  * "EULA" shall mean this End User Licence Agreement
- * "Licensor" shall mean SHINOBI SYSTEMS
+ * "Licensor" shall mean DAM VMS SYSTEMS
  * "Licensee" shall mean YOU, or the organisation (if any) on whose behalf YOU are taking the EULA.
 
 "SOFTWARE PRODUCTS" or "SOFTWARE" or "PRODUCTS" shall mean the Software Product this License is
-included with and any additional modules or add-ons delivered by Shinobi Systems. The term
-"SOFTWARE" includes, to the extent provided by SHINOBI SYSTEMS:
+included with and any additional modules or add-ons delivered by DAM VMS Systems. The term
+"SOFTWARE" includes, to the extent provided by DAM VMS SYSTEMS:
  1) any revisions, updates and/or upgrades thereto;
  2) any data, image or executable files, databases, data engines, computer software, or similar
  items customarily used or distributed with computer software products;
@@ -32,12 +32,12 @@ licence to use the SOFTWARE PRODUCTS listed therein and under the terms thereof.
 the terms and conditions established in this agreement, the LICENSEE does not acquire any
 ownership of copyright or other intellectual property rights in any part of the SOFTWARE
 PRODUCTS. The LICENSEE is only entitled to use the SOFTWARE PRODUCTS in accordance with the
-terms and conditions set forth by Shinobi Systems. By using the SOFTWARE PRODUCTS, the
+terms and conditions set forth by DAM VMS Systems. By using the SOFTWARE PRODUCTS, the
 LICENSEE agrees to accept the terms and conditions presented.
 
 LICENSEE must purchase the applicable subscription in any other use case unless otherwise
 granted. If the use case does not have a subscription applicable please contact a
-representative at support@shinobi.systems.
+representative at support@dam-vms.systems.
 
 #### Commercial Uses
 - Selling usage of the software
@@ -47,7 +47,7 @@ representative at support@shinobi.systems.
 As of 2022-07-12 the noted situations below are seen the same as "Commercial Use".
 
 - 25 Active Monitor Rule : Having at least 25 Active Monitors and not a Primary School or Secondary School. Does not apply to Personal Use.
-- 150 Active Monitor Rule : If you have more than 150 Active Monitors please contact support for an Enterprise License. The retail Shinobi Pro license will not be applicable for these installations.
+- 150 Active Monitor Rule : If you have more than 150 Active Monitors please contact support for an Enterprise License. The retail DAM VMS Pro license will not be applicable for these installations.
 - Used on a Device that was part of a commercial transaction. This can be, but not limited to, being sold or provided additionally to a sale.
 
 #### Conditions for Free (Unpaid) use.
@@ -64,7 +64,7 @@ Ambulance Services with less than 50 cameras
 - Use in Health Care facility like a hospital or walk-in clinic with less than 100 cameras
 - Schools and Organizations that have been given exemption
 
-As of 2022-07-12 If you are an organization that falls under one or more of these conditions for free use then you must display that you are using Shinobi Systems software as "shinobi.video". This can be physically on premise or on your organization's public web page.
+As of 2022-07-12 If you are an organization that falls under one or more of these conditions for free use then you must display that you are using DAM VMS Systems software as "dam-vms.video". This can be physically on premise or on your organization's public web page.
 
 Falling under the conditions for Free use does not guarantee you a License Key. It simply means you are allowed to use it without paying or trading for that use.
 
@@ -74,7 +74,7 @@ Please contact us through the Live Chat of our website and we can negotiate or m
 
 #### Registration
 
-Schools and Resellers must register with Shinobi Systems at https://licenses.shinobi.video.
+Schools and Resellers must register with DAM VMS Systems at https://licenses.dam-vms.video.
 In your account please fill out the "Apply for a School License" form or "Apply to be a Reseller" form.
 
 #### Support Services.
@@ -87,23 +87,23 @@ This is not the entire agreement on support services. You must also review all a
 provided with subscription plans provided.
 
 #### Software Product Ownership.
-This software is property of Shinobi Systems. LICENSEE must keep all copyright notices
+This software is property of DAM VMS Systems. LICENSEE must keep all copyright notices
 unchanged.
 
 This software contains or uses other software with their own licenses attached. See "List of Included Software" at the bottom of this document.
 
 #### Modification of this Software Product.
 LICENSEE may modify source code. LICENSEE may not alter or change
-copyright notices. All code changes by LICENSEE shall fall under the copyright of Shinobi
-Systems in the case code modified by LICENSEE is integrated into the official Shinobi code base.
+copyright notices. All code changes by LICENSEE shall fall under the copyright of DAM VMS
+Systems in the case code modified by LICENSEE is integrated into the official DAM VMS code base.
 
 #### Software Product Rebranding or "White-Labelling".
-LICENSEE can remove the Shinobi branding from the front end but all copyright notices must
+LICENSEE can remove the DAM VMS branding from the front end but all copyright notices must
 remain unchanged.
 
 #### Software Product Contributions.
-All contributed code becomes the property of Shinobi Systems. All contributors give permission
-to Shinobi and Shinobi developers to use the code however it is seen fit.
+All contributed code becomes the property of DAM VMS Systems. All contributors give permission
+to DAM VMS and DAM VMS developers to use the code however it is seen fit.
 
 #### Disclaimer of Warranty.
 THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
@@ -114,7 +114,7 @@ AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM IS WITH YOU.  SHOULD THE PROGRA
 YOU ASSUME THE COST OF ALL NECESSARY SERVICING, REPAIR OR CORRECTION.
 
 #### Changes to the Agreement.
-Shinobi Systems reserves the right to change the license and set of terms at any time.
+DAM VMS Systems reserves the right to change the license and set of terms at any time.
 Continued use is agreement to those possible changes. Changes to this license will be provided
 in the commit history of the repository it is located in.
 
@@ -191,9 +191,9 @@ Courthouse Vancouver Robson Square
 	pixel-change - https://www.npmjs.com/package/pixel-change
 	pushover-notifications - https://www.npmjs.com/package/pushover-notifications
 	sat - https://www.npmjs.com/package/sat
-	shinobi-onvif - https://www.npmjs.com/package/shinobi-onvif
-	shinobi-sound-detection - https://www.npmjs.com/package/shinobi-sound-detection
-	shinobi-zwave - https://www.npmjs.com/package/shinobi-zwave
+	dam-vms-onvif - https://www.npmjs.com/package/dam-vms-onvif
+	dam-vms-sound-detection - https://www.npmjs.com/package/dam-vms-sound-detection
+	dam-vms-zwave - https://www.npmjs.com/package/dam-vms-zwave
 	smtp-server - https://www.npmjs.com/package/smtp-server
 	socket.io - https://www.npmjs.com/package/socket.io
 	socket.io-client - https://www.npmjs.com/package/socket.io-client

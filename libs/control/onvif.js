@@ -1,6 +1,6 @@
 var os = require('os');
 var exec = require('child_process').exec;
-const onvif = require("shinobi-onvif");
+const onvif = require("dam-vms-onvif");
 const {
     addCredentialsToUrl,
 } = require('../common.js')
@@ -85,7 +85,7 @@ module.exports = function(s,config,lang,app,io){
                         response.repsonseFromDevice = command
                         doCallback(response)
                     }else{
-                        response.error = 'Big Errors, Please report it to Shinobi Development'
+                        response.error = 'Big Errors, Please report it to DAM VMS Development'
                         doCallback(response)
                     }
                 }
@@ -95,7 +95,7 @@ module.exports = function(s,config,lang,app,io){
                         return errorMessage('This is not an available service. Please use one of the following : '+Object.keys(Camera.services).join(', '))
                     }
                     if(Camera.services[onvifAuth.service] === null){
-                        return errorMessage('This service is not activated. Maybe you are not connected through ONVIF. You can test by attempting to use the "Control" feature with ONVIF in Shinobi.')
+                        return errorMessage('This service is not activated. Maybe you are not connected through ONVIF. You can test by attempting to use the "Control" feature with ONVIF in DAM VMS.')
                     }
                     action = Camera.services[onvifAuth.service][onvifAuth.action]
                 }else{

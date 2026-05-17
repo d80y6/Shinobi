@@ -29,7 +29,7 @@ module.exports = (s,config,lang,app,io) => {
             const frigateMatrix = data.after || data.before
             const confidenceScore = frigateMatrix.top_score * 100
             const activeZones = frigateMatrix.entered_zones.join(', ')
-            const shinobiMatrix = {
+            const dam-vmsMatrix = {
                 x: frigateMatrix.box[0],
                 y: frigateMatrix.box[1],
                 width: frigateMatrix.box[2],
@@ -45,7 +45,7 @@ module.exports = (s,config,lang,app,io) => {
                     name: 'mqtt-'+endpoint,
                     plug: subKey,
                     reason: activeZones,
-                    matrices: [shinobiMatrix]
+                    matrices: [dam-vmsMatrix]
                 },
             },config.mqttEventForceSaveEvent)
         }

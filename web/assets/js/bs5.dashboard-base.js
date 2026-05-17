@@ -206,7 +206,7 @@ const mergeDeep = function(...objects) {
   }, {});
 }
 function dashboardOptions(r,rr,rrr){
-    if(!rrr){rrr={};};if(typeof rrr === 'string'){rrr={n:rrr}};if(!rrr.n){rrr.n='ShinobiOptions_'+location.host+'_'+$user.ke+$user.uid}
+    if(!rrr){rrr={};};if(typeof rrr === 'string'){rrr={n:rrr}};if(!rrr.n){rrr.n='DAM VMSOptions_'+location.host+'_'+$user.ke+$user.uid}
     ii={o:localStorage.getItem(rrr.n)};try{ii.o=JSON.parse(ii.o)}catch(e){ii.o={}}
     if(!ii.o){ii.o={}}
     if(r&&rr&&!rrr.x){
@@ -575,11 +575,11 @@ function onTabClose(tabId){
 }
 
 // function saveTabStates(){
-//     localStorage.setItem(`Shinobi-Tab-States-${location.origin}`,JSON.stringify(loadedPages))
+//     localStorage.setItem(`DAM VMS-Tab-States-${location.origin}`,JSON.stringify(loadedPages))
 // }
 //
 // function loadTabStates(){
-//     var tabStates = JSON.parse(localStorage.getItem(`Shinobi-Tab-States-${location.origin}`)) || {}
+//     var tabStates = JSON.parse(localStorage.getItem(`DAM VMS-Tab-States-${location.origin}`)) || {}
 //     $.each(tabStates,function(tabId,data){
 //
 //     })
@@ -888,7 +888,7 @@ function logWriterDraw(id,data){
 }
 
 function setSwitchUIState(systemSwitch,toggleState){
-    var el = $(`[shinobi-switch="${systemSwitch}"]`)
+    var el = $(`[dam-vms-switch="${systemSwitch}"]`)
     var onClass = el.attr('on-class')
     var offClass = el.attr('off-class')
     var childTarget = el.attr('ui-change-target')
@@ -1231,7 +1231,7 @@ $(document).ready(function(){
     }
     $('.logout').click(function(e){
         $.get(getApiPrefix() + '/logout/' + $user.ke + '/' + $user.uid,function(data){
-            localStorage.removeItem('ShinobiLogin_'+location.host);
+            localStorage.removeItem('DAM VMSLogin_'+location.host);
             location.href = location.href.split('#')[0];
         })
     })

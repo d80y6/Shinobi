@@ -1,5 +1,5 @@
 //
-// Shinobi - Plugin Base
+// DAM VMS - Plugin Base
 // Copyright (C) 2016-2025 Moe Alam, moeiscool
 //
 // # Donate
@@ -30,7 +30,7 @@ module.exports = function(__dirname, config){
     try{
         if(!config.skipMainConfigCheck){
             mainConfig = require('../conf.json')
-            plugLog('Main Shinobi Config Found... Checking for Plugin Key...')
+            plugLog('Main DAM VMS Config Found... Checking for Plugin Key...')
             var foundKeyAdded = false
             if(mainConfig.pluginKeys && mainConfig.pluginKeys[config.plug]){
                 foundKeyAdded = true
@@ -296,11 +296,11 @@ module.exports = function(__dirname, config){
     }
     startWebServer()
     //web pages and plugin api
-    var webPageMssage = '<b>'+config.plug+'</b> for Shinobi is running'
+    var webPageMssage = '<b>'+config.plug+'</b> for DAM VMS is running'
     app.get('/', (req, res) => {
       res.end()
     });
-    //Conector to Shinobi
+    //Conector to DAM VMS
     if(config.mode === 'host'){
         plugLog('Plugin started as Host')
         //start plugin as host
@@ -314,7 +314,7 @@ module.exports = function(__dirname, config){
         io.attach(server);
         s.connectedClients = {};
         io.on('connection', (cn) => {
-            plugLog('Plugin Connected to a Shinobi..')
+            plugLog('Plugin Connected to a DAM VMS..')
             s.connectedClients[cn.id] = {
                 id: cn.id
             }
@@ -386,7 +386,7 @@ module.exports = function(__dirname, config){
           }
           io.on('connect_error', onDisconnect)
           io.on('connect', (d) => {
-              plugLog('Plugin Connected to Shinobi..')
+              plugLog('Plugin Connected to DAM VMS..')
               s.cx({f:'init',plug:config.plug,notice:config.notice,type:config.type,connectionType:config.connectionType});
               clearRetryConnectionTimeout = setTimeout(() => {
                   retryConnection = 0

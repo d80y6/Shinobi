@@ -138,15 +138,15 @@ module.exports = (processCwd,config) => {
     const checkSubscription = (subscriptionId,callback) => {
         function subscriptionFailed(){
             console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-            console.error('This Install of Shinobi is NOT Activated')
+            console.error('This Install of DAM VMS is NOT Activated')
             console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
             console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-            s.systemLog('This Install of Shinobi is NOT Activated')
+            s.systemLog('This Install of DAM VMS is NOT Activated')
             console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-            console.log('https://licenses.shinobi.video/subscribe')
+            console.log('https://licenses.dam-vms.video/subscribe')
         }
         if(subscriptionId && subscriptionId !== 'sub_XXXXXXXXXXXX' && !config.disableOnlineSubscriptionCheck){
-            var url = 'https://licenses.shinobi.video/subscribe/check?subscriptionId=' + subscriptionId
+            var url = 'https://licenses.dam-vms.video/subscribe/check?subscriptionId=' + subscriptionId
             var hasSubcribed = false
             fetchTimeout(url,30000,{
                 method: 'GET',
@@ -162,7 +162,7 @@ module.exports = (processCwd,config) => {
                 }
                 callback(hasSubcribed)
                 if(hasSubcribed){
-                    s.systemLog('This Install of Shinobi is Activated')
+                    s.systemLog('This Install of DAM VMS is Activated')
                     if(!json.expired && json.timeExpires){
                         s.systemLog(`This License expires on ${json.timeExpires}`)
                     }

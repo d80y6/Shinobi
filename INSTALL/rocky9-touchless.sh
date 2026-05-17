@@ -19,10 +19,10 @@ fi
 clear
 
 echo "========================================================="
-echo "==   Shinobi : The Open Source CCTV and NVR Solution   =="
+echo "==   DAM VMS : The Open Source CCTV and NVR Solution   =="
 echo "========================================================="
 echo "This installer is for CentOS 8 and Rocky 9."
-echo "https://shinobi.video for more information."
+echo "https://dam-vms.video for more information."
 echo "========================================================="
 
 #Install dependencies
@@ -92,9 +92,9 @@ sudo npm install pm2@latest -g
 
 sudo chmod -R 755 .
 touch INSTALL/installed.txt
-dos2unix INSTALL/shinobi
-chmod +x INSTALL/shinobi
-ln -s INSTALL/shinobi /usr/bin/shinobi
+dos2unix INSTALL/dam-vms
+chmod +x INSTALL/dam-vms
+ln -s INSTALL/dam-vms /usr/bin/dam-vms
 
 echo "========================================================="
 echo "Creating firewall rule for port 8080"
@@ -126,8 +126,8 @@ echo "|| Login with the Superuser and create a new user!!    ||"
 echo "========================================================="
 echo "|| Open http://${ipaddress// /}:8080/super in your browser. ||"
 echo "========================================================="
-echo "|| Default Superuser : admin@shinobi.video             ||"
+echo "|| Default Superuser : admin@dam-vms.video             ||"
 echo "|| Default Password : admin                            ||"
 echo "|| You can edit these settings in \"super.json\"         ||"
-echo "|| located in the Shinobi directory.                   ||"
+echo "|| located in the DAM VMS directory.                   ||"
 echo "========================================================="

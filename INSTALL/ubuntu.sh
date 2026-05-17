@@ -1,7 +1,7 @@
 #!/bin/bash
 DIR=$(dirname $0)
 echo "========================================================="
-echo "==!! Shinobi : The Open Source CCTV and NVR Solution !!=="
+echo "==!! DAM VMS : The Open Source CCTV and NVR Solution !!=="
 echo "========================================================="
 echo "To answer yes type the letter (y) in lowercase and press ENTER."
 echo "Default is no (N). Skip any components you already have or don't need."
@@ -35,19 +35,19 @@ fi
 #create super.json
 if [ ! -e "./super.json" ]; then
     echo "============="
-    echo "Default Superuser : admin@shinobi.video"
+    echo "Default Superuser : admin@dam-vms.video"
     echo "Default Password : admin"
-    echo "* You can edit these settings in \"super.json\" located in the Shinobi directory."
+    echo "* You can edit these settings in \"super.json\" located in the DAM VMS directory."
     sudo cp super.sample.json super.json
 fi
 if ! [ -x "$(command -v ifconfig)" ]; then
     echo "============="
-    echo "Shinobi - Installing Net-Tools and Dos2Unix"
+    echo "DAM VMS - Installing Net-Tools and Dos2Unix"
     sudo apt install net-tools dos2unix -y
 fi
 if ! [ -x "$(command -v node)" ]; then
     echo "============="
-    echo "Shinobi - Installing Node.js"
+    echo "DAM VMS - Installing Node.js"
     sh $DIR/nodejs-ubuntu.sh
 else
     echo "Node.js Found..."
@@ -60,12 +60,12 @@ sudo apt install make zip -y
 if ! [ -x "$(command -v ffmpeg)" ]; then
     if [ "$getubuntuversion" = "16" ] || [ "$getubuntuversion" -le "16" ]; then
         echo "============="
-        echo "Shinobi - Get FFMPEG 3.x from ppa:jonathonf/ffmpeg-3"
+        echo "DAM VMS - Get FFMPEG 3.x from ppa:jonathonf/ffmpeg-3"
         sudo add-apt-repository ppa:jonathonf/ffmpeg-3 -y
         sudo apt update -y && sudo apt install ffmpeg x264 x265 -y
     else
         echo "============="
-        echo "Shinobi - Installing FFMPEG"
+        echo "DAM VMS - Installing FFMPEG"
         sudo apt install ffmpeg -y
     fi
 else
@@ -73,11 +73,11 @@ else
     echo "Version : $(ffmpeg -version)"
 fi
 echo "============="
-echo "Shinobi - Do you want to Install MariaDB? Choose No if you already have it."
+echo "DAM VMS - Do you want to Install MariaDB? Choose No if you already have it."
 echo "(y)es or (N)o"
 read -r mysqlagree
 if [ "$mysqlagree" = "y" ] || [ "$mysqlagree" = "Y" ]; then
-    echo "Shinobi - Installing MariaDB"
+    echo "DAM VMS - Installing MariaDB"
     echo "Password for root SQL user, If you are installing SQL now then you may put anything:"
     read -r sqlpass
     echo "mariadb-server mariadb-server/root_password password $sqlpass" | debconf-set-selections
@@ -86,7 +86,7 @@ if [ "$mysqlagree" = "y" ] || [ "$mysqlagree" = "Y" ]; then
     sudo service mysql start
 fi
 echo "============="
-echo "Shinobi - Database Installation"
+echo "DAM VMS - Database Installation"
 echo "(y)es or (N)o"
 read -r mysqlagreeData
 if [ "$mysqlagreeData" = "y" ] || [ "$mysqlagreeData" = "Y" ]; then
@@ -102,24 +102,24 @@ if [ "$mysqlagreeData" = "y" ] || [ "$mysqlagreeData" = "Y" ]; then
     sudo mysql -u "$sqluser" -p"$sqlpass" -e "source sql/user.sql" || true
 fi
 echo "============="
-echo "Shinobi - Install NPM Libraries"
+echo "DAM VMS - Install NPM Libraries"
 sudo npm i npm -g
 sudo npm install --unsafe-perm
 # sudo npm audit fix --force
 echo "============="
-echo "Shinobi - Install PM2"
+echo "DAM VMS - Install PM2"
 sudo npm install pm2@latest -g
-echo "Shinobi - Finished"
+echo "DAM VMS - Finished"
 sudo chmod -R 755 .
 touch INSTALL/installed.txt
-dos2unix INSTALL/shinobi
-ln -s `readlink -f INSTALL/shinobi` /usr/bin/shinobi
-echo "Shinobi - Randomizing cron key"
+dos2unix INSTALL/dam-vms
+ln -s `readlink -f INSTALL/dam-vms` /usr/bin/dam-vms
+echo "DAM VMS - Randomizing cron key"
 node tools/modifyConfiguration.js addToConfig="{\"cron\":{\"key\":\"$(head -c 64 < /dev/urandom | sha256sum | awk '{print substr($1,1,60)}')\"}}"
-echo "Shinobi - Start Shinobi and set to start on boot?"
+echo "DAM VMS - Start DAM VMS and set to start on boot?"
 echo "(y)es or (N)o"
-read -r startShinobi
-if [ "$startShinobi" = "y" ] || [ "$startShinobi" = "y" ]; then
+read -r startDAM VMS
+if [ "$startDAM VMS" = "y" ] || [ "$startDAM VMS" = "y" ]; then
     sudo pm2 start camera.js
     #sudo pm2 start cron.js
     sudo pm2 startup
@@ -133,7 +133,7 @@ echo "|| Login with the Superuser and create a new user!!"
 echo "||==================================="
 echo "|| Open http://$(ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'):8080/super in your web browser."
 echo "||==================================="
-echo "|| Default Superuser : admin@shinobi.video"
+echo "|| Default Superuser : admin@dam-vms.video"
 echo "|| Default Password : admin"
 echo "====================================="
 echo "====================================="

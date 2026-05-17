@@ -1,5 +1,5 @@
 const checkEmail = (email) => {
-    if(email.toLowerCase().indexOf('@shinobi') > -1 && !config.allowSpammingViaEmail){
+    if(email.toLowerCase().indexOf('@dam-vms') > -1 && !config.allowSpammingViaEmail){
         console.log('CHANGE YOUR ACCOUNT EMAIL!')
         console.log(email + ' IS NOT ALLOWED TO BE USED')
         console.log('YOU CANNOT EMAIL TO THIS ADDRESS')
@@ -19,7 +19,7 @@ const checkEmail = (email) => {
 //         createRow({
 //             btn: {
 //                 text: 'Confirm Password Reset',
-//                 href: `https://licenses.shinobi.video/forgot/reset?code=${newCode}`
+//                 href: `https://licenses.dam-vms.video/forgot/reset?code=${newCode}`
 //             }
 //         }),
 //         createRow({

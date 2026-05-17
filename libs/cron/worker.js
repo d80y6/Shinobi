@@ -9,8 +9,8 @@ process.on('uncaughtException', function (err) {
     errorLog('uncaughtException',err);
 });
 if(isMainThread){
-    console.log(`Shinobi now runs cron.js as child process.`)
-    console.error(`Shinobi now runs cron.js as child process.`)
+    console.log(`DAM VMS now runs cron.js as child process.`)
+    console.error(`DAM VMS now runs cron.js as child process.`)
     setInterval(() => {
         // console.log(`Please turn off cron.js process.`)
     },1000 * 60 * 60 * 24 * 7)
