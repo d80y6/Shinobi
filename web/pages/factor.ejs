@@ -1,6 +1,6 @@
-<% var pageTitle = lang.Shinobi + ' - ' + lang["2-Factor Authentication"] %>
+<% var pageTitle = lang.DAM VMS + ' - ' + lang["2-Factor Authentication"] %>
 <head>
-    <!-- Powered by Shinobi, http://shinobi.video -->
+    <!-- Powered by DAM VMS, http://dam-vms.video -->
     <%- include('blocks/header-title', {pageTitle: pageTitle}); %>
     <%
         if(config.baseURL)window.libURL = config.baseURL;
@@ -22,7 +22,7 @@
     <script src="<%-window.libURL%>assets/vendor/js/jquery.serialize.js"></script>
 </head>
 <div id="page-contents" class="display-table full-height">
-    <div class="shinobi-bg-shade bg-gradient-blue">
+    <div class="dam-vms-bg-shade bg-gradient-blue">
     	<div class="d-flex flex-row full-height">
 			<div class="col-0 col-lg-8" style="background-image:url(<%- config.loginScreenBackground %>);<%- config.loginScreenBackgroundCss ? config.loginScreenBackgroundCss : 'background-size: cover;opacity: 0.2;' %>">
 
@@ -87,25 +87,25 @@
                             </a>
                         <% }) %>
                     </div>
-                    <!-- Powered By Shinobi -->
+                    <!-- Powered By DAM VMS -->
                     <div class="mt-4"></div>
                     <div class="text-center text-white monospace mt-2">
                         <small>
-                            <% if(config.showPoweredByShinobi){ %>
-                                <p><%- config.poweredByShinobi %></p>
+                            <% if(config.showPoweredByDAM VMS){ %>
+                                <p><%- config.poweredByDAM VMS %></p>
                             <% }else{ %>
-                                <!-- <%- config.poweredByShinobi %> -->
+                                <!-- <%- config.poweredByDAM VMS %> -->
                             <% } %>
                         </small>
                     </div>
-                    <!-- Powered By Shinobi END -->
+                    <!-- Powered By DAM VMS END -->
 				</div>
 			</div>
 		</div>
     </div>
 </div>
 <script>
-    $.ccio={f:$('#auth-form'),ls:localStorage.getItem('ShinobiAuth_'+location.host)}
+    $.ccio={f:$('#auth-form'),ls:localStorage.getItem('DAM VMSAuth_'+location.host)}
     $.ccio.gid=function(x){
         if(!x){x=10};var t = "";var p = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         for( var i=0; i < x; i++ )
@@ -114,7 +114,7 @@
     };
     if(!$.ccio.ls||$.ccio.ls===''){
         $.ccio.ls=$.ccio.gid(20)
-        localStorage.setItem('ShinobiAuth_'+location.host,$.ccio.ls)
+        localStorage.setItem('DAM VMSAuth_'+location.host,$.ccio.ls)
     }
     $(document).ready(function(){
         $('#machineID').val($.ccio.ls)

@@ -173,14 +173,14 @@ module.exports = function(s,config,lang,app){
                             Emitter = s.group[req.params.ke].activeMonitors[req.params.id].emitterChannel[chosenChannel]
                         }
                         res.writeHead(200, {
-                            'Content-Type': 'multipart/x-mixed-replace; boundary=shinobi',
+                            'Content-Type': 'multipart/x-mixed-replace; boundary=dam-vms',
                             'Cache-Control': 'no-cache',
                             'Connection': 'keep-alive',
                             'Pragma': 'no-cache'
                         });
                         var contentWriter
                         fs.readFile(config.defaultMjpeg,'binary',function(err,content){
-                            res.write("--shinobi\r\n");
+                            res.write("--dam-vms\r\n");
                             res.write("Content-Type: image/jpeg\r\n");
                             res.write("Content-Length: " + content.length + "\r\n");
                             res.write("\r\n");
@@ -391,7 +391,7 @@ module.exports = function(s,config,lang,app){
                     'Cache-Control': 'no-cache',
                     'Pragma': 'no-cache',
                     'Content-Type': 'video/mp4',
-                    'Server': 'Shinobi H.264 Test Stream',
+                    'Server': 'DAM VMS H.264 Test Stream',
                 })
                 var ip = s.getClientIp(req)
                 s.camera('watch_on',{

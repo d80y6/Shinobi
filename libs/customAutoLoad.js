@@ -174,15 +174,15 @@ module.exports = async (s,config,lang,app,io) => {
             return false
         }
     }
-    const loadModule = (shinobiModule) => {
+    const loadModule = (dam-vmsModule) => {
         s.debugLog(`+++++++++++++++++++++++`)
-        const moduleName = shinobiModule.name
+        const moduleName = dam-vmsModule.name
         s.debugLog(`Loading Module : ${moduleName}`)
         s.customAutoLoadModules[moduleName] = {}
         var customModulePath = modulesBasePath + '/' + moduleName
         s.debugLog(customModulePath)
-        s.debugLog(JSON.stringify(shinobiModule,null,3))
-        if(shinobiModule.isIgnitor){
+        s.debugLog(JSON.stringify(dam-vmsModule,null,3))
+        if(dam-vmsModule.isIgnitor){
             s.customAutoLoadModules[moduleName].type = 'file'
             try{
                 require(customModulePath)(s,config,lang,app,io)
@@ -190,7 +190,7 @@ module.exports = async (s,config,lang,app,io) => {
                 s.systemLog('Failed to Load Module : ' + moduleName)
                 s.systemLog(err)
             }
-        }else if(shinobiModule.isDirectory){
+        }else if(dam-vmsModule.isDirectory){
             s.customAutoLoadModules[moduleName].type = 'folder'
             try{
                 require(customModulePath)(s,config,lang,app,io)
@@ -354,11 +354,11 @@ module.exports = async (s,config,lang,app,io) => {
         }
         fs.readdir(modulesBasePath,function(err,folderContents){
             if(!err && folderContents.length > 0){
-                getModules(true).forEach((shinobiModule) => {
-                    if(shinobiModule.properties.disabled){
+                getModules(true).forEach((dam-vmsModule) => {
+                    if(dam-vmsModule.properties.disabled){
                         return;
                     }
-                    loadModule(shinobiModule)
+                    loadModule(dam-vmsModule)
                     s.reloadLanguages()
                     s.reloadDefinitions()
                 })

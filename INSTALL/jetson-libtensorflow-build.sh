@@ -12,7 +12,7 @@ sudo rm /usr/local/lib/libproto*
 sudo rm /usr/local/bin/protoc
 sudo pip3 uninstall -y protobuf
 sudo rm /usr/local/bin/bazel
-git clone https://gitlab.com/Shinobi-Systems/JetsonNanoTools.git
+git clone https://gitlab.com/DAM VMS-Systems/JetsonNanoTools.git
 cd JetsonNanoTools
 ./install_protobuf-3.8.0.sh
 cd ${HOME}/bazel/JetsonNanoTools

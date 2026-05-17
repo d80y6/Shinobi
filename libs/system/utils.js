@@ -8,7 +8,7 @@ module.exports = (config) => {
                 "Time Started": s.timeStarted,
                 "Time Ready": s.timeReady,
                 Versions: {
-                    "Shinobi": s.currentVersion,
+                    "DAM VMS": s.currentVersion,
                     "Node.js": process.version,
                     "FFmpeg": s.ffmpegVersion,
                     "isActivated": config.userHasSubscribed

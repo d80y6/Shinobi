@@ -7,7 +7,7 @@ pkg install -y nano ffmpeg libav x264 x265 mysql56-server node npm
 echo "Enabling mysql..."
 sysrc mysql_enable=yes
 service mysql-server start
-echo "Adding Shinobi user to database..."
+echo "Adding DAM VMS user to database..."
 mysql -h localhost -u root -e "source sql/user.sql"
 echo "Securing mysql..."
 #/usr/local/bin/mysql_secure_installation
@@ -31,6 +31,6 @@ echo "||  Login with the Superuser and   ||"
 echo "||       create a new user at      ||"
 echo "||  http://THIS_JAIL_IP:8080/super ||"
 echo "||==================================="
-echo "|| Superuser : admin@shinobi.video ||"
+echo "|| Superuser : admin@dam-vms.video ||"
 echo "||     Default Password : admin    ||"
 echo "====================================="

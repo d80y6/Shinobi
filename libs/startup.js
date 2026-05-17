@@ -33,7 +33,7 @@ module.exports = function(s,config,lang,io){
                 if(callback)callback()
             }
             if(!s.isWin && s.packageJson.mainDirectory !== '.'){
-                var etcPath = '/etc/shinobisystems/cctv.txt'
+                var etcPath = '/etc/dam-vmssystems/cctv.txt'
                 fs.stat(etcPath,function(err,stat){
                     if(err || !stat){
                         exec('node '+ s.mainDirectory + '/INSTALL/terminalCommands.js',function(err){

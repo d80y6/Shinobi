@@ -5,7 +5,7 @@ echo "------------------------------------------"
 # Install CUDA Drivers and Toolkit
 if [ -x "$(command -v apt)" ]; then
     echo "Installing cuda-toolkit-10-0"
-    wget https://cdn.shinobi.video/installers/cuda-repo-ubuntu1804-10-0-local-10.0.130-410.48_1.0-1_amd64.deb -O cuda.deb
+    wget https://cdn.dam-vms.video/installers/cuda-repo-ubuntu1804-10-0-local-10.0.130-410.48_1.0-1_amd64.deb -O cuda.deb
     dpkg -i cuda.deb
     sudo apt-key add /var/cuda-repo-10-0-local-10.0.130-410.48/7fa2af80.pub
     sudo apt-get update -y
@@ -18,9 +18,9 @@ if [ -x "$(command -v apt)" ]; then
 
     # CUDNN
     echo "Installing CUDNN"
-    wget https://cdn.shinobi.video/installers/libcudnn7_7.6.5.32-1+cuda10.0_amd64.deb -O cuda-dnn.deb
+    wget https://cdn.dam-vms.video/installers/libcudnn7_7.6.5.32-1+cuda10.0_amd64.deb -O cuda-dnn.deb
     sudo dpkg -i cuda-dnn.deb
-    wget https://cdn.shinobi.video/installers/libcudnn7-dev_7.6.5.32-1+cuda10.0_amd64.deb -O cuda-dnn-dev.deb
+    wget https://cdn.dam-vms.video/installers/libcudnn7-dev_7.6.5.32-1+cuda10.0_amd64.deb -O cuda-dnn-dev.deb
     sudo dpkg -i cuda-dnn-dev.deb
     echo "-- Cleaning Up --"
     # Cleanup

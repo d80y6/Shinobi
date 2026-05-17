@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Powered by Shinobi, http://shinobi.video -->
+<!-- Powered by DAM VMS, http://dam-vms.video -->
 <%- include('blocks/header-title'); %>
 <%
     if(config.baseURL)window.libURL = config.baseURL;
@@ -30,7 +30,7 @@
 <% if(screen){screen=screen.toLowerCase()} %>
 <body>
 <div id="page-contents" class="display-table full-height">
-    <div class="shinobi-bg-shade bg-gradient-<%- screen === 'super' ? 'green' : 'blue' %>">
+    <div class="dam-vms-bg-shade bg-gradient-<%- screen === 'super' ? 'green' : 'blue' %>">
     	<div class="d-flex flex-row full-height">
 			<div class="col-0 col-lg-8" style="background-image:url(<%- config.loginScreenBackground %>);<%- config.loginScreenBackgroundCss ? config.loginScreenBackgroundCss : 'background-size: cover;opacity: 0.2;' %>">
 
@@ -161,18 +161,18 @@
                             </a>
                         <% }) %>
                     </div>
-                    <!-- Powered By Shinobi -->
+                    <!-- Powered By DAM VMS -->
                     <div class="mt-4"></div>
                     <div class="text-center text-white monospace mt-2">
                         <small>
-                            <% if(config.showPoweredByShinobi){ %>
-                                <p><%- config.poweredByShinobi %></p>
+                            <% if(config.showPoweredByDAM VMS){ %>
+                                <p><%- config.poweredByDAM VMS %></p>
                             <% }else{ %>
-                                <!-- <%- config.poweredByShinobi %> -->
+                                <!-- <%- config.poweredByDAM VMS %> -->
                             <% } %>
                         </small>
                     </div>
-                    <!-- Powered By Shinobi END -->
+                    <!-- Powered By DAM VMS END -->
 				</div>
 			</div>
 		</div>
@@ -182,7 +182,7 @@
 <script>
     var googleSignIn = false;
     <% var failedLogin;if(failedLogin===true){ %>
-        localStorage.removeItem('ShinobiLogin_'+location.host)
+        localStorage.removeItem('DAM VMSLogin_'+location.host)
     <% } %>
 </script>
 <script src="<%-window.libURL%>assets/js/bs5.login.js"></script>

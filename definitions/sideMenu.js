@@ -32,55 +32,55 @@ module.exports = function(s,config,lang,Theme,mainBackgroundColor,textWhiteOnBgD
                            {
                                label: lang['Remember Positions'],
                                class: 'cursor-pointer',
-                               attributes: 'shinobi-switch="monitorOrder" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                               attributes: 'dam-vms-switch="monitorOrder" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
                                color: 'grey',
                            },
                            {
                                label: lang['Mute Audio'],
                                class: 'cursor-pointer',
-                               attributes: 'shinobi-switch="monitorMuteAudio" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                               attributes: 'dam-vms-switch="monitorMuteAudio" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
                                color: 'grey',
                            },
                            {
                                label: lang['Cycle Monitors'],
                                class: 'cursor-pointer',
-                               attributes: 'shinobi-switch="cycleLiveGrid" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                               attributes: 'dam-vms-switch="cycleLiveGrid" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
                                color: 'grey',
                            },
                            {
                                label: lang['JPEG Mode'],
                                class: 'cursor-pointer',
-                               attributes: 'shinobi-switch="jpegMode" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                               attributes: 'dam-vms-switch="jpegMode" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
                                color: 'grey',
                            },
                            {
                                label: lang['Stream in Background'],
                                class: 'cursor-pointer',
-                               attributes: 'shinobi-switch="backgroundStream" ui-change-target=".dot" on-class="dot-grey" off-class="dot-green"',
+                               attributes: 'dam-vms-switch="backgroundStream" ui-change-target=".dot" on-class="dot-grey" off-class="dot-green"',
                                color: 'grey',
                            },
                            {
                                label: lang[`Original Aspect Ratio`],
                                class: 'cursor-pointer',
-                               attributes: 'shinobi-switch="dontMonStretch" ui-change-target=".dot" on-class="dot-grey" off-class="dot-green"',
+                               attributes: 'dam-vms-switch="dontMonStretch" ui-change-target=".dot" on-class="dot-grey" off-class="dot-green"',
                                color: 'grey',
                            },
                            {
                                label: lang[`Hide Detection on Stream`],
                                class: 'cursor-pointer',
-                               attributes: 'shinobi-switch="dontShowDetection" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                               attributes: 'dam-vms-switch="dontShowDetection" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
                                color: 'grey',
                            },
                            {
                                label: lang[`Alert on Event`],
                                class: 'cursor-pointer',
-                               attributes: 'shinobi-switch="alertOnEvent" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                               attributes: 'dam-vms-switch="alertOnEvent" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
                                color: 'grey',
                            },
                            {
                                label: lang[`Popout on Event`],
                                class: 'cursor-pointer',
-                               attributes: 'shinobi-switch="popOnEvent" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                               attributes: 'dam-vms-switch="popOnEvent" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
                                color: 'grey',
                            },
                        ]
@@ -111,7 +111,7 @@ module.exports = function(s,config,lang,Theme,mainBackgroundColor,textWhiteOnBgD
                            {
                                label: lang[`Save Compressed Video on Completion`],
                                class: 'cursor-pointer',
-                               attributes: 'shinobi-switch="saveCompressedVideo" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                               attributes: 'dam-vms-switch="saveCompressedVideo" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
                                color: 'grey',
                            },
                        ]
@@ -130,7 +130,7 @@ module.exports = function(s,config,lang,Theme,mainBackgroundColor,textWhiteOnBgD
                            {
                                label: lang[`Save Built Video on Completion`],
                                class: 'cursor-pointer',
-                               attributes: 'shinobi-switch="timelapseSaveBuiltVideo" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                               attributes: 'dam-vms-switch="timelapseSaveBuiltVideo" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
                                color: 'grey',
                            },
                        ]
@@ -231,7 +231,7 @@ module.exports = function(s,config,lang,Theme,mainBackgroundColor,textWhiteOnBgD
                    },
                    {
                        icon: 'compass',
-                       label: `${lang['ShinobiHub']}`,
+                       label: `${lang['DAM VMSHub']}`,
                        pageOpen: 'configFinder',
                        addUl: true,
                        eval: `!$user.details.sub || $user.details.monitor_create !== 0`,

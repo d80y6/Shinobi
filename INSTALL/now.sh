@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "Shinobi Installer"
+echo "DAM VMS Installer"
 echo "========"
 echo "Select your OS"
 echo "If your OS is not on the list please refer to the docs."

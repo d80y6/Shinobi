@@ -1008,7 +1008,7 @@ monitorEditorWindow.find('.save_config').click(function(e){
         monitorId='NewMonitor'
     }
     form.details = safeJsonParse(form.details)
-    downloadJSON(form,'Shinobi_'+monitorId+'_config.json')
+    downloadJSON(form,'DAM VMS_'+monitorId+'_config.json')
 });
 monitorEditorWindow.find('.add-input-to-monitor-settings').click(function(e){
     showInputMappingFields()
@@ -1064,11 +1064,11 @@ editorForm.find('[name="type"]').change(function(e){
     function drawPluginElements(){
         if(Object.keys(connectedDetectorPlugins).length === 0){
             $('.stream-objects .stream-detected-object').remove()
-            $('.shinobi-detector').hide()
-            $('.shinobi-detector-msg').empty()
-            $('.shinobi-detector_name').empty()
-            $('.shinobi-detector_plug').hide()
-            $('.shinobi-detector-invert').show()
+            $('.dam-vms-detector').hide()
+            $('.dam-vms-detector-msg').empty()
+            $('.dam-vms-detector_name').empty()
+            $('.dam-vms-detector_plug').hide()
+            $('.dam-vms-detector-invert').show()
             setFieldVisibility()
             drawMonitorSettingsSubMenu()
         }else{
@@ -1079,12 +1079,12 @@ editorForm.find('[name="type"]').change(function(e){
                 if(d.notice){
                     pluginNotice.push('<b>' + d.plug + '</b> : ' + d.notice)
                 }
-                $('.shinobi-detector-'+d.plug).show()
+                $('.dam-vms-detector-'+d.plug).show()
             })
-            $('.shinobi-detector').show()
-            $('.shinobi-detector-invert').hide()
-            $('.shinobi-detector_name').text(pluginTitle.join(', '))
-            if(pluginNotice.length > 0)$('.shinobi-detector-msg').text(pluginNotice.join('<br>'))
+            $('.dam-vms-detector').show()
+            $('.dam-vms-detector-invert').hide()
+            $('.dam-vms-detector_name').text(pluginTitle.join(', '))
+            if(pluginNotice.length > 0)$('.dam-vms-detector-msg').text(pluginNotice.join('<br>'))
             setFieldVisibility()
             drawMonitorSettingsSubMenu()
         }

@@ -40,7 +40,7 @@ function getApiPrefix(path){
     return path ? mainPart + '/' + path + '/' + $user.ke : mainPart
 }
 function dashboardOptions(r,rr,rrr){
-    if(!rrr){rrr={};};if(typeof rrr === 'string'){rrr={n:rrr}};if(!rrr.n){rrr.n='ShinobiOptions_'+location.host}
+    if(!rrr){rrr={};};if(typeof rrr === 'string'){rrr={n:rrr}};if(!rrr.n){rrr.n='DAM VMSOptions_'+location.host}
     ii={o:localStorage.getItem(rrr.n)};try{ii.o=JSON.parse(ii.o)}catch(e){ii.o={}}
     if(!ii.o){ii.o={}}
     if(r&&rr&&!rrr.x){

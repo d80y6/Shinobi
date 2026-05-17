@@ -1,6 +1,6 @@
 #### Fast Install (The Ninja Way)
 
-1. Become `root` to use the installer and run Shinobi. Use one of the following to do so.
+1. Become `root` to use the installer and run DAM VMS. Use one of the following to do so.
 
     - Ubuntu 17.04, 17.10
         - `sudo su`
@@ -11,7 +11,7 @@
 2. Download and run the installer.
 
 ```
-bash <(curl -s https://raw.githubusercontent.com/ShinobiCCTV/Shinobi-Installer/master/shinobi-install.sh)
+bash <(curl -s https://raw.githubusercontent.com/DAM VMSCCTV/DAM VMS-Installer/master/dam-vms-install.sh)
 ```
 
-More info can be found here. https://shinobi.video/docs/start
+More info can be found here. https://dam-vms.video/docs/start

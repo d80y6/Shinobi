@@ -58,7 +58,7 @@ if [ "$DB_DISABLE_INCLUDED" = "false" ]; then
     fi
 
     echo "Create database user if it does not exists ..."
-    mysql -e "source /home/Shinobi/sql/user.sql" || true
+    mysql -e "source /home/DAM VMS/sql/user.sql" || true
 
 else
     echo "Create database schema if it does not exists ..."
@@ -68,7 +68,7 @@ DATABASE_CONFIG='{"host": "'$DB_HOST'","user": "'$DB_USER'","password": "'$DB_PA
 
 cronKey="$(head -c 1024 < /dev/urandom | sha256sum | awk '{print substr($1,1,29)}')"
 
-cd /home/Shinobi
+cd /home/DAM VMS
 mkdir -p libs/customAutoLoad
 
 if [ -e "/config/conf.json" ]; then
@@ -85,9 +85,9 @@ sed -i -e 's/change_this_to_something_very_random__just_anything_other_than_this
 
 
 echo "============="
-echo "Default Superuser : admin@shinobi.video"
+echo "Default Superuser : admin@dam-vms.video"
 echo "Default Password : admin"
-echo "Log in at http://HOST_IP:SHINOBI_PORT/super"
+echo "Log in at http://HOST_IP:DAM VMS_PORT/super"
 if [ -e "/config/super.json" ]; then
     cp /config/super.json super.json
 elif [ ! -e "./super.json" ]; then
@@ -100,5 +100,5 @@ if [ -e "/config/init.extension.sh" ]; then
 fi
 
 # Execute Command
-echo "Starting Shinobi ..."
+echo "Starting DAM VMS ..."
 exec "$@"

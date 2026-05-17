@@ -1,5 +1,5 @@
 var os = require('os');
-const onvif = require("shinobi-onvif");
+const onvif = require("dam-vms-onvif");
 const {
     addCredentialsToUrl,
     stringContains,

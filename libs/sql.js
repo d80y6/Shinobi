@@ -16,7 +16,7 @@ module.exports = function(s,config){
         }
     }
     if(s.databaseOptions.client === 'sqlite3' && s.databaseOptions.connection.filename === undefined){
-        s.databaseOptions.connection.filename = s.mainDirectory+"/shinobi.sqlite"
+        s.databaseOptions.connection.filename = s.mainDirectory+"/dam-vms.sqlite"
     }
     const {
         knexQuery,

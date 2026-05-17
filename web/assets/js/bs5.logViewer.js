@@ -59,7 +59,7 @@ $(document).ready(function(e){
             console.log('No Logs Found for Download')
             return
         }
-        downloadJSON(logViewerDataInMemory,'Shinobi_Logs_'+(new Date())+'.json')
+        downloadJSON(logViewerDataInMemory,'DAM VMS_Logs_'+(new Date())+'.json')
         return false;
     })
 })

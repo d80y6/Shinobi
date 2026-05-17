@@ -24,7 +24,7 @@ var moveModule = function(myModule){
         }
     })
 }
-exec(`git clone https://gitlab.com/Shinobi-Systems/customautoload-samples.git ${tempFolder}`,function(err){
+exec(`git clone https://gitlab.com/DAM VMS-Systems/customautoload-samples.git ${tempFolder}`,function(err){
     if(err)console.log('# customAutoLoad directory seems to already exist.')
     moduleList.forEach(function(myModule,number){
         moveModule(myModule)

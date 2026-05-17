@@ -13,7 +13,7 @@ module.exports = function(s,config,lang,app,io){
         const ipAddress = getIpAddress(req)
         const webAddress = ipAddress + ':' + options.port
         client.ip = webAddress;
-        client.shinobiChildAlreadyRegistered = true;
+        client.dam-vmsChildAlreadyRegistered = true;
         client.sendJson = (data) => {
             client.send(JSON.stringify(data))
         }

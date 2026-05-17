@@ -1,5 +1,5 @@
 ## Contributing license
-By contributing to this repository, you agree your contributions to be bound by the [SHINOBI OPEN SOURCE SOFTWARE LICENSE AGREEMENT
+By contributing to this repository, you agree your contributions to be bound by the [DAM VMS OPEN SOURCE SOFTWARE LICENSE AGREEMENT
 ](LICENSE.md)
 
 ## Suggestions
